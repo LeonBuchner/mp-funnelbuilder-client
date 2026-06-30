@@ -334,6 +334,14 @@ function previewIconBlock(iconName: string): IconBlock {
             :class="inputCls"
             @input="updateImage('alt', ($event.target as HTMLInputElement).value)"
           >
+          <!-- Warnung wenn kein Alt-Text gesetzt ist -->
+          <p
+            v-if="!(selectedBlock as ImageBlock).alt"
+            class="mt-1.5 rounded-md bg-orange-50 px-2.5 py-1.5 text-xs text-orange-700"
+            role="alert"
+          >
+            Ohne Alt-Text ist das Bild fuer Screenreader und SEO unsichtbar.
+          </p>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>

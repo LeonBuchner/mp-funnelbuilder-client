@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { TextBlock } from '~/types/funnel'
+import BlockTextTipTap from './BlockTextTipTap.vue'
+import { sanitizeHtml } from '~/utils/sanitizeHtml'
 
 const props = defineProps<{
   block: TextBlock
   mode: 'editor' | 'live'
-  /** Wenn true (editor-Modus + Block selektiert): contenteditable aktivieren */
+  /** Wenn true (editor-Modus + Block selektiert): TipTap aktivieren */
   isSelected?: boolean
 }>()
 
@@ -12,17 +14,14 @@ const emit = defineEmits<{
   (e: 'update-content', html: string): void
 }>()
 
-/** Ref auf das contenteditable-Element (nur aktiv wenn isEditable = true) */
-const editableEl = ref<HTMLDivElement | null>(null)
-
-/** Inline-Bearbeitung nur wenn Editor-Modus UND Block selektiert */
+/** TipTap nur wenn Editor-Modus UND Block selektiert */
 const isEditable = computed<boolean>(
   () => props.mode === 'editor' && props.isSelected === true,
 )
 
 /**
  * Tailwind-Klassen je nach block.styles.textSize.
- * S -> small, M -> normal (default), L -> large, XL -> xl, ... -> hero
+ * small -> xs, normal -> base (default), large -> xl, xl -> 2xl, hero -> 1.75rem
  */
 const sizeClass = computed<string>(() => {
   switch (props.block.styles?.textSize) {
@@ -52,14 +51,14 @@ const alignClass = computed<string>(() => {
   }
 })
 
-/** Gemeinsame Klassen für beide Rendering-Zweige */
+/** Gemeinsame Klassen fuer statischen Render und TipTap-Editor */
 const sharedClass = computed<string>(() =>
   [
     'w-full',
     sizeClass.value,
     alignClass.value,
     '[&_a]:underline [&_a]:text-[var(--funnel-accent)]',
-    '[&_p]:mb-2 last:[&_p]:mb-0',
+    '[&_p]:mb-2 [&_p:last-child]:mb-0',
     '[&_strong]:font-bold [&_em]:italic [&_u]:underline',
   ].join(' '),
 )
@@ -70,73 +69,48 @@ const inlineStyle = computed(() => ({
   fontFamily: 'var(--funnel-font)',
 }))
 
-// Wenn isEditable auf true wechselt: innerHTML aus block.content setzen
-watch(isEditable, (editable) => {
-  if (editable) {
-    nextTick(() => {
-      if (editableEl.value) {
-        editableEl.value.innerHTML = props.block.content
-      }
-    })
-  }
-})
-
-// Externes Update (z. B. aus den Block-Feldern) ins contenteditable spiegeln,
-// aber nur wenn das Element gerade NICHT fokussiert ist (kein Tipp-Interrupt)
-watch(
-  () => props.block.content,
-  (newContent) => {
-    if (editableEl.value && document.activeElement !== editableEl.value) {
-      if (editableEl.value.innerHTML !== newContent) {
-        editableEl.value.innerHTML = newContent
-      }
-    }
-  },
+/**
+ * Im live-Modus ist block.content bereits durch den Renderer-Lade-Transform
+ * bereinigt (sanitizeFunnelContent in [slug].vue). Kein erneuter sanitizeHtml-
+ * Aufruf im Render, sonst divergieren SSR (jsdom-DOMPurify) und Client
+ * (Browser-DOMPurify) in der Serialisierung -> Hydration-Mismatch.
+ *
+ * Im editor-Modus (ssr:false, client-only) wird clientseitig sanitisiert.
+ * Der Editor erzeugt sauberes TipTap-HTML, die Bereinigung ist eine
+ * zusaetzliche Absicherung.
+ */
+const safeContent = computed<string>(() =>
+  props.mode === 'live' ? props.block.content : sanitizeHtml(props.block.content),
 )
-
-onMounted(() => {
-  if (isEditable.value && editableEl.value) {
-    editableEl.value.innerHTML = props.block.content
-  }
-})
-
-function onInput(event: Event): void {
-  const el = event.currentTarget as HTMLElement
-  emit('update-content', el.innerHTML)
-}
 </script>
 
 <template>
   <!--
-    Statische Ansicht (kein Block selektiert, oder live-Modus):
-    v-html ist hier bewusst eingesetzt. Im Editor kommt der Inhalt
-    ausschließlich vom Admin-User (kein Fremd-Input).
+    Statische Ansicht (live-Modus oder Block nicht selektiert):
+    safeContent: Im live-Modus bereits beim Laden sanitisiert (kein erneuter
+    Aufruf im Render, verhindert Hydration-Mismatch). Im editor-Modus
+    clientseitig sanitisiert (ssr:false, kein Mismatch-Risiko).
   -->
   <!-- eslint-disable vue/no-v-html -->
   <div
     v-if="!isEditable"
     :class="sharedClass"
     :style="inlineStyle"
-    v-html="block.content"
+    v-html="safeContent"
   />
   <!-- eslint-enable vue/no-v-html -->
 
   <!--
-    Inline-Bearbeitung (editor-Modus + selektiert):
-    contenteditable="true" erlaubt direktes Tippen im Frame.
-    @mousedown.stop verhindert, dass Klicks ins Canvas den Block deselektieren.
-    @input sendet den aktuellen HTML-Inhalt nach oben.
+    TipTap-Editor (editor-Modus + selektiert).
+    ClientOnly: TipTap benoetigt den Browser; der SSR-Renderer rendert
+    diesen Zweig nie (mode='live').
   -->
-  <div
-    v-else
-    ref="editableEl"
-    contenteditable="true"
-    spellcheck="true"
-    :class="sharedClass + ' outline-none cursor-text min-h-[1.5em]'"
-    :style="inlineStyle"
-    role="textbox"
-    aria-multiline="true"
-    aria-label="Text inline bearbeiten"
-    @input="onInput"
-  />
+  <ClientOnly v-else>
+    <BlockTextTipTap
+      :initial-content="block.content"
+      :shared-class="sharedClass"
+      :inline-style="inlineStyle"
+      @update-content="emit('update-content', $event)"
+    />
+  </ClientOnly>
 </template>

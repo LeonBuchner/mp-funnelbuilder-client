@@ -14,6 +14,7 @@
  *   image – Cards mit Bild + Titel (wie single_choice 'full')
  */
 import type { MultiChoiceBlock } from '~/types/funnel'
+import { sanitizeHtml } from '~/utils/sanitizeHtml'
 
 const iconPaths: Record<string, string> = {
   'graduation-cap':
@@ -90,6 +91,16 @@ function hasIcon(name: string | undefined): name is string {
 
 function iconFallback(label: string): string {
   return label.charAt(0).toUpperCase()
+}
+
+/**
+ * Im live-Modus sind option.label-Werte bereits durch den Renderer-Lade-Transform
+ * bereinigt (sanitizeFunnelContent). Kein erneuter sanitizeHtml-Aufruf im Render
+ * verhindert Hydration-Mismatches (jsdom vs. Browser-DOMPurify-Divergenz).
+ * Im editor-Modus (client-only) wird clientseitig sanitisiert.
+ */
+function safeOptionLabel(label: string): string {
+  return props.mode === 'live' ? label : sanitizeHtml(label)
 }
 </script>
 
@@ -264,10 +275,12 @@ function iconFallback(label: string): string {
           </span>
 
           <!-- eslint-disable vue/no-v-html -->
+          <!-- safeOptionLabel: im live-Modus bereits beim Laden sanitisiert,
+               kein erneuter Aufruf im Render (kein Hydration-Mismatch). -->
           <span
             class="text-sm leading-tight"
             :class="option.label.length < 20 ? 'font-semibold' : 'font-normal'"
-            v-html="option.label"
+            v-html="safeOptionLabel(option.label)"
           />
           <!-- eslint-enable vue/no-v-html -->
         </label>

@@ -53,6 +53,12 @@ export const useEditorStore = defineStore('editor', () => {
   const publishState = ref<'idle' | 'publishing' | 'published' | 'error'>('idle')
   const validationErrors = ref<ValidationErrors>({})
 
+  /**
+   * Vorschau-Modus: wenn true, rendert der Canvas die Bloecke interaktiv (mode='live')
+   * ohne Editor-Overlays. Wird per togglePreview() umgeschaltet.
+   */
+  const previewMode = ref<boolean>(false)
+
   // ---------------------------------------------------------------------------
   // Getters
   // ---------------------------------------------------------------------------
@@ -106,6 +112,18 @@ export const useEditorStore = defineStore('editor', () => {
 
   function deselectBlock(): void {
     selectedBlockId.value = null
+  }
+
+  /**
+   * Schaltet den In-Editor-Vorschau-Modus um.
+   * Beim Aktivieren wird die Block-Selektion aufgehoben,
+   * damit keine Editor-Overlays in der Vorschau erscheinen.
+   */
+  function togglePreview(): void {
+    previewMode.value = !previewMode.value
+    if (previewMode.value) {
+      selectedBlockId.value = null
+    }
   }
 
   function addStep(type: StepType = 'content'): void {
@@ -310,6 +328,7 @@ export const useEditorStore = defineStore('editor', () => {
     lastSavedAt,
     publishState,
     validationErrors,
+    previewMode,
     // Getters
     steps,
     selectedStep,
@@ -319,6 +338,7 @@ export const useEditorStore = defineStore('editor', () => {
     selectStep,
     selectBlock,
     deselectBlock,
+    togglePreview,
     addStep,
     removeStep,
     moveStep,

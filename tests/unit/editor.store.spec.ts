@@ -419,6 +419,51 @@ describe('useEditorStore', () => {
   })
 
   // -------------------------------------------------------------------------
+  // togglePreview()
+  // -------------------------------------------------------------------------
+
+  it('togglePreview() schaltet previewMode von false auf true', () => {
+    const store = useEditorStore()
+    expect(store.previewMode).toBe(false)
+
+    store.togglePreview()
+
+    expect(store.previewMode).toBe(true)
+  })
+
+  it('togglePreview() schaltet previewMode wieder zurueck auf false', () => {
+    const store = useEditorStore()
+
+    store.togglePreview()
+    expect(store.previewMode).toBe(true)
+
+    store.togglePreview()
+    expect(store.previewMode).toBe(false)
+  })
+
+  it('togglePreview() setzt selectedBlockId beim Aktivieren auf null', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'text')
+    expect(store.selectedBlockId).not.toBeNull()
+
+    store.togglePreview()
+
+    expect(store.previewMode).toBe(true)
+    expect(store.selectedBlockId).toBeNull()
+  })
+
+  it('togglePreview() beendet Vorschau-Modus beim zweiten Aufruf', () => {
+    const store = setupStoreWithContent()
+
+    store.togglePreview()
+    store.togglePreview()
+
+    expect(store.previewMode).toBe(false)
+  })
+
+  // -------------------------------------------------------------------------
   // deselectBlock()
   // -------------------------------------------------------------------------
 

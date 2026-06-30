@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { OptinCheckboxBlock } from '~/types/funnel'
+import { sanitizeHtml } from '~/utils/sanitizeHtml'
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +23,16 @@ function handleChange(event: Event): void {
     emit('update:modelValue', (event.target as HTMLInputElement).checked)
   }
 }
+
+/**
+ * Im live-Modus ist checkboxLabel bereits durch den Renderer-Lade-Transform
+ * bereinigt. Kein erneuter sanitizeHtml-Aufruf im Render (verhindert
+ * Hydration-Mismatch durch jsdom/Browser-DOMPurify-Divergenz).
+ * Im editor-Modus (client-only) wird clientseitig sanitisiert.
+ */
+const safeLabel = computed<string>(() =>
+  props.mode === 'live' ? props.block.checkboxLabel : sanitizeHtml(props.block.checkboxLabel),
+)
 </script>
 
 <template>
@@ -45,13 +56,14 @@ function handleChange(event: Event): void {
       :style="{ color: 'var(--funnel-muted)' }"
     >
       <!--
-        v-html: checkboxLabel kann Link-HTML zur Datenschutzerklärung enthalten.
-        Inhalt kommt vom Admin und wird serverseitig validiert.
+        v-html: checkboxLabel kann Link-HTML zur Datenschutzerklaerung enthalten.
+        safeLabel: Im live-Modus bereits beim Laden sanitisiert, im editor-Modus
+        clientseitig. Kein erneuter Aufruf im Render (kein Hydration-Mismatch).
       -->
       <!-- eslint-disable vue/no-v-html -->
       <span
         class="[&_a]:underline [&_a]:text-[var(--funnel-accent)]"
-        v-html="block.checkboxLabel"
+        v-html="safeLabel"
       />
       <!-- eslint-enable vue/no-v-html -->
       <span

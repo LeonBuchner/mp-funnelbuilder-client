@@ -1,23 +1,26 @@
 <!--
   EditorFormatToolbar: Format-Toolbar fuer Text-Bloecke im Kontext-Panel.
   Layout nach 08-element-ausgewaehlt-formatierung.jpg:
-    Zeile 1: S / M / L / XL / ...  (textSize)
-    Zeile 2: B / I / U              (execCommand)
-    Zeile 3: Emoji | Link           (picker / createLink)
+    Zeile 1: S / M / L / XL / ...  (textSize via editorStore)
+    Zeile 2: B / I / U              (TipTap chain commands)
+    Zeile 3: Emoji | Link           (TipTap insertContent / setLink)
     Zeile 4: Textfarbe | Hintergrund (styles.color / styles.backgroundColor)
 
-  B/I/U nutzen document.execCommand (deprecated, aber browserweit funktionsfähig).
-  @mousedown.prevent auf allen Toolbar-Buttons verhindert Focus-Verlust des contenteditable,
-  damit die aktuelle Text-Selektion erhalten bleibt.
+  B/I/U/Link nutzen useActiveEditor(), um den TipTap-Editor des
+  aktuell selektierten Text-Blocks anzusprechen.
+  @mousedown.prevent auf Toolbar-Buttons verhindert Fokusverlust des Editors,
+  damit die Selektion erhalten bleibt.
 -->
 <script setup lang="ts">
 import type { TextBlock } from '~/types/funnel'
+import { useActiveEditor } from '~/composables/useActiveEditor'
 
 const props = defineProps<{
   isReadonly: boolean
 }>()
 
 const editorStore = useEditorStore()
+const { activeEditor } = useActiveEditor()
 
 const block = computed<TextBlock | null>(() => {
   const b = editorStore.selectedBlock
@@ -34,7 +37,7 @@ const showLinkInput = ref(false)
 const linkUrl = ref('https://')
 
 // -------------------------------------------------------------------------
-// TextSize
+// TextSize (Block-Ebene, kein TipTap noetig)
 // -------------------------------------------------------------------------
 
 type TextSizeKey = 'small' | 'normal' | 'large' | 'xl' | 'hero'
@@ -62,18 +65,26 @@ function setTextSize(size: TextSizeKey): void {
 }
 
 // -------------------------------------------------------------------------
-// B / I / U via execCommand
+// B / I / U via TipTap
 // -------------------------------------------------------------------------
 
-function execFormat(command: 'bold' | 'italic' | 'underline'): void {
+function toggleBold(): void {
   if (props.isReadonly) return
-  document.execCommand(command, false)
-  // Fokus explizit in das contenteditable zurücksetzen (Firefox)
-  ;(document.activeElement as HTMLElement | null)?.focus()
+  activeEditor.value?.chain().focus().toggleBold().run()
+}
+
+function toggleItalic(): void {
+  if (props.isReadonly) return
+  activeEditor.value?.chain().focus().toggleItalic().run()
+}
+
+function toggleUnderline(): void {
+  if (props.isReadonly) return
+  activeEditor.value?.chain().focus().toggleUnderline().run()
 }
 
 // -------------------------------------------------------------------------
-// Farben
+// Farben (Block-Ebene, kein TipTap noetig)
 // -------------------------------------------------------------------------
 
 const currentColor = computed<string>(() => block.value?.styles?.color ?? '')
@@ -108,52 +119,43 @@ function resetBgColor(): void {
 }
 
 // -------------------------------------------------------------------------
-// Emoji-Picker
+// Emoji-Picker: Emoji per TipTap am Cursor einfuegen
 // -------------------------------------------------------------------------
 
 function onEmojiPick(emoji: string): void {
-  document.execCommand('insertText', false, emoji)
+  activeEditor.value?.chain().focus().insertContent(emoji).run()
   showEmojiPicker.value = false
-  ;(document.activeElement as HTMLElement | null)?.focus()
 }
 
 // -------------------------------------------------------------------------
-// Link
+// Link via TipTap setLink / unsetLink
 // -------------------------------------------------------------------------
 
-/** Selektion speichern bevor Eingabefeld den Fokus übernimmt */
-let savedRange: Range | null = null
-
 function openLinkInput(): void {
-  const sel = window.getSelection()
-  if (sel && sel.rangeCount > 0) {
-    savedRange = sel.getRangeAt(0).cloneRange()
-  }
+  // Bestehenden Link-Href vorbelegen, falls Selektion einen Link enthaelt
+  const existing = activeEditor.value?.getAttributes('link')?.href as string | undefined
+  linkUrl.value = existing ?? 'https://'
   showLinkInput.value = true
-  linkUrl.value = 'https://'
 }
 
 function applyLink(): void {
-  if (!linkUrl.value || props.isReadonly) {
+  if (props.isReadonly) {
     showLinkInput.value = false
     return
   }
-  // Selektion wiederherstellen und Link anwenden
-  if (savedRange) {
-    const sel = window.getSelection()
-    if (sel) {
-      sel.removeAllRanges()
-      sel.addRange(savedRange)
+  const e = activeEditor.value
+  if (e) {
+    if (linkUrl.value && linkUrl.value !== 'https://') {
+      e.chain().focus().setLink({ href: linkUrl.value, target: '_blank' }).run()
+    } else {
+      e.chain().focus().unsetLink().run()
     }
   }
-  document.execCommand('createLink', false, linkUrl.value)
   showLinkInput.value = false
-  savedRange = null
 }
 
 function cancelLink(): void {
   showLinkInput.value = false
-  savedRange = null
 }
 </script>
 
@@ -162,17 +164,17 @@ function cancelLink(): void {
     v-if="block"
     class="space-y-1.5 pb-3"
   >
-    <!-- Zeile 1: Größen-Buttons S / M / L / XL / ... -->
+    <!-- Zeile 1: Groessen-Buttons S / M / L / XL / ... -->
     <div
       class="flex"
       role="group"
-      aria-label="Textgröße"
+      aria-label="Textgroesse"
     >
       <button
         v-for="btn in SIZE_BUTTONS"
         :key="btn.value"
         type="button"
-        :aria-label="`Größe ${btn.label}`"
+        :aria-label="`Groesse ${btn.label}`"
         :aria-pressed="activeSize === btn.value"
         :disabled="isReadonly"
         :class="[
@@ -203,7 +205,7 @@ function cancelLink(): void {
         aria-label="Fett"
         :disabled="isReadonly"
         class="flex-1 rounded py-1.5 text-xs font-bold text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-1 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
-        @mousedown.prevent="execFormat('bold')"
+        @mousedown.prevent="toggleBold"
       >
         B
       </button>
@@ -212,7 +214,7 @@ function cancelLink(): void {
         aria-label="Kursiv"
         :disabled="isReadonly"
         class="flex-1 rounded py-1.5 text-xs italic text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-1 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
-        @mousedown.prevent="execFormat('italic')"
+        @mousedown.prevent="toggleItalic"
       >
         I
       </button>
@@ -221,7 +223,7 @@ function cancelLink(): void {
         aria-label="Unterstrichen"
         :disabled="isReadonly"
         class="flex-1 rounded py-1.5 text-xs underline text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-1 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
-        @mousedown.prevent="execFormat('underline')"
+        @mousedown.prevent="toggleUnderline"
       >
         U
       </button>
@@ -234,13 +236,13 @@ function cancelLink(): void {
     <div
       class="relative flex"
       role="group"
-      aria-label="Einfügen"
+      aria-label="Einfuegen"
     >
       <!-- Emoji-Button -->
       <div class="relative flex-1">
         <button
           type="button"
-          aria-label="Emoji einfügen"
+          aria-label="Emoji einfuegen"
           :aria-expanded="showEmojiPicker"
           :disabled="isReadonly"
           class="flex w-full items-center justify-center rounded py-1.5 text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
@@ -298,7 +300,7 @@ function cancelLink(): void {
       <div class="relative flex-1">
         <button
           type="button"
-          aria-label="Link einfügen"
+          aria-label="Link einfuegen"
           :aria-expanded="showLinkInput"
           :disabled="isReadonly"
           class="flex w-full items-center justify-center rounded py-1.5 text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
@@ -330,7 +332,7 @@ function cancelLink(): void {
           v-if="showLinkInput"
           class="absolute left-0 top-full z-50 mt-1 w-64 rounded-lg border border-ui-border bg-white p-2 shadow-lg"
           role="dialog"
-          aria-label="Link einfügen"
+          aria-label="Link einfuegen"
         >
           <label
             for="fmt-link-url"
@@ -350,17 +352,17 @@ function cancelLink(): void {
           <div class="flex justify-end gap-1.5">
             <button
               type="button"
-              class="rounded px-2 py-1 text-xs text-ui-muted hover:text-ui-text focus:outline-none"
+              class="rounded px-2 py-1 text-xs text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
               @click="cancelLink"
             >
               Abbrechen
             </button>
             <button
               type="button"
-              class="rounded bg-ui-accent px-2 py-1 text-xs font-medium text-white hover:bg-ui-accent-hover focus:outline-none"
+              class="rounded bg-ui-accent px-2 py-1 text-xs font-medium text-white hover:bg-ui-accent-hover focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
               @click="applyLink"
             >
-              Einfügen
+              Einfuegen
             </button>
           </div>
         </div>
@@ -398,7 +400,7 @@ function cancelLink(): void {
             :value="currentColor || '#1f2937'"
             :disabled="isReadonly"
             class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            aria-label="Textfarbe wählen"
+            aria-label="Textfarbe waehlen"
             @input="setColor(($event.target as HTMLInputElement).value)"
           >
         </div>
@@ -406,8 +408,8 @@ function cancelLink(): void {
           v-if="currentColor"
           type="button"
           class="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ui-border text-ui-muted hover:bg-red-100 hover:text-red-500"
-          aria-label="Textfarbe zurücksetzen"
-          title="Zurücksetzen"
+          aria-label="Textfarbe zuruecksetzen"
+          title="Zuruecksetzen"
           @mousedown.prevent="resetColor"
         >
           <svg
@@ -448,7 +450,7 @@ function cancelLink(): void {
             :value="currentBgColor || '#ffffff'"
             :disabled="isReadonly"
             class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            aria-label="Hintergrundfarbe wählen"
+            aria-label="Hintergrundfarbe waehlen"
             @input="setBgColor(($event.target as HTMLInputElement).value)"
           >
         </div>
@@ -456,8 +458,8 @@ function cancelLink(): void {
           v-if="currentBgColor"
           type="button"
           class="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ui-border text-ui-muted hover:bg-red-100 hover:text-red-500"
-          aria-label="Hintergrundfarbe zurücksetzen"
-          title="Zurücksetzen"
+          aria-label="Hintergrundfarbe zuruecksetzen"
+          title="Zuruecksetzen"
           @mousedown.prevent="resetBgColor"
         >
           <svg

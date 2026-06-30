@@ -38,6 +38,35 @@ onMounted(async () => {
 // Add-Panel (ersetzt BlockPicker)
 // ---------------------------------------------------------------------------
 const showAddPanel = ref(false)
+
+// ---------------------------------------------------------------------------
+// Vorschau-Modus
+// ---------------------------------------------------------------------------
+
+// Add-Panel schliessen, wenn Vorschau-Modus aktiviert wird
+watch(
+  () => editorStore.previewMode,
+  (active) => {
+    if (active) {
+      showAddPanel.value = false
+    }
+  },
+)
+
+// Esc beendet den Vorschau-Modus
+function handleEditorKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && editorStore.previewMode) {
+    editorStore.togglePreview()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleEditorKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleEditorKeydown)
+})
 </script>
 
 <template>
@@ -115,8 +144,10 @@ const showAddPanel = ref(false)
       </div>
 
       <!-- Hauptfläche: linkes Panel + Canvas -->
+      <!-- Im Vorschau-Modus ist das linke Panel ausgeblendet, damit der Canvas mehr Platz bekommt -->
       <div class="flex flex-1 overflow-hidden">
         <EditorLeftPanel
+          v-if="!editorStore.previewMode"
           :is-readonly="isReadonly"
           :show-add-panel="showAddPanel"
           @close-add-panel="showAddPanel = false"

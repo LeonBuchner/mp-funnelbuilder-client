@@ -16,6 +16,7 @@ import { funnelStepContextKey } from '~/composables/useFunnelStepContext'
 import { useFunnelThemes } from '~/composables/useFunnelThemes'
 import { useRendererState } from '~/composables/useRendererState'
 import { usePublicApi } from '~/composables/usePublicApi'
+import { sanitizeFunnelContent } from '~/utils/sanitizeFunnelContent'
 import type { PublicFunnel } from '~/types/public-funnel'
 import type { Block, ButtonBlock } from '~/types/funnel'
 
@@ -34,9 +35,18 @@ const slug = route.params.slug as string
 
 const api = usePublicApi()
 
+/**
+ * Funnel-Daten laden und HTML-Felder einmalig sanitisieren (transform).
+ *
+ * Der transform laeuft serverseitig; das Ergebnis wird in den Nuxt-Payload
+ * serialisiert. Client-Hydration liest denselben bereits bereinigten String
+ * aus dem Payload, ohne erneutes Sanitisieren. Dadurch kein SSR/Client-Divergenz
+ * mehr und keine Hydration-Mismatches.
+ */
 const { data: funnel, error: fetchError } = await useAsyncData<PublicFunnel>(
   `funnel-${slug}`,
   () => api<PublicFunnel>(`/f/${slug}`),
+  { transform: sanitizeFunnelContent },
 )
 
 // Bei Fehler (404 / Server-Fehler) Error-Seite anzeigen

@@ -29,6 +29,29 @@ const blocks = computed(() => editorStore.selectedStep?.blocks ?? [])
 const stepId = computed(() => editorStore.selectedStep?.id ?? '')
 
 // ---------------------------------------------------------------------------
+// Vorschau-Modus: lokaler Antwort-State (veraendert nicht den Store-Content)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lokale Antworten fuer interaktive Bloecke im Vorschau-Modus.
+ * Wird beim Aktivieren des Vorschau-Modus zurueckgesetzt.
+ */
+const previewAnswers = ref<Record<string, string | boolean>>({})
+
+watch(
+  () => editorStore.previewMode,
+  (active) => {
+    if (active) {
+      previewAnswers.value = {}
+    }
+  },
+)
+
+function updatePreviewAnswer(blockId: string, value: string | boolean): void {
+  previewAnswers.value[blockId] = value
+}
+
+// ---------------------------------------------------------------------------
 // Dynamisches Theme: CSS-Variablen aus content.meta.themeId
 // ---------------------------------------------------------------------------
 const activeThemeStyle = computed<Record<string, string>>(() => {
@@ -88,11 +111,15 @@ function blockLabel(type: BlockType): string {
 }
 
 function onBlockClick(blockId: string): void {
-  editorStore.selectBlock(blockId)
+  if (!editorStore.previewMode) {
+    editorStore.selectBlock(blockId)
+  }
 }
 
 function onCanvasClick(): void {
-  editorStore.deselectBlock()
+  if (!editorStore.previewMode) {
+    editorStore.deselectBlock()
+  }
 }
 
 /** Inline-Bearbeitung von TextBlocks: neuen HTML-Inhalt in den Store schreiben */
@@ -120,9 +147,15 @@ function handleTextContentUpdate(blockId: string, html: string): void {
       </div>
 
       <!-- Handy-Frame -->
+      <!--
+        Breite: 375px im Vorschau-Modus (Mobile-Standard), 390px im Editor.
+        Im Vorschau-Modus kein @click.stop noetig, da onCanvasClick bereits
+        gegen previewMode abgesichert ist.
+      -->
       <div
         v-else
-        class="relative w-[390px] flex-shrink-0 self-start"
+        class="relative flex-shrink-0 self-start"
+        :class="editorStore.previewMode ? 'w-[375px]' : 'w-[390px]'"
         @click.stop
       >
         <!--
@@ -161,58 +194,78 @@ function handleTextContentUpdate(blockId: string, html: string): void {
             :key="block.id"
             class="relative px-4 py-1"
           >
-            <!-- Klickbare Block-Flaeche -->
-            <div
-              class="relative cursor-pointer"
-              tabindex="0"
-              role="button"
-              :aria-label="`Block bearbeiten: ${blockLabel(block.type)}`"
-              @click.stop="onBlockClick(block.id)"
-              @keyup.enter.stop="onBlockClick(block.id)"
-            >
-              <!-- Block-Inhalt -->
+            <!--
+              EDITOR-MODUS: interaktiver Wrapper mit Selektion, Ring, Label und
+              FloatingToolbar.
+            -->
+            <template v-if="!editorStore.previewMode">
+              <!-- Klickbare Block-Flaeche -->
+              <div
+                class="relative cursor-pointer"
+                tabindex="0"
+                role="button"
+                :aria-label="`Block bearbeiten: ${blockLabel(block.type)}`"
+                @click.stop="onBlockClick(block.id)"
+                @keyup.enter.stop="onBlockClick(block.id)"
+              >
+                <!-- Block-Inhalt -->
+                <BlockRenderer
+                  :block="block"
+                  mode="editor"
+                  :is-selected="editorStore.selectedBlockId === block.id"
+                  @update-content="(html: string) => handleTextContentUpdate(block.id, html)"
+                />
+
+                <!-- Selektion: blauer Ring -->
+                <div
+                  v-if="editorStore.selectedBlockId === block.id"
+                  class="pointer-events-none absolute inset-0 z-10 rounded-lg ring-2 ring-ui-accent"
+                  aria-hidden="true"
+                />
+
+                <!-- Label-Tag oben links -->
+                <span
+                  v-if="editorStore.selectedBlockId === block.id"
+                  class="absolute -top-2.5 left-2 z-20 select-none rounded bg-ui-accent px-1.5 py-0.5 text-xs font-medium text-white"
+                  aria-hidden="true"
+                >
+                  {{ blockLabel(block.type) }}
+                </span>
+              </div>
+
+              <!-- Floating-Toolbar: rechts vom Frame, absolute zur Block-Zeile -->
+              <div
+                v-if="editorStore.selectedBlockId === block.id && !props.isReadonly"
+                class="absolute left-full top-1 z-30 ml-2"
+                @click.stop
+              >
+                <EditorFloatingToolbar
+                  :step-id="stepId"
+                  :block-id="block.id"
+                  :block-index="idx"
+                  :total-blocks="blocks.length"
+                />
+              </div>
+            </template>
+
+            <!--
+              VORSCHAU-MODUS: mode='live', kein Editor-Overlay.
+              Lokale Antworten (previewAnswers) werden nicht in den Store geschrieben.
+              @action-Emits werden ignoriert (keine Navigations-Logik im Vorschau).
+            -->
+            <template v-else>
               <BlockRenderer
                 :block="block"
-                mode="editor"
-                :is-selected="editorStore.selectedBlockId === block.id"
-                @update-content="(html: string) => handleTextContentUpdate(block.id, html)"
+                mode="live"
+                :model-value="previewAnswers[block.id]"
+                @update:model-value="updatePreviewAnswer(block.id, $event)"
               />
-
-              <!-- Selektion: blauer Ring -->
-              <div
-                v-if="editorStore.selectedBlockId === block.id"
-                class="pointer-events-none absolute inset-0 z-10 rounded-lg ring-2 ring-ui-accent"
-                aria-hidden="true"
-              />
-
-              <!-- Label-Tag oben links -->
-              <span
-                v-if="editorStore.selectedBlockId === block.id"
-                class="absolute -top-2.5 left-2 z-20 select-none rounded bg-ui-accent px-1.5 py-0.5 text-xs font-medium text-white"
-                aria-hidden="true"
-              >
-                {{ blockLabel(block.type) }}
-              </span>
-            </div>
-
-            <!-- Floating-Toolbar: rechts vom Frame, absolute zur Block-Zeile -->
-            <div
-              v-if="editorStore.selectedBlockId === block.id && !props.isReadonly"
-              class="absolute left-full top-1 z-30 ml-2"
-              @click.stop
-            >
-              <EditorFloatingToolbar
-                :step-id="stepId"
-                :block-id="block.id"
-                :block-index="idx"
-                :total-blocks="blocks.length"
-              />
-            </div>
+            </template>
           </div>
 
-          <!-- Block hinzufügen -->
+          <!-- Block hinzufügen (nur im Editor-Modus) -->
           <div
-            v-if="!props.isReadonly"
+            v-if="!props.isReadonly && !editorStore.previewMode"
             class="mx-4 mt-4"
           >
             <button

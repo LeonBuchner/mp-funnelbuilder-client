@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { SingleChoiceBlock } from '~/types/funnel'
+import { sanitizeHtml } from '~/utils/sanitizeHtml'
 
 const props = withDefaults(
   defineProps<{
@@ -77,6 +78,16 @@ function iconFallback(label: string): string {
 
 function hasIcon(name: string | undefined): name is string {
   return !!name && name in iconPaths
+}
+
+/**
+ * Im live-Modus sind option.label-Werte bereits durch den Renderer-Lade-Transform
+ * bereinigt (sanitizeFunnelContent). Kein erneuter sanitizeHtml-Aufruf im Render
+ * verhindert Hydration-Mismatches (jsdom vs. Browser-DOMPurify-Divergenz).
+ * Im editor-Modus (client-only) wird clientseitig sanitisiert.
+ */
+function safeOptionLabel(label: string): string {
+  return props.mode === 'live' ? label : sanitizeHtml(label)
 }
 </script>
 
@@ -196,15 +207,13 @@ function hasIcon(name: string | undefined): name is string {
             {{ iconFallback(option.label) }}
           </span>
 
-          <!--
-            v-html: option.label kommt vom Admin und kann bold/italic enthalten.
-            Inhalt wird serverseitig validiert.
-          -->
           <!-- eslint-disable vue/no-v-html -->
+          <!-- safeOptionLabel: im live-Modus bereits beim Laden sanitisiert,
+               kein erneuter Aufruf im Render (kein Hydration-Mismatch). -->
           <span
             class="text-sm leading-tight"
             :class="option.label.length < 20 ? 'font-semibold' : 'font-normal'"
-            v-html="option.label"
+            v-html="safeOptionLabel(option.label)"
           />
           <!-- eslint-enable vue/no-v-html -->
         </button>

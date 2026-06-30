@@ -28,6 +28,18 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    // TipTap + ProseMirror in den SSR-Bundle einbetten statt als externe
+    // Node-Modules zu behandeln. Verhindert CJS/ESM-Interop-Fehler im Build.
+    ssr: {
+      noExternal: [
+        '@tiptap/core',
+        '@tiptap/vue-3',
+        '@tiptap/pm',
+        '@tiptap/starter-kit',
+        '@tiptap/extension-link',
+        '@tiptap/extension-underline',
+      ],
+    },
   },
 
   // Pre-komprimierte Assets (Brotli + gzip) fuer schlanke Uebertragung.

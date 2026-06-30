@@ -93,23 +93,6 @@ async function handlePublish(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Vorschau
-// ---------------------------------------------------------------------------
-const previewUrl = computed<string | null>(() => {
-  const funnel = editorStore.funnel
-  if (funnel?.status === 'published' || funnel?.published_version) {
-    return `/f/${funnel.id}`
-  }
-  return null
-})
-
-function handlePreviewClick(): void {
-  if (!previewUrl.value) {
-    toast.info('Veröffentliche den Funnel zuerst, um die Vorschau zu öffnen.')
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Einstellungen-Dropdown (Platzhalter)
 // ---------------------------------------------------------------------------
 const showSettingsDropdown = ref(false)
@@ -325,43 +308,19 @@ onClickOutside(settingsDropdownEl, () => {
         Fehler
       </span>
 
-      <!-- Vorschau-Auge -->
-      <a
-        v-if="previewUrl"
-        :href="previewUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
-        aria-label="Vorschau in neuem Tab öffnen"
-        title="Vorschau"
-      >
-        <svg
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="1.75"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-          />
-        </svg>
-      </a>
+      <!-- Vorschau-Toggle (In-Editor-Vorschau) -->
       <button
-        v-else
         type="button"
-        class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted opacity-40 focus:outline-none"
-        title="Veröffentliche den Funnel zuerst, um die Vorschau zu öffnen"
-        aria-label="Vorschau (erst nach Veröffentlichung verfügbar)"
-        @click="handlePreviewClick"
+        :aria-pressed="editorStore.previewMode"
+        :class="[
+          'flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent/50',
+          editorStore.previewMode
+            ? 'bg-ui-accent text-white'
+            : 'text-ui-muted hover:bg-ui-bg hover:text-ui-text',
+        ]"
+        aria-label="Vorschau"
+        :title="editorStore.previewMode ? 'Vorschau beenden (Esc)' : 'Vorschau'"
+        @click="editorStore.togglePreview()"
       >
         <svg
           class="h-4 w-4"
