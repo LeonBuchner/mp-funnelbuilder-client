@@ -8,6 +8,7 @@ import type {
   Block,
   TextBlock,
   ImageBlock,
+  LogoBlock,
   ButtonBlock,
   SingleChoiceBlock,
   InputTextBlock,
@@ -31,6 +32,7 @@ import type {
   ChoiceOption,
   MultiChoiceImageLayout,
 } from '~/types/funnel'
+import { useWorkspaceStore } from '~/stores/workspace'
 import BlockIcon from '~/components/blocks/BlockIcon.vue'
 
 const props = defineProps<{
@@ -265,6 +267,63 @@ const ICON_NAMES = [
 function previewIconBlock(iconName: string): IconBlock {
   return { id: 'preview', type: 'icon', iconName, size: 24 }
 }
+
+// ---------------------------------------------------------------------------
+// Bild-Picker / Logo-Picker (Workspace-Mediathek B10)
+// ---------------------------------------------------------------------------
+
+const workspaceStore = useWorkspaceStore()
+
+/** UUID des aktiven Workspace fuer den Mediathek-API-Aufruf. */
+const workspaceUuid = computed<string>(() => workspaceStore.activeWorkspace?.id ?? '')
+
+/** Steuert das ImagePickerModal fuer image-Bloecke. */
+const showImagePicker = ref(false)
+
+/** Zeigt das manuelle URL-Eingabefeld fuer image-Bloecke. */
+const showExternalImageUrl = ref(false)
+
+/** Steuert das ImagePickerModal fuer logo-Bloecke. */
+const showLogoPicker = ref(false)
+
+/** Picker-Zustand zuruecksetzen wenn ein anderer Block gewaehlt wird. */
+watch(
+  () => props.selectedBlock?.id,
+  () => {
+    showImagePicker.value = false
+    showLogoPicker.value = false
+    showExternalImageUrl.value = false
+  },
+)
+
+function updateLogo(patch: Partial<Omit<LogoBlock, 'id' | 'type'>>): void {
+  emit('update-block', patch as Partial<Block>)
+}
+
+/** Wird vom ImagePickerModal aufgerufen wenn ein Bild fuer image-Block gewaehlt wird. */
+function onImagePickerSelect(payload: { url: string, alt_text: string | null }): void {
+  const block = props.selectedBlock
+  if (!block || block.type !== 'image') return
+  const currentAlt = (block as ImageBlock).alt
+  emit('update-block', {
+    url: payload.url,
+    // Alt-Text nur befuellen wenn er bisher leer ist
+    ...(currentAlt ? {} : { alt: payload.alt_text ?? '' }),
+  } as Partial<Block>)
+  showImagePicker.value = false
+}
+
+/** Wird vom ImagePickerModal aufgerufen wenn ein Bild fuer logo-Block gewaehlt wird. */
+function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): void {
+  const block = props.selectedBlock
+  if (!block || block.type !== 'logo') return
+  const currentAlt = (block as LogoBlock).alt
+  emit('update-block', {
+    url: payload.url,
+    ...(currentAlt ? {} : { alt: payload.alt_text ?? '' }),
+  } as Partial<Block>)
+  showLogoPicker.value = false
+}
 </script>
 
 <template>
@@ -301,7 +360,58 @@ function previewIconBlock(iconName: string): IconBlock {
     <!-- IMAGE -->
     <template v-else-if="selectedBlock.type === 'image'">
       <div class="space-y-3">
-        <div>
+        <!-- Vorschau des aktuellen Bildes -->
+        <div
+          v-if="(selectedBlock as ImageBlock).url"
+          class="overflow-hidden rounded-lg border border-ui-border"
+        >
+          <img
+            :src="(selectedBlock as ImageBlock).url"
+            :alt="(selectedBlock as ImageBlock).alt || 'Vorschau'"
+            class="h-24 w-full bg-ui-bg object-contain py-1"
+            loading="lazy"
+          >
+        </div>
+
+        <!-- Picker-Button -->
+        <button
+          v-if="!isReadonly"
+          type="button"
+          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+          @click="showImagePicker = true"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+            />
+          </svg>
+          {{ (selectedBlock as ImageBlock).url ? 'Bild ändern' : 'Bild wählen' }}
+        </button>
+
+        <!-- Toggle: Externe URL -->
+        <label
+          v-if="!isReadonly"
+          class="flex items-center gap-2 text-sm text-ui-text"
+        >
+          <input
+            v-model="showExternalImageUrl"
+            type="checkbox"
+            class="h-4 w-4 accent-ui-accent"
+          >
+          Externe URL verwenden
+        </label>
+
+        <!-- Manuelles URL-Feld (nur bei aktivem Toggle oder readonly) -->
+        <div v-if="showExternalImageUrl || isReadonly">
           <label
             for="bf-image-url"
             class="mb-1 block text-xs font-medium text-ui-muted"
@@ -318,6 +428,8 @@ function previewIconBlock(iconName: string): IconBlock {
             @input="updateImage('url', ($event.target as HTMLInputElement).value)"
           >
         </div>
+
+        <!-- Alt-Text -->
         <div>
           <label
             for="bf-image-alt"
@@ -334,7 +446,7 @@ function previewIconBlock(iconName: string): IconBlock {
             :class="inputCls"
             @input="updateImage('alt', ($event.target as HTMLInputElement).value)"
           >
-          <!-- Warnung wenn kein Alt-Text gesetzt ist -->
+          <!-- Warnung wenn kein Alt-Text gesetzt ist (B5) -->
           <p
             v-if="!(selectedBlock as ImageBlock).alt"
             class="mt-1.5 rounded-md bg-orange-50 px-2.5 py-1.5 text-xs text-orange-700"
@@ -343,6 +455,8 @@ function previewIconBlock(iconName: string): IconBlock {
             Ohne Alt-Text ist das Bild fuer Screenreader und SEO unsichtbar.
           </p>
         </div>
+
+        <!-- Breite / Höhe -->
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label
@@ -380,6 +494,15 @@ function previewIconBlock(iconName: string): IconBlock {
           </div>
         </div>
       </div>
+
+      <!-- Bild-Picker Modal -->
+      <EditorImagePickerModal
+        v-if="showImagePicker && workspaceUuid"
+        :workspace-uuid="workspaceUuid"
+        :is-readonly="isReadonly"
+        @select="onImagePickerSelect"
+        @close="showImagePicker = false"
+      />
     </template>
 
     <!-- BUTTON -->
@@ -1540,6 +1663,114 @@ function previewIconBlock(iconName: string): IconBlock {
           >
         </div>
       </div>
+    </template>
+
+    <!-- LOGO -->
+    <template v-else-if="selectedBlock.type === 'logo'">
+      <div class="space-y-3">
+        <!-- Vorschau des aktuellen Logos -->
+        <div
+          v-if="(selectedBlock as LogoBlock).url"
+          class="overflow-hidden rounded-lg border border-ui-border"
+        >
+          <img
+            :src="(selectedBlock as LogoBlock).url"
+            :alt="(selectedBlock as LogoBlock).alt || 'Logo-Vorschau'"
+            class="h-12 w-full bg-ui-bg object-contain py-1"
+            loading="lazy"
+          >
+        </div>
+
+        <!-- Picker-Button -->
+        <button
+          v-if="!isReadonly"
+          type="button"
+          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+          @click="showLogoPicker = true"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+            />
+          </svg>
+          {{ (selectedBlock as LogoBlock).url ? 'Logo ändern' : 'Logo wählen' }}
+        </button>
+
+        <!-- Alt-Text -->
+        <div>
+          <label
+            for="bf-logo-alt"
+            class="mb-1 block text-xs font-medium text-ui-muted"
+          >
+            Alt-Text (Barrierefreiheit)
+          </label>
+          <input
+            id="bf-logo-alt"
+            type="text"
+            :value="(selectedBlock as LogoBlock).alt ?? ''"
+            :readonly="isReadonly"
+            placeholder="Firmenlogo"
+            :class="inputCls"
+            @input="updateLogo({ alt: ($event.target as HTMLInputElement).value })"
+          >
+        </div>
+
+        <!-- Breite / Höhe -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label
+              for="bf-logo-width"
+              class="mb-1 block text-xs font-medium text-ui-muted"
+            >
+              Breite (px)
+            </label>
+            <input
+              id="bf-logo-width"
+              type="number"
+              :value="(selectedBlock as LogoBlock).width ?? ''"
+              :readonly="isReadonly"
+              min="1"
+              :class="inputCls"
+              @input="updateLogo({ width: Number(($event.target as HTMLInputElement).value) || undefined })"
+            >
+          </div>
+          <div>
+            <label
+              for="bf-logo-height"
+              class="mb-1 block text-xs font-medium text-ui-muted"
+            >
+              Höhe (px)
+            </label>
+            <input
+              id="bf-logo-height"
+              type="number"
+              :value="(selectedBlock as LogoBlock).height ?? ''"
+              :readonly="isReadonly"
+              min="1"
+              :class="inputCls"
+              @input="updateLogo({ height: Number(($event.target as HTMLInputElement).value) || undefined })"
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Logo-Picker Modal -->
+      <EditorImagePickerModal
+        v-if="showLogoPicker && workspaceUuid"
+        :workspace-uuid="workspaceUuid"
+        :is-readonly="isReadonly"
+        @select="onLogoPickerSelect"
+        @close="showLogoPicker = false"
+      />
     </template>
   </div>
 </template>

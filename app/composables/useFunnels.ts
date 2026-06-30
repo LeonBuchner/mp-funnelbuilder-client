@@ -18,7 +18,8 @@ export interface CreateFunnelPayload {
 export interface UpdateFunnelPayload {
   name?: string
   slug?: string
-  branding_id?: string
+  /** null entfernt das Branding (zurueck zum Theme-Preset). */
+  branding_id?: string | null
 }
 
 export interface FunnelResponse {

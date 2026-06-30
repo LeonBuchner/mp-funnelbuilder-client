@@ -2,7 +2,7 @@
  * Typen fuer die oeffentliche Funnel-API (/api/public/...).
  * Kein Auth-Token erforderlich, CORS erlaubt alle Origins.
  */
-import type { FunnelContent } from '~/types/funnel'
+import type { FunnelContent, BrandingColors } from '~/types/funnel'
 
 // ---------------------------------------------------------------------------
 // API-Response: GET /api/public/f/{hash}
@@ -21,10 +21,19 @@ export interface PublicFunnelSettings {
   tracking: PublicFunnelTracking
 }
 
+/**
+ * Branding wie es der oeffentliche Renderer-Endpunkt liefert.
+ * Gleiche Felder wie Branding in funnel.ts, aber als eigenstaendiger Typ
+ * (kein Import des Admin-Typs in den Public-Bereich).
+ */
 export interface PublicFunnelBranding {
   id: string
   name: string
-  is_default: boolean
+  colors: BrandingColors
+  font_heading: string | null
+  font_body: string | null
+  logo_path: string | null
+  favicon_path: string | null
 }
 
 export interface PublicFunnel {

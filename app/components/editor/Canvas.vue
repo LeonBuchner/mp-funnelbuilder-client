@@ -19,6 +19,7 @@ import type { Block, BlockType } from '~/types/funnel'
 import BlockRenderer from '~/components/blocks/BlockRenderer.vue'
 import { funnelStepContextKey, type FunnelStepContext } from '~/composables/useFunnelStepContext'
 import { useFunnelThemes } from '~/composables/useFunnelThemes'
+import { brandingToFunnelVars } from '~/composables/useBrandings'
 
 const props = defineProps<{
   isReadonly: boolean
@@ -88,9 +89,15 @@ function updatePreviewAnswer(blockId: string, value: string | boolean): void {
 }
 
 // ---------------------------------------------------------------------------
-// Dynamisches Theme: CSS-Variablen aus content.meta.themeId
+// Dynamisches Theme / Branding: CSS-Variablen
+// Prioritaet: Branding (editorStore.funnel.branding) > Theme-Preset (themeId)
+// Reagiert sofort auf Branding-Wechsel im BrandingSection.
 // ---------------------------------------------------------------------------
 const activeThemeStyle = computed<Record<string, string>>(() => {
+  const branding = editorStore.funnel?.branding
+  if (branding) {
+    return brandingToFunnelVars(branding)
+  }
   const themeId = editorStore.content?.meta?.themeId ?? 'mp'
   return getThemeVars(themeId)
 })

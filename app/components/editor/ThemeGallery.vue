@@ -53,6 +53,14 @@ const perspectiveThemes = computed<FunnelTheme[]>(() =>
 <template>
   <div class="flex-1 overflow-y-auto px-3 py-4">
     <!-- ------------------------------------------------------------------ -->
+    <!-- Dein Branding (B11): oberhalb der Perspective-Presets               -->
+    <!-- ------------------------------------------------------------------ -->
+    <EditorBrandingSection :is-readonly="props.isReadonly" />
+
+    <!-- Trennlinie -->
+    <div class="mb-4 h-px bg-ui-border" />
+
+    <!-- ------------------------------------------------------------------ -->
     <!-- Deine Themes                                                         -->
     <!-- ------------------------------------------------------------------ -->
     <section

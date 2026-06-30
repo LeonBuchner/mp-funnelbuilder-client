@@ -14,6 +14,7 @@ import { provide, computed, ref, watch, onMounted, nextTick } from 'vue'
 import BlockRenderer from '~/components/blocks/BlockRenderer.vue'
 import { funnelStepContextKey } from '~/composables/useFunnelStepContext'
 import { useFunnelThemes } from '~/composables/useFunnelThemes'
+import { brandingToFunnelVars } from '~/composables/useBrandings'
 import { useRendererState } from '~/composables/useRendererState'
 import { usePublicApi } from '~/composables/usePublicApi'
 import { sanitizeFunnelContent } from '~/utils/sanitizeFunnelContent'
@@ -143,19 +144,25 @@ useHead({
 })
 
 // ---------------------------------------------------------------------------
-// Theme (CSS-Variablen)
+// Theme / Branding (CSS-Variablen)
+// Prioritaet: branding (aus API) > theme-Preset (themeId in meta)
+// Die Vars sind deterministisch aus den Branding-Daten berechnet, daher
+// kein Hydration-Mismatch zwischen SSR und Client.
 // ---------------------------------------------------------------------------
 
 const { getThemeVars } = useFunnelThemes()
-const themeVars = computed<Record<string, string>>(() =>
-  getThemeVars(funnelData.content.meta.themeId ?? 'mp'),
-)
-const containerStyle = computed(() => ({
-  ...themeVars.value,
-  backgroundColor: 'var(--funnel-bg)',
-  fontFamily: 'var(--funnel-font)',
-  color: 'var(--funnel-text)',
-}))
+const containerStyle = computed(() => {
+  const vars = funnelData.branding
+    ? brandingToFunnelVars(funnelData.branding)
+    : getThemeVars(funnelData.content.meta.themeId ?? 'mp')
+
+  return {
+    ...vars,
+    backgroundColor: 'var(--funnel-bg)',
+    fontFamily: 'var(--funnel-font)',
+    color: 'var(--funnel-text)',
+  }
+})
 
 // ---------------------------------------------------------------------------
 // Renderer-State

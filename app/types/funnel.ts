@@ -365,10 +365,28 @@ export interface FunnelContent {
 // Funnel + FunnelVersion
 // ---------------------------------------------------------------------------
 
+/** Farb-Schema eines Brandings (Hex-Farben). */
+export interface BrandingColors {
+  primary: string
+  secondary: string
+  background: string
+  surface: string
+  text: string
+  accent: string
+}
+
+/**
+ * Workspace-Branding (B11).
+ * id ist eine UUID (String), kein Integer mehr.
+ */
 export interface Branding {
   id: string
   name: string
-  is_default: boolean
+  colors: BrandingColors
+  font_heading: string | null
+  font_body: string | null
+  logo_path: string | null
+  favicon_path: string | null
 }
 
 export interface FunnelVersion {
