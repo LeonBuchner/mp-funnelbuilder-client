@@ -1,14 +1,14 @@
 <!--
   EditorLeftPanel: Linkes Panel im Perspective-Stil.
-  - Tabs "Übersicht / Design" als Segmented Control
-  - Kontext-Modus: wenn Block selektiert, Block-Einstellungen statt Übersicht
-    - Text-Blöcke: FormatToolbar oben + (legacy) HTML-Feld
-    - Button/SingleChoice: Block-Felder + Verknüpfungs-Sektion
-    - Alle Typen: EditorBlockFields
-  - Add-Modus: wenn showAddPanel=true, zeigt das Sektion-hinzufügen-Panel
-  - Design-Tab: Theme-Galerie (ThemeGallery)
+  - Tabs "Uebersicht / Design" als Segmented Control
+  - Kontext-Modus: wenn Block selektiert, Block-Einstellungen statt Uebersicht
+  - Seiten-Liste und Ergebnis-Liste sind per Drag-and-Drop sortierbar.
+    Tastatur-Fallback: Hoch/Runter-Buttons bleiben vollstaendig erhalten (WCAG).
 -->
 <script setup lang="ts">
+import { VueDraggable } from 'vue-draggable-plus'
+import type { DraggableEvent } from 'vue-draggable-plus'
+import { GripVertical } from 'lucide-vue-next'
 import type { Block, Step } from '~/types/funnel'
 
 const props = defineProps<{
@@ -25,7 +25,11 @@ const editorStore = useEditorStore()
 type LeftTab = 'overview' | 'design'
 const activeTab = ref<LeftTab>('overview')
 
-/** Seiten (alle Steps die kein Ergebnis sind) */
+// ---------------------------------------------------------------------------
+// Gefilterte Step-Listen
+// ---------------------------------------------------------------------------
+
+/** Seiten (alle Steps ohne Ergebnis-Typ) */
 const pageSteps = computed<Step[]>(() =>
   editorStore.steps.filter(s => s.type !== 'result'),
 )
@@ -35,14 +39,101 @@ const resultSteps = computed<Step[]>(() =>
   editorStore.steps.filter(s => s.type === 'result'),
 )
 
-/** Buchstabenindex für Ergebnis-Steps (A, B, C ...) */
+// ---------------------------------------------------------------------------
+// Lokale Refs fuer DnD (vue-draggable-plus braucht beschreibbare Arrays)
+// ---------------------------------------------------------------------------
+
+const localPageSteps = ref<Step[]>([...pageSteps.value])
+const localResultSteps = ref<Step[]>([...resultSteps.value])
+
+watch(
+  pageSteps,
+  (newSteps) => {
+    const newIds = newSteps.map(s => s.id).join(',')
+    const localIds = localPageSteps.value.map(s => s.id).join(',')
+    if (newIds !== localIds) {
+      localPageSteps.value = [...newSteps]
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  resultSteps,
+  (newSteps) => {
+    const newIds = newSteps.map(s => s.id).join(',')
+    const localIds = localResultSteps.value.map(s => s.id).join(',')
+    if (newIds !== localIds) {
+      localResultSteps.value = [...newSteps]
+    }
+  },
+  { immediate: true },
+)
+
+// ---------------------------------------------------------------------------
+// Globale Index-Mappings fuer die reorderSteps-Aktion
+// reorderSteps arbeitet auf dem globalen content.steps-Array.
+// Diese Mappings uebersetzen lokale (gefilterte) Indizes in globale Indizes.
+// ---------------------------------------------------------------------------
+
+const pageStepGlobalIndices = computed<number[]>(() =>
+  editorStore.steps
+    .map((s, i) => ({ step: s, idx: i }))
+    .filter(({ step }) => step.type !== 'result')
+    .map(({ idx }) => idx),
+)
+
+const resultStepGlobalIndices = computed<number[]>(() =>
+  editorStore.steps
+    .map((s, i) => ({ step: s, idx: i }))
+    .filter(({ step }) => step.type === 'result')
+    .map(({ idx }) => idx),
+)
+
+/**
+ * Drag-End-Handler fuer Seiten.
+ * oldIndex/newIndex beziehen sich auf localPageSteps (gefiltert).
+ * Der Store wird ueber die globalen Indizes aktualisiert.
+ * Wichtig: pageStepGlobalIndices wird aus dem Store gelesen, der noch
+ * die alte Reihenfolge hat – daher sind die Mappings noch korrekt.
+ */
+function onPageStepDragEnd(evt: DraggableEvent<Step>): void {
+  const { oldIndex, newIndex } = evt
+  if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return
+
+  const globalFrom = pageStepGlobalIndices.value[oldIndex]
+  const globalTo = pageStepGlobalIndices.value[newIndex]
+
+  if (globalFrom !== undefined && globalTo !== undefined) {
+    editorStore.reorderSteps(globalFrom, globalTo)
+  }
+}
+
+/** Drag-End-Handler fuer Ergebnisse. */
+function onResultStepDragEnd(evt: DraggableEvent<Step>): void {
+  const { oldIndex, newIndex } = evt
+  if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return
+
+  const globalFrom = resultStepGlobalIndices.value[oldIndex]
+  const globalTo = resultStepGlobalIndices.value[newIndex]
+
+  if (globalFrom !== undefined && globalTo !== undefined) {
+    editorStore.reorderSteps(globalFrom, globalTo)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Hilfsfunktionen
+// ---------------------------------------------------------------------------
+
+/** Buchstabenindex fuer Ergebnis-Steps (A, B, C ...) */
 function resultLabel(idx: number): string {
   return String.fromCharCode(65 + idx)
 }
 
 function confirmRemoveStep(step: Step): void {
   if (editorStore.steps.length <= 1) return
-  if (window.confirm(`Seite "${step.internalTitle}" wirklich löschen?`)) {
+  if (window.confirm(`Seite "${step.internalTitle}" wirklich loeschen?`)) {
     editorStore.removeStep(step.id)
   }
 }
@@ -92,17 +183,18 @@ const blockContextTitle = computed<string>(() => {
   return map[type] ?? type
 })
 
-/** Zeige Format-Toolbar (nur für Text-Blöcke) */
 const showFormatToolbar = computed<boolean>(
   () => editorStore.selectedBlock?.type === 'text',
 )
 
-/** Zeige Verknüpfungs-Sektion (nur für Button und Single-Choice) */
 const showLinkTarget = computed<boolean>(
   () =>
     editorStore.selectedBlock?.type === 'button' ||
     editorStore.selectedBlock?.type === 'single_choice',
 )
+
+/** DnD aktiv: nur im Editor-Modus, nicht readonly, nicht Vorschau */
+const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
 </script>
 
 <template>
@@ -111,16 +203,15 @@ const showLinkTarget = computed<boolean>(
     aria-label="Funnel-Struktur"
   >
     <!-- ================================================================== -->
-    <!-- ADD-PANEL-MODUS: Sektion hinzufügen                                -->
+    <!-- ADD-PANEL-MODUS: Sektion hinzufuegen                               -->
     <!-- ================================================================== -->
     <template v-if="props.showAddPanel">
-      <!-- Header mit Zurück-Button -->
       <div class="flex items-center gap-2 border-b border-ui-border px-3 py-3">
         <button
           type="button"
           class="flex h-7 w-7 items-center justify-center rounded text-ui-muted hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
-          aria-label="Zurück zur Übersicht"
-          title="Zurück"
+          aria-label="Zurueck zur Uebersicht"
+          title="Zurueck"
           @click="emit('close-add-panel')"
         >
           <svg
@@ -138,10 +229,9 @@ const showLinkTarget = computed<boolean>(
             />
           </svg>
         </button>
-        <span class="flex-1 text-sm font-semibold text-ui-text">Sektion hinzufügen</span>
+        <span class="flex-1 text-sm font-semibold text-ui-text">Sektion hinzufuegen</span>
       </div>
 
-      <!-- AddPanel-Inhalt (scrollbar) -->
       <div
         class="flex-1 overflow-y-auto"
         role="region"
@@ -155,7 +245,7 @@ const showLinkTarget = computed<boolean>(
     <!-- NORMAL-MODUS: Tabs + Kontext                                        -->
     <!-- ================================================================== -->
     <template v-else>
-      <!-- Segmented Control: Übersicht / Design -->
+      <!-- Segmented Control: Uebersicht / Design -->
       <div
         class="mx-3 mt-3 mb-0 flex rounded-lg bg-ui-bg p-0.5"
         role="tablist"
@@ -173,7 +263,7 @@ const showLinkTarget = computed<boolean>(
           ]"
           @click="activeTab = 'overview'"
         >
-          Übersicht
+          Uebersicht
         </button>
         <button
           type="button"
@@ -195,13 +285,12 @@ const showLinkTarget = computed<boolean>(
       <!-- KONTEXT-MODUS: Block selektiert -> Block-Einstellungen              -->
       <!-- ------------------------------------------------------------------ -->
       <template v-if="editorStore.selectedBlockId">
-        <!-- Header mit Zurück-Button -->
         <div class="flex items-center gap-2 border-b border-ui-border px-3 py-3 mt-3">
           <button
             type="button"
             class="flex h-7 w-7 items-center justify-center rounded text-ui-muted hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
-            aria-label="Zurück zur Übersicht"
-            title="Zurück"
+            aria-label="Zurueck zur Uebersicht"
+            title="Zurueck"
             @click="editorStore.deselectBlock()"
           >
             <svg
@@ -224,7 +313,6 @@ const showLinkTarget = computed<boolean>(
             {{ blockContextTitle }}
           </span>
 
-          <!-- Info-Icon -->
           <button
             type="button"
             class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
@@ -253,13 +341,11 @@ const showLinkTarget = computed<boolean>(
           </button>
         </div>
 
-        <!-- Block-Felder (scrollbar) -->
         <div
           class="flex-1 overflow-y-auto"
           role="tabpanel"
           aria-label="Block-Einstellungen"
         >
-          <!-- Format-Toolbar: nur für Text-Blöcke -->
           <div
             v-if="showFormatToolbar"
             class="border-b border-ui-border px-3 pt-3"
@@ -267,7 +353,6 @@ const showLinkTarget = computed<boolean>(
             <EditorFormatToolbar :is-readonly="props.isReadonly" />
           </div>
 
-          <!-- Block-Typ-spezifische Felder -->
           <div class="p-3">
             <EditorBlockFields
               :selected-block="editorStore.selectedBlock"
@@ -276,7 +361,6 @@ const showLinkTarget = computed<boolean>(
             />
           </div>
 
-          <!-- Verknüpfungs-Sektion: für Button und Single-Choice -->
           <div
             v-if="showLinkTarget"
             class="border-t border-ui-border px-3 pb-3 pt-3"
@@ -287,13 +371,13 @@ const showLinkTarget = computed<boolean>(
       </template>
 
       <!-- ------------------------------------------------------------------ -->
-      <!-- ÜBERSICHT-TAB (kein Block selektiert)                              -->
+      <!-- UEBERSICHT-TAB (kein Block selektiert)                              -->
       <!-- ------------------------------------------------------------------ -->
       <template v-else-if="activeTab === 'overview'">
         <div
           class="flex-1 overflow-y-auto"
           role="tabpanel"
-          aria-label="Funnel-Übersicht"
+          aria-label="Funnel-Uebersicht"
         >
           <!-- SEITEN -->
           <section aria-label="Seiten">
@@ -304,7 +388,7 @@ const showLinkTarget = computed<boolean>(
               <button
                 type="button"
                 class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
-                title="Seiten erklärt"
+                title="Seiten erklaert"
                 aria-label="Info zu Seiten"
               >
                 <svg
@@ -329,15 +413,30 @@ const showLinkTarget = computed<boolean>(
               </button>
             </div>
 
-            <ol
+            <!--
+              Sortierbare Seiten-Liste.
+              tag="ol" erhaelt die semantische Listenstruktur.
+              handle=".step-drag-handle": Nur der Griff startet den Drag.
+              disabled: kein DnD im Vorschau- oder Readonly-Modus.
+            -->
+            <VueDraggable
+              v-model="localPageSteps"
+              tag="ol"
               class="px-2"
               aria-label="Seiten-Liste"
+              handle=".step-drag-handle"
+              :animation="150"
+              :force-fallback="true"
+              :fallback-on-body="true"
+              :disabled="!dndEnabled"
+              ghost-class="panel-drag-ghost"
+              @end="onPageStepDragEnd"
             >
               <li
-                v-for="(step, idx) in pageSteps"
+                v-for="(step, idx) in localPageSteps"
                 :key="step.id"
                 :class="[
-                  'group mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 transition-colors',
+                  'group mb-0.5 flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-2 transition-colors',
                   editorStore.selectedStepId === step.id
                     ? 'bg-ui-bg text-ui-text'
                     : 'text-ui-text hover:bg-ui-bg/60',
@@ -349,6 +448,25 @@ const showLinkTarget = computed<boolean>(
                 @click="editorStore.selectStep(step.id)"
                 @keyup.enter="editorStore.selectStep(step.id)"
               >
+                <!--
+                  Drag-Griff: nur sichtbar bei Hover, nur im Editor-Modus.
+                  tabindex=-1: Tastatur-Nutzer verwenden stattdessen die
+                  Hoch/Runter-Buttons weiter unten (WCAG-konformer Fallback).
+                -->
+                <button
+                  v-if="dndEnabled"
+                  type="button"
+                  class="step-drag-handle flex h-4 w-4 flex-shrink-0 cursor-grab items-center justify-center text-ui-muted opacity-0 transition-opacity group-hover:opacity-60 active:cursor-grabbing focus-visible:opacity-60 focus-visible:outline-none"
+                  aria-label="Seite verschieben"
+                  tabindex="-1"
+                  @click.stop
+                >
+                  <GripVertical
+                    class="h-3.5 w-3.5"
+                    aria-hidden="true"
+                  />
+                </button>
+
                 <!-- Nummer -->
                 <span
                   :class="[
@@ -367,7 +485,7 @@ const showLinkTarget = computed<boolean>(
                   {{ step.internalTitle }}
                 </span>
 
-                <!-- Hover-Aktionen -->
+                <!-- Hover-Aktionen (Tastatur-Fallback fuer DnD) -->
                 <div
                   v-if="!props.isReadonly"
                   class="flex flex-shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
@@ -399,7 +517,7 @@ const showLinkTarget = computed<boolean>(
                   </button>
                   <button
                     type="button"
-                    :disabled="idx === pageSteps.length - 1"
+                    :disabled="idx === localPageSteps.length - 1"
                     class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border disabled:opacity-30 focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
                     aria-label="Seite nach unten"
                     title="Nach unten"
@@ -424,8 +542,8 @@ const showLinkTarget = computed<boolean>(
                     type="button"
                     :disabled="editorStore.steps.length <= 1"
                     class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 disabled:opacity-30 focus:outline-none focus:ring-1 focus:ring-red-400/50"
-                    aria-label="Seite löschen"
-                    title="Löschen"
+                    aria-label="Seite loeschen"
+                    title="Loeschen"
                     @click="confirmRemoveStep(step)"
                   >
                     <svg
@@ -445,9 +563,9 @@ const showLinkTarget = computed<boolean>(
                   </button>
                 </div>
               </li>
-            </ol>
+            </VueDraggable>
 
-            <!-- Seite hinzufügen -->
+            <!-- Seite hinzufuegen -->
             <button
               v-if="!props.isReadonly"
               type="button"
@@ -468,7 +586,7 @@ const showLinkTarget = computed<boolean>(
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              Seite hinzufügen
+              Seite hinzufuegen
             </button>
           </section>
 
@@ -483,7 +601,7 @@ const showLinkTarget = computed<boolean>(
               <button
                 type="button"
                 class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
-                title="Ergebnisse erklärt"
+                title="Ergebnisse erklaert"
                 aria-label="Info zu Ergebnissen"
               >
                 <svg
@@ -508,15 +626,24 @@ const showLinkTarget = computed<boolean>(
               </button>
             </div>
 
-            <ol
+            <VueDraggable
+              v-model="localResultSteps"
+              tag="ol"
               class="px-2"
               aria-label="Ergebnis-Liste"
+              handle=".step-drag-handle"
+              :animation="150"
+              :force-fallback="true"
+              :fallback-on-body="true"
+              :disabled="!dndEnabled"
+              ghost-class="panel-drag-ghost"
+              @end="onResultStepDragEnd"
             >
               <li
-                v-for="(step, idx) in resultSteps"
+                v-for="(step, idx) in localResultSteps"
                 :key="step.id"
                 :class="[
-                  'group mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 transition-colors',
+                  'group mb-0.5 flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-2 transition-colors',
                   editorStore.selectedStepId === step.id
                     ? 'bg-ui-bg text-ui-text'
                     : 'text-ui-text hover:bg-ui-bg/60',
@@ -528,6 +655,21 @@ const showLinkTarget = computed<boolean>(
                 @click="editorStore.selectStep(step.id)"
                 @keyup.enter="editorStore.selectStep(step.id)"
               >
+                <!-- Drag-Griff -->
+                <button
+                  v-if="dndEnabled"
+                  type="button"
+                  class="step-drag-handle flex h-4 w-4 flex-shrink-0 cursor-grab items-center justify-center text-ui-muted opacity-0 transition-opacity group-hover:opacity-60 active:cursor-grabbing focus-visible:opacity-60 focus-visible:outline-none"
+                  aria-label="Ergebnis verschieben"
+                  tabindex="-1"
+                  @click.stop
+                >
+                  <GripVertical
+                    class="h-3.5 w-3.5"
+                    aria-hidden="true"
+                  />
+                </button>
+
                 <!-- Buchstabe A/B/C -->
                 <span
                   :class="[
@@ -556,8 +698,8 @@ const showLinkTarget = computed<boolean>(
                     type="button"
                     :disabled="editorStore.steps.length <= 1"
                     class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 disabled:opacity-30 focus:outline-none focus:ring-1 focus:ring-red-400/50"
-                    aria-label="Ergebnis löschen"
-                    title="Löschen"
+                    aria-label="Ergebnis loeschen"
+                    title="Loeschen"
                     @click="confirmRemoveStep(step)"
                   >
                     <svg
@@ -579,14 +721,14 @@ const showLinkTarget = computed<boolean>(
               </li>
 
               <li
-                v-if="resultSteps.length === 0"
+                v-if="localResultSteps.length === 0"
                 class="px-4 py-2 text-xs text-ui-muted"
               >
                 Noch keine Ergebnisse.
               </li>
-            </ol>
+            </VueDraggable>
 
-            <!-- Ergebnis hinzufügen -->
+            <!-- Ergebnis hinzufuegen -->
             <button
               v-if="!props.isReadonly"
               type="button"
@@ -607,7 +749,7 @@ const showLinkTarget = computed<boolean>(
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              Ergebnis hinzufügen
+              Ergebnis hinzufuegen
             </button>
           </section>
 
@@ -622,7 +764,7 @@ const showLinkTarget = computed<boolean>(
               <button
                 type="button"
                 class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
-                title="Nachrichten erklärt"
+                title="Nachrichten erklaert"
                 aria-label="Info zu Nachrichten"
               >
                 <svg
@@ -655,7 +797,7 @@ const showLinkTarget = computed<boolean>(
               type="button"
               disabled
               aria-disabled="true"
-              title="Nachrichten kommen in einem späteren Schritt"
+              title="Nachrichten kommen in einem spaeteren Schritt"
               class="mt-1 flex w-full cursor-not-allowed items-center gap-2 px-4 py-2 text-sm text-ui-muted opacity-40 focus:outline-none"
             >
               <svg
@@ -688,6 +830,16 @@ const showLinkTarget = computed<boolean>(
         />
       </template>
     </template>
-    <!-- Ende NORMAL-MODUS (v-else) -->
   </aside>
 </template>
+
+<style>
+/*
+  Platzhalter-Ghost beim Drag in den Step-Listen des LeftPanels.
+*/
+.panel-drag-ghost {
+  opacity: 0.4;
+  background-color: rgba(53, 121, 250, 0.06);
+  border-radius: 0.5rem;
+}
+</style>

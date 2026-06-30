@@ -4,11 +4,17 @@
   Selektierter Block: blauer 2px-Ring + Label-Tag oben links.
   Floating-Toolbar erscheint rechts neben dem Frame.
 
+  Drag-and-Drop (Editor-Modus): Bloecke koennen per Griff-Icon (links, sichtbar
+  bei Hover) umsortiert werden. Klick auf den Block selektiert ihn weiterhin.
+  Im Vorschau-Modus ist DnD deaktiviert; stattdessen einfaches v-for.
+
   Theme: wird dynamisch aus content.meta.themeId geladen (useFunnelThemes).
   Die CSS-Variablen --funnel-* werden per :style am Frame-Container gesetzt.
-  Der öffentliche Renderer nutzt denselben Mechanismus (keine feste .funnel-theme-* Klasse).
 -->
 <script setup lang="ts">
+import { VueDraggable } from 'vue-draggable-plus'
+import type { DraggableEvent } from 'vue-draggable-plus'
+import { GripVertical } from 'lucide-vue-next'
 import type { Block, BlockType } from '~/types/funnel'
 import BlockRenderer from '~/components/blocks/BlockRenderer.vue'
 import { funnelStepContextKey, type FunnelStepContext } from '~/composables/useFunnelStepContext'
@@ -25,17 +31,47 @@ const emit = defineEmits<{
 const editorStore = useEditorStore()
 const { getThemeVars } = useFunnelThemes()
 
-const blocks = computed(() => editorStore.selectedStep?.blocks ?? [])
+// ---------------------------------------------------------------------------
+// Block-Liste: lokalem Ref fuer vue-draggable-plus (braucht beschreibbares Array)
+// ---------------------------------------------------------------------------
+
+const storeBlocks = computed(() => editorStore.selectedStep?.blocks ?? [])
 const stepId = computed(() => editorStore.selectedStep?.id ?? '')
+
+/**
+ * Lokale Kopie der Block-Liste fuer DnD.
+ * vue-draggable-plus mutiert das Array beim Drop – wir rufen danach reorderBlocks
+ * auf, um den Store zu synchronisieren.
+ */
+const localBlocks = ref<Block[]>([...storeBlocks.value])
+
+watch(
+  storeBlocks,
+  (newBlocks) => {
+    // Nur neu setzen, wenn sich die Reihenfolge/Menge tatsaechlich geaendert hat
+    // (z.B. Step-Wechsel, Block-Hinzufuegen/-Loeschen). Verhindert
+    // unnoetige Re-Renders nach dem eigenen reorderBlocks-Aufruf.
+    const newIds = newBlocks.map(b => b.id).join(',')
+    const localIds = localBlocks.value.map(b => b.id).join(',')
+    if (newIds !== localIds) {
+      localBlocks.value = [...newBlocks]
+    }
+  },
+  { immediate: true },
+)
+
+function onBlockDragEnd(evt: DraggableEvent<Block>): void {
+  const { oldIndex, newIndex } = evt
+  if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return
+  // Der Store wird aus den globalen Indizes aktualisiert.
+  // localBlocks ist bereits in der neuen Reihenfolge (vue-draggable-plus).
+  editorStore.reorderBlocks(stepId.value, oldIndex, newIndex)
+}
 
 // ---------------------------------------------------------------------------
 // Vorschau-Modus: lokaler Antwort-State (veraendert nicht den Store-Content)
 // ---------------------------------------------------------------------------
 
-/**
- * Lokale Antworten fuer interaktive Bloecke im Vorschau-Modus.
- * Wird beim Aktivieren des Vorschau-Modus zurueckgesetzt.
- */
 const previewAnswers = ref<Record<string, string | boolean>>({})
 
 watch(
@@ -60,8 +96,7 @@ const activeThemeStyle = computed<Record<string, string>>(() => {
 })
 
 // ---------------------------------------------------------------------------
-// Step-Kontext: provide für BlockProgress und andere Block-Komponenten.
-// Nur 'question'- und 'form'-Steps zählen als Frage-Steps.
+// Step-Kontext: provide fuer BlockProgress und andere Block-Komponenten.
 // ---------------------------------------------------------------------------
 const questionSteps = computed(() =>
   editorStore.steps.filter(s => s.type === 'question' || s.type === 'form'),
@@ -83,7 +118,6 @@ provide(funnelStepContextKey, stepContext)
 /** Benutzerfreundliche Bezeichnung je Block-Typ */
 function blockLabel(type: BlockType): string {
   const map: Record<BlockType, string> = {
-    // M1
     text: 'Text',
     image: 'Bild',
     button: 'Button',
@@ -94,7 +128,6 @@ function blockLabel(type: BlockType): string {
     optin_checkbox: 'Opt-in',
     progress_indicator: 'Fortschritt',
     logo: 'Logo',
-    // M2
     multi_choice: 'Mehrfachauswahl',
     input_date: 'Datum',
     input_time: 'Uhrzeit',
@@ -122,7 +155,7 @@ function onCanvasClick(): void {
   }
 }
 
-/** Inline-Bearbeitung von TextBlocks: neuen HTML-Inhalt in den Store schreiben */
+/** Inline-Bearbeitung von TextBlocks */
 function handleTextContentUpdate(blockId: string, html: string): void {
   const sid = stepId.value
   if (!sid) return
@@ -138,19 +171,17 @@ function handleTextContentUpdate(blockId: string, html: string): void {
     @click="onCanvasClick"
   >
     <div class="flex min-h-full justify-center py-8 px-12">
-      <!-- Leerer Zustand: kein Step ausgewählt -->
+      <!-- Leerer Zustand: kein Step ausgewaehlt -->
       <div
         v-if="!editorStore.selectedStep"
         class="flex items-center self-center text-sm text-ui-muted"
       >
-        Wähle eine Seite oder ein Ergebnis aus, um den Inhalt zu bearbeiten.
+        Waehle eine Seite oder ein Ergebnis aus, um den Inhalt zu bearbeiten.
       </div>
 
-      <!-- Handy-Frame -->
       <!--
+        Handy-Frame.
         Breite: 375px im Vorschau-Modus (Mobile-Standard), 390px im Editor.
-        Im Vorschau-Modus kein @click.stop noetig, da onCanvasClick bereits
-        gegen previewMode abgesichert ist.
       -->
       <div
         v-else
@@ -168,102 +199,156 @@ function handleTextContentUpdate(blockId: string, html: string): void {
         />
 
         <!--
-          Inhalt: theme-getrieben über :style (CSS-Variablen aus activeThemeStyle).
-          Keine feste .funnel-theme-* Klasse mehr - der öffentliche Renderer
-          nutzt denselben Mechanismus.
+          Inhalt: theme-getrieben ueber :style (CSS-Variablen aus activeThemeStyle).
+          overflow-hidden wird fuer DnD auf overflow-visible gestellt; das Erscheinungsbild
+          der runden Ecken bleibt erhalten, weil der visuelle Hintergrund (Karte oben)
+          separat absolut positioniert ist.
         -->
         <div
-          class="relative py-6 overflow-hidden rounded-[32px]"
+          class="relative py-6"
+          :class="editorStore.previewMode ? 'overflow-hidden rounded-[32px]' : 'overflow-visible'"
           :style="{
             ...activeThemeStyle,
             backgroundColor: 'var(--funnel-bg)',
             fontFamily: 'var(--funnel-font)',
           }"
         >
-          <!-- Keine Blöcke: Hinweis -->
-          <div
-            v-if="blocks.length === 0"
-            class="mx-6 rounded-xl border-2 border-dashed border-ui-border py-10 text-center text-sm text-ui-muted"
-          >
-            Noch keine Blöcke. Füge einen Block hinzu.
-          </div>
+          <!-- ================================================================ -->
+          <!-- EDITOR-MODUS: DnD aktiv                                          -->
+          <!-- ================================================================ -->
+          <template v-if="!editorStore.previewMode">
+            <!-- Keine Bloecke: Hinweis -->
+            <div
+              v-if="localBlocks.length === 0"
+              class="mx-6 rounded-xl border-2 border-dashed border-ui-border py-10 text-center text-sm text-ui-muted"
+            >
+              Noch keine Bloecke. Fuege einen Block hinzu.
+            </div>
 
-          <!-- Block-Liste -->
-          <div
-            v-for="(block, idx) in blocks"
-            :key="block.id"
-            class="relative px-4 py-1"
-          >
             <!--
-              EDITOR-MODUS: interaktiver Wrapper mit Selektion, Ring, Label und
-              FloatingToolbar.
+              Sortierbare Block-Liste.
+              handle=".block-drag-handle": Nur der Griff startet den Drag.
+              Klick auf den Block selbst selektiert ihn (keine Interferenz).
+              forceFallback + fallbackOnBody: Der Drag-Clone wird an document.body
+              angehaengt, damit er nicht durch overflow geclippt wird.
             -->
-            <template v-if="!editorStore.previewMode">
-              <!-- Klickbare Block-Flaeche -->
+            <VueDraggable
+              v-model="localBlocks"
+              tag="div"
+              handle=".block-drag-handle"
+              :animation="150"
+              :force-fallback="true"
+              :fallback-on-body="true"
+              ghost-class="canvas-drag-ghost"
+              fallback-class="canvas-drag-fallback"
+              @end="onBlockDragEnd"
+            >
               <div
-                class="relative cursor-pointer"
-                tabindex="0"
-                role="button"
-                :aria-label="`Block bearbeiten: ${blockLabel(block.type)}`"
-                @click.stop="onBlockClick(block.id)"
-                @keyup.enter.stop="onBlockClick(block.id)"
+                v-for="(block, idx) in localBlocks"
+                :key="block.id"
+                class="group relative px-4 py-1"
               >
-                <!-- Block-Inhalt -->
-                <BlockRenderer
-                  :block="block"
-                  mode="editor"
-                  :is-selected="editorStore.selectedBlockId === block.id"
-                  @update-content="(html: string) => handleTextContentUpdate(block.id, html)"
-                />
-
-                <!-- Selektion: blauer Ring -->
-                <div
-                  v-if="editorStore.selectedBlockId === block.id"
-                  class="pointer-events-none absolute inset-0 z-10 rounded-lg ring-2 ring-ui-accent"
-                  aria-hidden="true"
-                />
-
-                <!-- Label-Tag oben links -->
-                <span
-                  v-if="editorStore.selectedBlockId === block.id"
-                  class="absolute -top-2.5 left-2 z-20 select-none rounded bg-ui-accent px-1.5 py-0.5 text-xs font-medium text-white"
-                  aria-hidden="true"
+                <!--
+                  Drag-Griff: im linken Padding-Bereich (px-4 = 16px).
+                  Nur bei Hover sichtbar; Klick wird gestoppt, damit er nicht
+                  zur Block-Selektion durchbricht.
+                  aria-label und tabindex=-1 (DnD ist kein Tastatur-Flow –
+                  der Button-Fallback in der FloatingToolbar bleibt die
+                  barrierefreie Variante).
+                -->
+                <button
+                  v-if="!props.isReadonly"
+                  type="button"
+                  class="block-drag-handle absolute left-0 top-0 z-20 flex h-full w-4 cursor-grab items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent/50"
+                  aria-label="Block verschieben"
+                  tabindex="-1"
+                  @click.stop
                 >
-                  {{ blockLabel(block.type) }}
-                </span>
-              </div>
+                  <GripVertical
+                    class="h-3.5 w-3.5 text-ui-muted"
+                    aria-hidden="true"
+                  />
+                </button>
 
-              <!-- Floating-Toolbar: rechts vom Frame, absolute zur Block-Zeile -->
-              <div
-                v-if="editorStore.selectedBlockId === block.id && !props.isReadonly"
-                class="absolute left-full top-1 z-30 ml-2"
-                @click.stop
-              >
-                <EditorFloatingToolbar
-                  :step-id="stepId"
-                  :block-id="block.id"
-                  :block-index="idx"
-                  :total-blocks="blocks.length"
-                />
-              </div>
-            </template>
+                <!--
+                  Klickbare Block-Flaeche: Selektion per Klick oder Enter.
+                -->
+                <div
+                  class="relative cursor-pointer"
+                  tabindex="0"
+                  role="button"
+                  :aria-label="`Block bearbeiten: ${blockLabel(block.type)}`"
+                  @click.stop="onBlockClick(block.id)"
+                  @keyup.enter.stop="onBlockClick(block.id)"
+                >
+                  <BlockRenderer
+                    :block="block"
+                    mode="editor"
+                    :is-selected="editorStore.selectedBlockId === block.id"
+                    @update-content="(html: string) => handleTextContentUpdate(block.id, html)"
+                  />
 
-            <!--
-              VORSCHAU-MODUS: mode='live', kein Editor-Overlay.
-              Lokale Antworten (previewAnswers) werden nicht in den Store geschrieben.
-              @action-Emits werden ignoriert (keine Navigations-Logik im Vorschau).
-            -->
-            <template v-else>
+                  <!-- Selektion: blauer Ring -->
+                  <div
+                    v-if="editorStore.selectedBlockId === block.id"
+                    class="pointer-events-none absolute inset-0 z-10 rounded-lg ring-2 ring-ui-accent"
+                    aria-hidden="true"
+                  />
+
+                  <!-- Label-Tag oben links -->
+                  <span
+                    v-if="editorStore.selectedBlockId === block.id"
+                    class="absolute -top-2.5 left-2 z-20 select-none rounded bg-ui-accent px-1.5 py-0.5 text-xs font-medium text-white"
+                    aria-hidden="true"
+                  >
+                    {{ blockLabel(block.type) }}
+                  </span>
+                </div>
+
+                <!-- Floating-Toolbar: rechts vom Frame, absolute zur Block-Zeile -->
+                <div
+                  v-if="editorStore.selectedBlockId === block.id && !props.isReadonly"
+                  class="absolute left-full top-1 z-30 ml-2"
+                  @click.stop
+                >
+                  <EditorFloatingToolbar
+                    :step-id="stepId"
+                    :block-id="block.id"
+                    :block-index="idx"
+                    :total-blocks="localBlocks.length"
+                  />
+                </div>
+              </div>
+            </VueDraggable>
+          </template>
+
+          <!-- ================================================================ -->
+          <!-- VORSCHAU-MODUS: mode='live', kein DnD, keine Editor-Overlays     -->
+          <!-- ================================================================ -->
+          <template v-else>
+            <!-- Keine Bloecke im Vorschau-Modus -->
+            <div
+              v-if="storeBlocks.length === 0"
+              class="mx-6 rounded-xl border-2 border-dashed border-ui-border py-10 text-center text-sm text-ui-muted"
+            >
+              Noch keine Bloecke.
+            </div>
+
+            <div
+              v-for="block in storeBlocks"
+              :key="block.id"
+              class="relative px-4 py-1"
+            >
               <BlockRenderer
                 :block="block"
                 mode="live"
                 :model-value="previewAnswers[block.id]"
                 @update:model-value="updatePreviewAnswer(block.id, $event)"
               />
-            </template>
-          </div>
+            </div>
+          </template>
 
-          <!-- Block hinzufügen (nur im Editor-Modus) -->
+          <!-- Block hinzufuegen (nur im Editor-Modus) -->
           <div
             v-if="!props.isReadonly && !editorStore.previewMode"
             class="mx-4 mt-4"
@@ -271,7 +356,7 @@ function handleTextContentUpdate(blockId: string, html: string): void {
             <button
               type="button"
               class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ui-border py-3 text-sm text-ui-muted transition-colors hover:border-ui-accent hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
-              aria-label="Block hinzufügen"
+              aria-label="Block hinzufuegen"
               @click.stop="emit('open-block-picker')"
             >
               <svg
@@ -288,7 +373,7 @@ function handleTextContentUpdate(blockId: string, html: string): void {
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              Block hinzufügen
+              Block hinzufuegen
             </button>
           </div>
         </div>
@@ -296,3 +381,24 @@ function handleTextContentUpdate(blockId: string, html: string): void {
     </div>
   </section>
 </template>
+
+<style>
+/*
+  Ghost-Element (Platzhalter an der Ziel-Position) waehrend des Drags.
+  Halbdurchsichtig + Akzent-Hintergrund zeigt an, wo der Block landen wird.
+*/
+.canvas-drag-ghost {
+  opacity: 0.4;
+  background-color: rgba(53, 121, 250, 0.08);
+  border-radius: 0.5rem;
+}
+
+/*
+  Fallback-Klon (folgt dem Cursor). Leichter Schatten macht ihn abgrenzbar.
+*/
+.canvas-drag-fallback {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-radius: 0.5rem;
+  opacity: 0.95;
+}
+</style>

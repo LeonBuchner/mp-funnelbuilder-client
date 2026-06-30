@@ -5,6 +5,7 @@
  * - Selektion (Step, Block)
  * - Speicher- und Veröffentlichungsstatus
  * - Auto-Save via watchDebounced (1500 ms nach letzter Mutation)
+ * - Undo/Redo via Snapshot-before-Modell (max. 50 Eintraege)
  *
  * Keine Geschäftslogik in Komponenten: alle Mutationen hier.
  */
@@ -37,6 +38,9 @@ interface ApiValidationError {
   }
 }
 
+/** Maximale Anzahl an Undo-Eintraegen */
+const MAX_HISTORY = 50
+
 export const useEditorStore = defineStore('editor', () => {
   const funnelsApi = useFunnels()
 
@@ -60,6 +64,21 @@ export const useEditorStore = defineStore('editor', () => {
   const previewMode = ref<boolean>(false)
 
   // ---------------------------------------------------------------------------
+  // Undo/Redo-Stacks (Snapshot-before-Modell)
+  // ---------------------------------------------------------------------------
+  /**
+   * Undo-Stack: jeder Eintrag ist ein tiefer Klon des Content-Zustands
+   * BEVOR die jeweilige Mutation ausgefuehrt wurde. Maximal MAX_HISTORY Eintraege.
+   */
+  const history = ref<FunnelContent[]>([])
+
+  /**
+   * Redo-Stack: haelt die Zustaende, die durch Undo verworfen wurden.
+   * Wird bei jeder neuen Mutation geleert (Redo-Zweig verwerfen).
+   */
+  const redoStack = ref<FunnelContent[]>([])
+
+  // ---------------------------------------------------------------------------
   // Getters
   // ---------------------------------------------------------------------------
   const steps = computed<Step[]>(() => content.value?.steps ?? [])
@@ -72,6 +91,9 @@ export const useEditorStore = defineStore('editor', () => {
     if (!selectedStep.value || !selectedBlockId.value) return null
     return selectedStep.value.blocks.find(b => b.id === selectedBlockId.value) ?? null
   })
+
+  const canUndo = computed<boolean>(() => history.value.length > 0)
+  const canRedo = computed<boolean>(() => redoStack.value.length > 0)
 
   // ---------------------------------------------------------------------------
   // Auto-Save: feuert 1500 ms nach dem Setzen von isDirty = true
@@ -87,6 +109,58 @@ export const useEditorStore = defineStore('editor', () => {
   )
 
   // ---------------------------------------------------------------------------
+  // Undo/Redo-Hilfsfunktionen (intern, nicht exportiert)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Tiefer Klon via JSON-Roundtrip.
+   * structuredClone kann Vue-reaktive Proxy-Objekte nicht klonen (DataCloneError),
+   * daher ist JSON.parse(JSON.stringify()) hier die zuverlaessigere Wahl:
+   * JSON.stringify traversiert den Proxy und serialisiert die Rohwerte,
+   * JSON.parse erzeugt ein frisches, nicht-reaktives Objekt.
+   */
+  function deepClone(value: FunnelContent): FunnelContent {
+    return JSON.parse(JSON.stringify(value)) as FunnelContent
+  }
+
+  /**
+   * Vor jeder content-veraendernden Mutation aufrufen.
+   * Speichert einen tiefen Klon des aktuellen Content in den Undo-Stack
+   * und leert den Redo-Stack (neuer Zweig nach Undo verwirft Zukunft).
+   */
+  function snapshot(): void {
+    if (!content.value) return
+    redoStack.value = []
+    history.value.push(deepClone(content.value))
+    if (history.value.length > MAX_HISTORY) {
+      history.value.shift()
+    }
+  }
+
+  /**
+   * Nach undo/redo: stellt sicher, dass selectedStepId und selectedBlockId
+   * im wiederhergestellten Content noch existieren. Setzt sie andernfalls auf null.
+   */
+  function validateSelection(): void {
+    if (!content.value) {
+      selectedStepId.value = null
+      selectedBlockId.value = null
+      return
+    }
+    const stepExists = content.value.steps.some(s => s.id === selectedStepId.value)
+    if (!stepExists) {
+      selectedStepId.value = content.value.steps[0]?.id ?? null
+      selectedBlockId.value = null
+      return
+    }
+    const step = content.value.steps.find(s => s.id === selectedStepId.value)
+    const blockExists = step?.blocks.some(b => b.id === selectedBlockId.value) ?? false
+    if (!blockExists) {
+      selectedBlockId.value = null
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Actions
   // ---------------------------------------------------------------------------
 
@@ -99,6 +173,29 @@ export const useEditorStore = defineStore('editor', () => {
     selectedBlockId.value = null
     isDirty.value = false
     validationErrors.value = {}
+    // History beim Laden leeren – kein Undo ueber den Initialzustand hinaus
+    history.value = []
+    redoStack.value = []
+  }
+
+  /** Macht die letzte Mutation rueckgaengig. */
+  function undo(): void {
+    if (!canUndo.value || !content.value) return
+    redoStack.value.push(deepClone(content.value))
+    content.value = history.value.pop()!
+    isDirty.value = true
+    validateSelection()
+  }
+
+  /** Stellt die zuletzt rueckgaengig gemachte Mutation wieder her. */
+  function redo(): void {
+    if (!canRedo.value) return
+    if (content.value) {
+      history.value.push(deepClone(content.value))
+    }
+    content.value = redoStack.value.pop()!
+    isDirty.value = true
+    validateSelection()
   }
 
   function selectStep(id: string): void {
@@ -128,6 +225,7 @@ export const useEditorStore = defineStore('editor', () => {
 
   function addStep(type: StepType = 'content'): void {
     if (!content.value) return
+    snapshot()
     const step = createEmptyStep()
     step.type = type
     if (type === 'result') {
@@ -143,7 +241,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (!content.value) return
     const idx = content.value.steps.findIndex(s => s.id === id)
     if (idx < 0) return
-
+    snapshot()
     content.value.steps.splice(idx, 1)
 
     if (selectedStepId.value === id) {
@@ -162,6 +260,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (idx < 0) return
     const targetIdx = dir === 'up' ? idx - 1 : idx + 1
     if (targetIdx < 0 || targetIdx >= arr.length) return
+    snapshot()
     const step = arr.splice(idx, 1)[0]!
     arr.splice(targetIdx, 0, step)
     isDirty.value = true
@@ -171,6 +270,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (!content.value) return
     const step = content.value.steps.find(s => s.id === stepId)
     if (!step) return
+    snapshot()
     const block = createBlock(type)
     step.blocks.push(block)
     selectedBlockId.value = block.id
@@ -186,6 +286,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (!content.value || blocks.length === 0) return
     const step = content.value.steps.find(s => s.id === stepId)
     if (!step) return
+    snapshot()
     for (const block of blocks) {
       step.blocks.push(block)
     }
@@ -199,6 +300,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (!step) return
     const idx = step.blocks.findIndex(b => b.id === blockId)
     if (idx < 0) return
+    snapshot()
     step.blocks.splice(idx, 1)
     if (selectedBlockId.value === blockId) {
       selectedBlockId.value = null
@@ -214,8 +316,44 @@ export const useEditorStore = defineStore('editor', () => {
     if (idx < 0) return
     const targetIdx = dir === 'up' ? idx - 1 : idx + 1
     if (targetIdx < 0 || targetIdx >= step.blocks.length) return
+    snapshot()
     const block = step.blocks.splice(idx, 1)[0]!
     step.blocks.splice(targetIdx, 0, block)
+    isDirty.value = true
+  }
+
+  /**
+   * Sortiert Bloecke per Drag-and-Drop um.
+   * Verschiebt den Block von fromIndex auf toIndex innerhalb des Steps.
+   * Tastatur-Fallback: moveBlock() bleibt weiterhin verfuegbar.
+   */
+  function reorderBlocks(stepId: string, fromIndex: number, toIndex: number): void {
+    if (!content.value) return
+    const step = content.value.steps.find(s => s.id === stepId)
+    if (!step) return
+    if (fromIndex === toIndex) return
+    if (fromIndex < 0 || fromIndex >= step.blocks.length) return
+    if (toIndex < 0 || toIndex >= step.blocks.length) return
+    snapshot()
+    const block = step.blocks.splice(fromIndex, 1)[0]!
+    step.blocks.splice(toIndex, 0, block)
+    isDirty.value = true
+  }
+
+  /**
+   * Sortiert Steps per Drag-and-Drop um.
+   * Arbeitet auf dem globalen content.steps-Array (nicht gefiltert).
+   * Tastatur-Fallback: moveStep() bleibt weiterhin verfuegbar.
+   */
+  function reorderSteps(fromIndex: number, toIndex: number): void {
+    if (!content.value) return
+    const arr = content.value.steps
+    if (fromIndex === toIndex) return
+    if (fromIndex < 0 || fromIndex >= arr.length) return
+    if (toIndex < 0 || toIndex >= arr.length) return
+    snapshot()
+    const step = arr.splice(fromIndex, 1)[0]!
+    arr.splice(toIndex, 0, step)
     isDirty.value = true
   }
 
@@ -229,6 +367,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (!step) return
     const idx = step.blocks.findIndex(b => b.id === blockId)
     if (idx < 0) return
+    snapshot()
     const original = step.blocks[idx]!
     const duplicate: Block =
       original.type === 'single_choice'
@@ -254,6 +393,7 @@ export const useEditorStore = defineStore('editor', () => {
     if (!step) return
     const idx = step.blocks.findIndex(b => b.id === blockId)
     if (idx < 0) return
+    snapshot()
     // Spread ist sicher, da der Aufrufer den konkreten Typ kennt
     step.blocks[idx] = { ...step.blocks[idx]!, ...patch } as Block
     isDirty.value = true
@@ -263,18 +403,21 @@ export const useEditorStore = defineStore('editor', () => {
     if (!content.value) return
     const idx = content.value.steps.findIndex(s => s.id === stepId)
     if (idx < 0) return
+    snapshot()
     content.value.steps[idx] = { ...content.value.steps[idx]!, ...patch }
     isDirty.value = true
   }
 
   function updateSettings(patch: Partial<FunnelSettings>): void {
     if (!content.value) return
+    snapshot()
     content.value.settings = { ...content.value.settings, ...patch }
     isDirty.value = true
   }
 
   function updateMeta(patch: Partial<FunnelMeta>): void {
     if (!content.value) return
+    snapshot()
     content.value.meta = { ...content.value.meta, ...patch }
     isDirty.value = true
   }
@@ -329,10 +472,14 @@ export const useEditorStore = defineStore('editor', () => {
     publishState,
     validationErrors,
     previewMode,
+    // Undo/Redo-State
+    history,
     // Getters
     steps,
     selectedStep,
     selectedBlock,
+    canUndo,
+    canRedo,
     // Actions
     load,
     selectStep,
@@ -346,6 +493,8 @@ export const useEditorStore = defineStore('editor', () => {
     addBlocks,
     removeBlock,
     moveBlock,
+    reorderBlocks,
+    reorderSteps,
     duplicateBlock,
     updateBlock,
     updateStep,
@@ -353,5 +502,7 @@ export const useEditorStore = defineStore('editor', () => {
     updateMeta,
     saveDraft,
     publish,
+    undo,
+    redo,
   }
 })

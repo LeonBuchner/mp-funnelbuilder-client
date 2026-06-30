@@ -295,7 +295,7 @@ onClickOutside(settingsDropdownEl, () => {
     </nav>
 
     <!-- ------------------------------------------------------------------ -->
-    <!-- Rechts: Vorschau, Einstellungen, Veröffentlichen, +               -->
+    <!-- Rechts: Undo/Redo, Vorschau, Einstellungen, Veröffentlichen, +  -->
     <!-- ------------------------------------------------------------------ -->
     <div class="flex flex-shrink-0 items-center gap-2 pl-4">
       <!-- Validierungsfehler-Indikator -->
@@ -307,6 +307,62 @@ onClickOutside(settingsDropdownEl, () => {
       >
         Fehler
       </span>
+
+      <!-- Undo/Redo-Buttons -->
+      <div
+        v-if="!props.isReadonly"
+        class="flex items-center gap-0.5"
+        role="group"
+        aria-label="Bearbeitungsverlauf"
+      >
+        <button
+          type="button"
+          :disabled="!editorStore.canUndo"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Rückgängig (Strg+Z)"
+          title="Rückgängig (Strg+Z)"
+          @click="editorStore.undo()"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.75"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+            />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          :disabled="!editorStore.canRedo"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Wiederholen (Strg+Y)"
+          title="Wiederholen (Strg+Y)"
+          @click="editorStore.redo()"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.75"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 15 21 9m0 0-6-6m6 6H9a6 6 0 0 0 0 12h3"
+            />
+          </svg>
+        </button>
+      </div>
 
       <!-- Vorschau-Toggle (In-Editor-Vorschau) -->
       <button

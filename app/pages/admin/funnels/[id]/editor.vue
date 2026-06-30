@@ -53,10 +53,44 @@ watch(
   },
 )
 
-// Esc beendet den Vorschau-Modus
+/**
+ * Prueft ob ein Texteingabefeld oder TipTap-Editor fokussiert ist.
+ * In diesem Fall behalten diese ihr eigenes Undo-Verhalten.
+ */
+function isInputFocused(): boolean {
+  const el = document.activeElement
+  if (!el) return false
+  const tag = el.tagName.toLowerCase()
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return true
+  // contenteditable (TipTap und aehnliche Rich-Text-Editoren)
+  if ((el as HTMLElement).contentEditable === 'true') return true
+  return false
+}
+
+// Esc beendet den Vorschau-Modus; Ctrl/Cmd+Z = Undo; Ctrl/Cmd+Y / Ctrl/Cmd+Shift+Z = Redo
 function handleEditorKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape' && editorStore.previewMode) {
     editorStore.togglePreview()
+    return
+  }
+
+  // Undo/Redo nur wenn kein Texteingabefeld fokussiert ist
+  if (isInputFocused()) return
+
+  const isMac = navigator.platform.toLowerCase().includes('mac')
+  const modifier = isMac ? event.metaKey : event.ctrlKey
+
+  if (!modifier) return
+
+  if (event.key === 'z' && !event.shiftKey) {
+    event.preventDefault()
+    editorStore.undo()
+    return
+  }
+
+  if (event.key === 'y' || (event.key === 'z' && event.shiftKey)) {
+    event.preventDefault()
+    editorStore.redo()
   }
 }
 

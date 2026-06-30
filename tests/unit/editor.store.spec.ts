@@ -552,4 +552,329 @@ describe('useEditorStore', () => {
     expect(store.content?.settings.startButtonLabel).toBe(originalLabel)
     expect(store.content?.settings.progressBar).toBe(true)
   })
+
+  // -------------------------------------------------------------------------
+  // reorderBlocks()
+  // -------------------------------------------------------------------------
+
+  it('reorderBlocks() verschiebt einen Block von vorne nach hinten', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'text')
+    store.addBlock(stepId, 'image')
+    store.addBlock(stepId, 'button')
+
+    const [b1, b2, b3] = store.selectedStep!.blocks.map(b => b.id)
+
+    // Block 0 (text) an Position 2 verschieben -> [image, button, text]
+    store.reorderBlocks(stepId, 0, 2)
+
+    expect(store.selectedStep!.blocks[0]!.id).toBe(b2)
+    expect(store.selectedStep!.blocks[1]!.id).toBe(b3)
+    expect(store.selectedStep!.blocks[2]!.id).toBe(b1)
+  })
+
+  it('reorderBlocks() verschiebt einen Block von hinten nach vorne', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'text')
+    store.addBlock(stepId, 'image')
+    store.addBlock(stepId, 'button')
+
+    const [b1, b2, b3] = store.selectedStep!.blocks.map(b => b.id)
+
+    // Block 2 (button) an Position 0 verschieben -> [button, text, image]
+    store.reorderBlocks(stepId, 2, 0)
+
+    expect(store.selectedStep!.blocks[0]!.id).toBe(b3)
+    expect(store.selectedStep!.blocks[1]!.id).toBe(b1)
+    expect(store.selectedStep!.blocks[2]!.id).toBe(b2)
+  })
+
+  it('reorderBlocks() setzt isDirty auf true', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'text')
+    store.addBlock(stepId, 'image')
+    store.isDirty = false
+
+    store.reorderBlocks(stepId, 0, 1)
+
+    expect(store.isDirty).toBe(true)
+  })
+
+  it('reorderBlocks() tut nichts bei gleichem from/to-Index', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'text')
+    store.addBlock(stepId, 'image')
+    store.isDirty = false
+
+    const originalOrder = store.selectedStep!.blocks.map(b => b.id)
+    store.reorderBlocks(stepId, 1, 1)
+
+    expect(store.selectedStep!.blocks.map(b => b.id)).toEqual(originalOrder)
+    expect(store.isDirty).toBe(false)
+  })
+
+  it('reorderBlocks() tut nichts bei ungueltigem Index (zu gross)', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'text')
+    store.addBlock(stepId, 'image')
+    store.isDirty = false
+
+    const originalOrder = store.selectedStep!.blocks.map(b => b.id)
+    store.reorderBlocks(stepId, 0, 99)
+
+    expect(store.selectedStep!.blocks.map(b => b.id)).toEqual(originalOrder)
+    expect(store.isDirty).toBe(false)
+  })
+
+  it('reorderBlocks() tut nichts bei ungueltigem Index (negativ)', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'text')
+    store.addBlock(stepId, 'image')
+    store.isDirty = false
+
+    const originalOrder = store.selectedStep!.blocks.map(b => b.id)
+    store.reorderBlocks(stepId, -1, 1)
+
+    expect(store.selectedStep!.blocks.map(b => b.id)).toEqual(originalOrder)
+    expect(store.isDirty).toBe(false)
+  })
+
+  // -------------------------------------------------------------------------
+  // reorderSteps()
+  // -------------------------------------------------------------------------
+
+  it('reorderSteps() verschiebt einen Step von vorne nach hinten', () => {
+    const store = setupStoreWithContent()
+
+    store.addStep()
+    store.addStep()
+
+    const [s1, s2, s3] = store.steps.map(s => s.id)
+
+    // Step 0 an Position 2 verschieben -> [s2, s3, s1]
+    store.reorderSteps(0, 2)
+
+    expect(store.steps[0]!.id).toBe(s2)
+    expect(store.steps[1]!.id).toBe(s3)
+    expect(store.steps[2]!.id).toBe(s1)
+  })
+
+  it('reorderSteps() verschiebt einen Step von hinten nach vorne', () => {
+    const store = setupStoreWithContent()
+
+    store.addStep()
+    store.addStep()
+
+    const [s1, s2, s3] = store.steps.map(s => s.id)
+
+    // Step 2 an Position 0 verschieben -> [s3, s1, s2]
+    store.reorderSteps(2, 0)
+
+    expect(store.steps[0]!.id).toBe(s3)
+    expect(store.steps[1]!.id).toBe(s1)
+    expect(store.steps[2]!.id).toBe(s2)
+  })
+
+  it('reorderSteps() setzt isDirty auf true', () => {
+    const store = setupStoreWithContent()
+
+    store.addStep()
+    store.isDirty = false
+
+    store.reorderSteps(0, 1)
+
+    expect(store.isDirty).toBe(true)
+  })
+
+  it('reorderSteps() tut nichts bei gleichem from/to-Index', () => {
+    const store = setupStoreWithContent()
+
+    store.addStep()
+    store.isDirty = false
+
+    const originalOrder = store.steps.map(s => s.id)
+    store.reorderSteps(0, 0)
+
+    expect(store.steps.map(s => s.id)).toEqual(originalOrder)
+    expect(store.isDirty).toBe(false)
+  })
+
+  it('reorderSteps() tut nichts bei ungueltigem Index (zu gross)', () => {
+    const store = setupStoreWithContent()
+
+    store.addStep()
+    store.isDirty = false
+
+    const originalOrder = store.steps.map(s => s.id)
+    store.reorderSteps(0, 99)
+
+    expect(store.steps.map(s => s.id)).toEqual(originalOrder)
+    expect(store.isDirty).toBe(false)
+  })
+
+  it('reorderSteps() tut nichts bei ungueltigem Index (negativ)', () => {
+    const store = setupStoreWithContent()
+
+    store.addStep()
+    store.isDirty = false
+
+    const originalOrder = store.steps.map(s => s.id)
+    store.reorderSteps(-1, 1)
+
+    expect(store.steps.map(s => s.id)).toEqual(originalOrder)
+    expect(store.isDirty).toBe(false)
+  })
+
+  // -------------------------------------------------------------------------
+  // Undo / Redo
+  // -------------------------------------------------------------------------
+
+  it('3 Mutationen -> undo 3x -> content deep-equal mit Initialzustand', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    // Initialzustand festhalten
+    const initialContent = JSON.parse(JSON.stringify(store.content))
+
+    // Mutation 1: Block hinzufuegen
+    store.addBlock(stepId, 'text')
+    const blockId = store.selectedBlockId!
+
+    // Mutation 2: Block aktualisieren
+    store.updateBlock(stepId, blockId, { content: 'Hallo Welt' })
+
+    // Mutation 3: Block entfernen
+    store.removeBlock(stepId, blockId)
+
+    expect(store.history.length).toBe(3)
+
+    store.undo()
+    store.undo()
+    store.undo()
+
+    expect(store.history.length).toBe(0)
+    expect(store.content).toEqual(initialContent)
+  })
+
+  it('3 Mutationen -> undo 2x -> redo 1x -> Stand nach 2. Mutation', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    // Mutation 1
+    store.addBlock(stepId, 'text')
+    const blockId = store.selectedBlockId!
+
+    // Mutation 2: Zustand nach dieser Mutation festhalten
+    store.updateBlock(stepId, blockId, { content: 'Stand Mutation 2' })
+    const contentAfterMutation2 = JSON.parse(JSON.stringify(store.content))
+
+    // Mutation 3
+    store.removeBlock(stepId, blockId)
+
+    // 2x zurueck, dann 1x vor
+    store.undo()
+    store.undo()
+    store.redo()
+
+    expect(store.content).toEqual(contentAfterMutation2)
+    expect(store.canRedo).toBe(true)
+  })
+
+  it('mehr als 50 Mutationen -> history.length <= 50', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    // 55 Mutationen ausfuehren
+    for (let i = 0; i < 55; i++) {
+      store.addBlock(stepId, 'text')
+    }
+
+    expect(store.history.length).toBeLessThanOrEqual(50)
+  })
+
+  it('undo + neue Mutation verwirft den Redo-Zweig', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'text')
+    store.addBlock(stepId, 'button')
+
+    // Einen Schritt zurueck
+    store.undo()
+    expect(store.canRedo).toBe(true)
+
+    // Neue Mutation nach dem Undo
+    store.addBlock(stepId, 'image')
+
+    // Redo-Zweig muss verworfen sein
+    expect(store.canRedo).toBe(false)
+  })
+
+  it('load() leert History und Redo-Stack', async () => {
+    mockGet.mockResolvedValueOnce({ data: mockFunnel })
+
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    // Mutation erzeugt History-Eintrag
+    store.addBlock(stepId, 'text')
+    expect(store.history.length).toBeGreaterThan(0)
+
+    // Undo erzeugt Redo-Eintrag
+    store.undo()
+    expect(store.canRedo).toBe(true)
+
+    // Laden muss beides leeren
+    await store.load('funnel-uuid-1')
+
+    expect(store.history.length).toBe(0)
+    expect(store.canRedo).toBe(false)
+  })
+
+  it('undo setzt selectedBlockId auf null wenn Block nicht mehr existiert', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    // Block hinzufuegen und selektieren
+    store.addBlock(stepId, 'text')
+    const blockId = store.selectedBlockId!
+    expect(blockId).not.toBeNull()
+
+    // Rueckgaengig: Block war vorher nicht vorhanden
+    store.undo()
+
+    expect(store.selectedBlockId).toBeNull()
+  })
+
+  it('canUndo ist false bei leerem Store, true nach Mutation', () => {
+    const store = setupStoreWithContent()
+    expect(store.canUndo).toBe(false)
+
+    store.addStep()
+    expect(store.canUndo).toBe(true)
+  })
+
+  it('undo setzt isDirty auf true', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'text')
+    store.isDirty = false
+
+    store.undo()
+
+    expect(store.isDirty).toBe(true)
+  })
 })
