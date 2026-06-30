@@ -1,0 +1,438 @@
+/**
+ * useRendererState: Zustand und Logik des oeffentlichen Funnel-Renderers.
+ *
+ * Verwaltet:
+ *   - session_id (stabil pro Funnel/Besucher, in localStorage)
+ *   - currentStepIndex + lineare Navigation (next/back)
+ *   - answers: Record<fieldKey, value> (in-memory)
+ *   - Validierung pro Step vor next()/submit
+ *   - Lead-Submit via POST /api/public/f/{hash}/leads
+ *   - Event-Tracking via POST /api/public/f/{hash}/events (best-effort, clientseitig)
+ *   - autoAdvance bei single_choice mit autoAdvance=true
+ *   - FunnelStepContext fuer provide() in der Page-Komponente
+ *
+ * Keine Logik-Engine (bedingte Navigation): das ist M3.
+ */
+import { ref, computed, nextTick, onMounted } from 'vue'
+import { usePublicApi } from '~/composables/usePublicApi'
+import type { FunnelStepContext } from '~/composables/useFunnelStepContext'
+import type { Step, Block, SingleChoiceBlock, OptinCheckboxBlock } from '~/types/funnel'
+import type { EventType, EventBody, LeadSubmitBody, LeadAnswer, UtmParams } from '~/types/public-funnel'
+
+// ---------------------------------------------------------------------------
+// Hilfsfunktionen
+// ---------------------------------------------------------------------------
+
+/** Typ-Guard: gibt true zurueck wenn Block ein fieldKey-Attribut hat */
+function hasFieldKey(block: Block): block is Block & { fieldKey: string; required?: boolean } {
+  return 'fieldKey' in block && typeof (block as { fieldKey?: unknown }).fieldKey === 'string'
+}
+
+/** Entfernt HTML-Tags fuer Klartext (Consent-Text) */
+function stripHtml(html: string): string {
+  if (import.meta.client) {
+    const div = document.createElement('div')
+    div.innerHTML = html
+    return div.textContent?.trim() ?? ''
+  }
+  return html.replace(/<[^>]*>/g, '').trim()
+}
+
+/** Bestimmt den Geraete-Typ grob anhand des User-Agents */
+function getDeviceType(): string {
+  if (!import.meta.client) return 'unknown'
+  return /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+}
+
+// ---------------------------------------------------------------------------
+// Composable
+// ---------------------------------------------------------------------------
+
+export function useRendererState(hash: string, steps: Step[]) {
+  const api = usePublicApi()
+
+  /**
+   * Stabile Session-ID pro Funnel und Besucher.
+   * Wird erst in onMounted aus localStorage gelesen (oder neu erzeugt).
+   * Damit ist SSR- und Client-DOM beim ersten Render identisch (kein localStorage-Zugriff waehrend SSR/Hydration).
+   */
+  const sessionId = ref<string>('')
+
+  onMounted(() => {
+    const key = `mp_funnel_session_${hash}`
+    try {
+      const stored = window.localStorage.getItem(key)
+      if (stored) {
+        sessionId.value = stored
+      }
+      else {
+        const id = crypto.randomUUID()
+        window.localStorage.setItem(key, id)
+        sessionId.value = id
+      }
+    }
+    catch {
+      // localStorage nicht verfuegbar (privater Modus, einige Browser)
+      sessionId.value = crypto.randomUUID()
+    }
+  })
+
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+
+  const currentStepIndex = ref<number>(0)
+  const answers = ref<Record<string, string | boolean>>({})
+  const errors = ref<Record<string, string>>({})
+  const isSubmitting = ref<boolean>(false)
+  const isSubmitted = ref<boolean>(false)
+  const submitError = ref<string | null>(null)
+  const rateLimitError = ref<boolean>(false)
+
+  // ---------------------------------------------------------------------------
+  // Computed
+  // ---------------------------------------------------------------------------
+
+  const currentStep = computed<Step | undefined>(() => steps[currentStepIndex.value])
+
+  /** Alle Steps, die als Frage-Steps zaehlen (question | form). */
+  const questionSteps = computed<Step[]>(() =>
+    steps.filter(s => s.type === 'question' || s.type === 'form'),
+  )
+
+  /**
+   * Kontext fuer BlockProgress / useFunnelStepContext.
+   * Wird per provide(funnelStepContextKey, stepContext) in der Page-Komponente bereitgestellt.
+   */
+  const stepContext = computed<FunnelStepContext>(() => {
+    const step = currentStep.value
+    const total = questionSteps.value.length
+    if (!step) return { questionNumber: null, totalQuestions: total }
+    if (step.type === 'question' || step.type === 'form') {
+      const idx = questionSteps.value.findIndex(s => s.id === step.id)
+      return { questionNumber: idx >= 0 ? idx + 1 : null, totalQuestions: total }
+    }
+    return { questionNumber: null, totalQuestions: total }
+  })
+
+  // ---------------------------------------------------------------------------
+  // Antworten
+  // ---------------------------------------------------------------------------
+
+  /** Gibt den gespeicherten Wert fuer einen Block zurueck (oder undefined). */
+  function getAnswerForBlock(block: Block): string | boolean | undefined {
+    if (!hasFieldKey(block)) return undefined
+    return answers.value[block.fieldKey]
+  }
+
+  /**
+   * Speichert eine Antwort und loescht den Fehler fuer das Feld.
+   * Bei single_choice mit autoAdvance=true wird naechster Step automatisch aufgerufen.
+   */
+  function updateAnswer(block: Block, value: string | boolean): void {
+    if (!hasFieldKey(block)) return
+    answers.value[block.fieldKey] = value
+
+    // Fehler beim Tippen/Auswaehlen sofort entfernen
+    if (errors.value[block.fieldKey]) {
+      const fk = block.fieldKey
+      errors.value = Object.fromEntries(
+        Object.entries(errors.value).filter(([k]) => k !== fk),
+      ) as Record<string, string>
+    }
+
+    // autoAdvance: bei single_choice automatisch weiterschalten
+    if (
+      block.type === 'single_choice'
+      && (block as SingleChoiceBlock).autoAdvance
+      && typeof value === 'string'
+      && value !== ''
+    ) {
+      nextTick(() => {
+        next().catch(() => { /* Validierungsfehler unkritisch */ })
+      })
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Validierung
+  // ---------------------------------------------------------------------------
+
+  /** Loescht alle Fehler des aktuellen Steps. */
+  function clearCurrentStepErrors(): void {
+    const step = currentStep.value
+    if (!step) return
+    const keysToRemove = new Set(
+      step.blocks
+        .filter(hasFieldKey)
+        .map(b => (b as { fieldKey: string }).fieldKey),
+    )
+    if (keysToRemove.size === 0) return
+    errors.value = Object.fromEntries(
+      Object.entries(errors.value).filter(([k]) => !keysToRemove.has(k)),
+    ) as Record<string, string>
+  }
+
+  /**
+   * Prueft alle Pflichtfelder des aktuellen Steps.
+   * Setzt errors.value[fieldKey] bei Verstoss.
+   * Gibt true zurueck wenn der Step valide ist.
+   */
+  function validateCurrentStep(): boolean {
+    const step = currentStep.value
+    if (!step) return true
+
+    clearCurrentStepErrors()
+    let valid = true
+
+    for (const block of step.blocks) {
+      if (!hasFieldKey(block) || !block.required) continue
+
+      const value = answers.value[block.fieldKey]
+
+      if (block.type === 'optin_checkbox') {
+        if (!value) {
+          errors.value[block.fieldKey] = 'Bitte stimme den Bedingungen zu.'
+          valid = false
+        }
+      }
+      else if (value === undefined || value === null || (typeof value === 'string' && !value.trim())) {
+        errors.value[block.fieldKey] = 'Dieses Feld ist erforderlich.'
+        valid = false
+      }
+      else if (block.type === 'input_email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(value as string)) {
+          errors.value[block.fieldKey] = 'Bitte gib eine gueltige E-Mail-Adresse ein.'
+          valid = false
+        }
+      }
+      else if (block.type === 'input_phone') {
+        const phoneVal = typeof value === 'string' ? value.replace(/\D/g, '') : ''
+        if (phoneVal.length < 6) {
+          errors.value[block.fieldKey] = 'Bitte gib eine gueltige Telefonnummer ein.'
+          valid = false
+        }
+      }
+    }
+
+    return valid
+  }
+
+  // ---------------------------------------------------------------------------
+  // Event-Tracking (best-effort, nur clientseitig)
+  // ---------------------------------------------------------------------------
+
+  function trackEvent(
+    eventType: EventType,
+    extras?: { step_index?: number; block_id?: string; event_value?: string },
+  ): void {
+    if (!import.meta.client) return
+
+    const body: EventBody = {
+      session_id: sessionId.value,
+      event_type: eventType,
+      device_type: getDeviceType(),
+      referrer: document.referrer || undefined,
+      ...extras,
+    }
+
+    api(`/f/${hash}/events`, { method: 'POST', body })
+      .catch(() => { /* Fehler beim Event-Tracking stoeren den Funnel nicht */ })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Navigation
+  // ---------------------------------------------------------------------------
+
+  async function next(): Promise<void> {
+    if (!validateCurrentStep()) return
+    if (currentStepIndex.value >= steps.length - 1) return
+
+    trackEvent('step_complete', { step_index: currentStepIndex.value })
+    currentStepIndex.value++
+    trackEvent('step_view', { step_index: currentStepIndex.value })
+  }
+
+  function back(): void {
+    if (currentStepIndex.value <= 0) return
+    trackEvent('step_back', { step_index: currentStepIndex.value })
+    currentStepIndex.value--
+    trackEvent('step_view', { step_index: currentStepIndex.value })
+  }
+
+  function reset(): void {
+    currentStepIndex.value = 0
+    answers.value = {}
+    errors.value = {}
+    submitError.value = null
+    rateLimitError.value = false
+    isSubmitted.value = false
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lead-Submit
+  // ---------------------------------------------------------------------------
+
+  /** Sammelt alle Antworten aus allen Steps im API-Format. */
+  function collectAnswers(): LeadAnswer[] {
+    const result: LeadAnswer[] = []
+    steps.forEach((step, stepIdx) => {
+      step.blocks.forEach((block) => {
+        if (!hasFieldKey(block)) return
+        const value = answers.value[block.fieldKey]
+        if (value !== undefined) {
+          result.push({
+            step_index: stepIdx,
+            block_id: block.id,
+            block_type: block.type,
+            field_key: block.fieldKey,
+            value,
+          })
+        }
+      })
+    })
+    return result
+  }
+
+  /**
+   * Sendet den Lead an die API.
+   * Navigiert bei Erfolg zum result-Step (oder letzten Step).
+   * Setzt inline-Fehler bei 422, rateLimitError bei 429.
+   */
+  async function submitLead(opts?: { utm?: UtmParams }): Promise<void> {
+    if (!validateCurrentStep()) return
+
+    isSubmitting.value = true
+    submitError.value = null
+    rateLimitError.value = false
+
+    try {
+      const allAnswers = collectAnswers()
+
+      // Consent-Wert und -Text aus dem optin_checkbox-Block ermitteln
+      let consentValue = false
+      let consentText = ''
+
+      outerLoop: for (const step of steps) {
+        for (const block of step.blocks) {
+          if (block.type === 'optin_checkbox') {
+            const optin = block as OptinCheckboxBlock
+            consentValue = (answers.value[optin.fieldKey] as boolean) ?? false
+            consentText = stripHtml(optin.checkboxLabel)
+            break outerLoop
+          }
+        }
+      }
+
+      const body: LeadSubmitBody = {
+        session_id: sessionId.value,
+        answers: allAnswers,
+        consent: consentValue,
+        consent_text: consentText,
+        ...(opts?.utm ? { utm: opts.utm } : {}),
+      }
+
+      await api(`/f/${hash}/leads`, { method: 'POST', body })
+
+      isSubmitted.value = true
+      trackEvent('lead_submit')
+
+      // Zum result-Step navigieren (oder letztem Step)
+      const resultIdx = steps.findIndex(s => s.type === 'result')
+      currentStepIndex.value = resultIdx >= 0 ? resultIdx : steps.length - 1
+    }
+    catch (err: unknown) {
+      type ApiError = {
+        status?: number
+        statusCode?: number
+        data?: { errors?: Record<string, string | string[]> }
+      }
+      const e = err as ApiError
+      const status = e.status ?? e.statusCode
+
+      if (status === 422 && e.data?.errors) {
+        for (const [key, msgs] of Object.entries(e.data.errors)) {
+          // API liefert z. B. 'answers.email_xxx' oder direkt 'email_xxx'
+          const fieldKey = key.startsWith('answers.') ? key.slice(8) : key
+          errors.value[fieldKey] = Array.isArray(msgs)
+            ? (msgs[0] ?? 'Fehler')
+            : String(msgs)
+        }
+      }
+      else if (status === 429) {
+        rateLimitError.value = true
+      }
+      else {
+        submitError.value = 'Etwas ist schiefgelaufen. Bitte versuche es erneut.'
+      }
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Action-Handler (aus BlockButton)
+  // ---------------------------------------------------------------------------
+
+  async function handleAction(
+    action: string,
+    extras?: { externalUrl?: string; openInNewTab?: boolean },
+  ): Promise<void> {
+    switch (action) {
+      case 'next':
+        await next()
+        break
+      case 'submit':
+        await submitLead()
+        break
+      case 'external_url':
+        if (extras?.externalUrl && import.meta.client) {
+          if (extras.openInNewTab) {
+            window.open(extras.externalUrl, '_blank', 'noopener,noreferrer')
+          }
+          else {
+            window.location.href = extras.externalUrl
+          }
+        }
+        break
+      case 'restart':
+        reset()
+        break
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Expose
+  // ---------------------------------------------------------------------------
+
+  return {
+    // State (readonly von aussen)
+    sessionId,
+    currentStepIndex,
+    currentStep,
+    answers,
+    errors,
+    isSubmitting,
+    isSubmitted,
+    submitError,
+    rateLimitError,
+    // Computed
+    stepContext,
+    questionSteps,
+    // Methoden
+    getAnswerForBlock,
+    updateAnswer,
+    next,
+    back,
+    reset,
+    validateCurrentStep,
+    collectAnswers,
+    submitLead,
+    trackEvent,
+    handleAction,
+  }
+}
+
+export type RendererState = ReturnType<typeof useRendererState>

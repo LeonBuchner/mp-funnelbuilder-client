@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  /* Perspective-Designtokens (App-Chrome) */
+  --color-ui-accent: #3579fa;
+  --color-ui-accent-hover: #2f6fe6;
+  --color-ui-accent-light: #eff4ff;
+  --color-ui-bg: #f3f4f6;
+  --color-ui-surface: #ffffff;
+  --color-ui-border: #e5e7eb;
+  --color-ui-text: #1f2937;
+  --color-ui-muted: #6b7280;
+
+  /* Live-Badge */
+  --color-live-bg: #e2fbe8;
+  --color-live-text: #16a34a;
+
+  /*
+   * Rueckwaertskompatible mp-* Aliase:
+   * Bestehender Code (editor.vue, auth-Seiten, SettingsPanel usw.)
+   * nutzt diese Klassen weiterhin ohne Anpassung.
+   * Die Farbwerte entsprechen jetzt dem neuen Perspective-Look.
+   */
+  --color-mp-accent: #3579fa;
+  --color-mp-accent-hover: #2f6fe6;
+  --color-mp-accent-light: #eff4ff;
+  --color-mp-surface: #f3f4f6;
+  --color-mp-border: #e5e7eb;
+  --color-mp-text: #1f2937;
+  --color-mp-muted: #6b7280;
+  --color-mp-sidebar: #1e293b;
+  --color-mp-sidebar-hover: #334155;
+
+  /* Schrift */
+  --font-sans: Inter, system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-ui-bg);
+  color: var(--color-ui-text);
+  font-family: var(--font-sans);
+}
+
+/* ---------------------------------------------------------------------------
+ * Funnel-Theme-Variablen
+ * Werden am Frame-Container gesetzt (Canvas.vue, Renderer).
+ * Bloecke nutzen ausschliesslich var(--funnel-*), nicht die App-Chrome-Farben.
+ * :root setzt den sicheren Fallback, .funnel-theme-mp das Default-Theme "MP".
+ * Pro-Funnel-Branding (M2) ueberschreibt einzelne Variablen am Container.
+ * --------------------------------------------------------------------------- */
+:root {
+  --funnel-primary: #1c4687;
+  --funnel-primary-hover: #163872;
+  --funnel-on-primary: #ffffff;
+  --funnel-bg: #ffffff;
+  --funnel-surface: #ffffff;
+  --funnel-text: #1f2937;
+  --funnel-muted: #6b7280;
+  --funnel-accent: #3579fa;
+  --funnel-radius: 12px;
+  --funnel-font: Inter, system-ui, sans-serif;
+}
+
+.funnel-theme-mp {
+  --funnel-primary: #1c4687;
+  --funnel-primary-hover: #163872;
+  --funnel-on-primary: #ffffff;
+  --funnel-bg: #ffffff;
+  --funnel-surface: #ffffff;
+  --funnel-text: #1f2937;
+  --funnel-muted: #6b7280;
+  --funnel-accent: #3579fa;
+  --funnel-radius: 12px;
+  --funnel-font: Inter, system-ui, sans-serif;
+}

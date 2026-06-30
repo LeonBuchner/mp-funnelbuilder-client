@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/*
+ * Renderer-spezifisches Tailwind-Bundle: Nur Komponenten des oeffentlichen
+ * Funnel-Renderers werden gescannt. Editor- und Admin-Verzeichnisse sind
+ * ausgeschlossen, um das CSS-Bundle klein zu halten.
+ *
+ * main.css bleibt unveraendert fuer Admin- und Auth-Routen.
+ */
+@source not "../../components/editor/**";
+@source not "../../pages/admin/**";
+@source not "../../pages/auth/**";
+
+@theme {
+  /* Schrift (damit @nuxt/fonts die Inter-@font-face-Regeln einfuegt) */
+  --font-sans: Inter, "Inter Fallback: BlinkMacSystemFont", "Inter Fallback: Segoe UI",
+    "Inter Fallback: Helvetica Neue", "Inter Fallback: Arial", "Inter Fallback: Noto Sans",
+    system-ui, sans-serif;
+}
+
+/* Basis-Body-Style fuer den Renderer-Kontext */
+body {
+  font-family: var(--font-sans);
+}
+
+/* ---------------------------------------------------------------------------
+ * Funnel-Theme-Variablen (identisch zu main.css)
+ * Werden am Frame-Container gesetzt.
+ * Bloecke nutzen ausschliesslich var(--funnel-*).
+ * --------------------------------------------------------------------------- */
+:root {
+  --funnel-primary: #1c4687;
+  --funnel-primary-hover: #163872;
+  --funnel-on-primary: #ffffff;
+  --funnel-bg: #ffffff;
+  --funnel-surface: #ffffff;
+  --funnel-text: #1f2937;
+  --funnel-muted: #6b7280;
+  --funnel-accent: #3579fa;
+  --funnel-radius: 12px;
+  --funnel-font: Inter, system-ui, sans-serif;
+}
+
+.funnel-theme-mp {
+  --funnel-primary: #1c4687;
+  --funnel-primary-hover: #163872;
+  --funnel-on-primary: #ffffff;
+  --funnel-bg: #ffffff;
+  --funnel-surface: #ffffff;
+  --funnel-text: #1f2937;
+  --funnel-muted: #6b7280;
+  --funnel-accent: #3579fa;
+  --funnel-radius: 12px;
+  --funnel-font: Inter, system-ui, sans-serif;
+}
