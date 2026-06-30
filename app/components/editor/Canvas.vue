@@ -60,6 +60,7 @@ provide(funnelStepContextKey, stepContext)
 /** Benutzerfreundliche Bezeichnung je Block-Typ */
 function blockLabel(type: BlockType): string {
   const map: Record<BlockType, string> = {
+    // M1
     text: 'Text',
     image: 'Bild',
     button: 'Button',
@@ -70,6 +71,18 @@ function blockLabel(type: BlockType): string {
     optin_checkbox: 'Opt-in',
     progress_indicator: 'Fortschritt',
     logo: 'Logo',
+    // M2
+    multi_choice: 'Mehrfachauswahl',
+    input_date: 'Datum',
+    input_time: 'Uhrzeit',
+    input_number: 'Zahl',
+    input_dropdown: 'Dropdown',
+    input_textarea: 'Textfeld',
+    rating: 'Bewertung',
+    divider: 'Trenner',
+    spacer: 'Abstand',
+    video: 'Video',
+    icon: 'Icon',
   }
   return map[type] ?? type
 }

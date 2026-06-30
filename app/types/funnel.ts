@@ -1,5 +1,5 @@
 /**
- * Typen für den Funnel-Builder (M1).
+ * Typen für den Funnel-Builder (M1 + M2).
  * Alle Block-Typen als Discriminated Union über das Feld `type`.
  */
 
@@ -59,7 +59,18 @@ export interface SingleChoiceOption {
   iconName?: string
 }
 
+/**
+ * Gemeinsamer Basis-Layout-Typ fuer Auswahl-Bloecke ('none' und 'icon'
+ * sind in single_choice und multi_choice identisch).
+ * single_choice ergaenzt 'full' (Vollbild-Card), multi_choice 'image' (Bild-Card).
+ */
+export type ChoiceImageLayout = 'none' | 'icon' | 'full' | 'image'
+
+/** Layout-Varianten fuer single_choice (Backend-Schema v1.1.0). */
 export type ImageLayout = 'none' | 'icon' | 'full'
+
+/** Layout-Varianten fuer multi_choice (Backend-Schema v1.1.0). */
+export type MultiChoiceImageLayout = 'none' | 'icon' | 'image'
 
 export interface SingleChoiceBlock {
   id: string
@@ -132,6 +143,152 @@ export interface LogoBlock {
   height?: number
 }
 
+// ---------------------------------------------------------------------------
+// M2-Block-Typen (Backend-Schema v1.1.0)
+// ---------------------------------------------------------------------------
+
+/** Option fuer multi_choice und input_dropdown */
+export interface ChoiceOption {
+  id: string
+  label: string
+  value: string
+  /** Nur multi_choice: optionales Bild */
+  imageUrl?: string
+  /** Nur multi_choice: optionaler Icon-Name (Lucide-kompatibel) */
+  iconName?: string
+}
+
+/**
+ * Mehrfachauswahl-Block.
+ *
+ * v-model-Konvention: kommaseparierter String der gewaehlten values,
+ * z. B. "option_a,option_b". Das Backend speichert lead_answer.value
+ * als diesen String direkt. Reihenfolge entspricht der Klick-Reihenfolge.
+ */
+export interface MultiChoiceBlock {
+  id: string
+  type: 'multi_choice'
+  fieldKey: string
+  required?: boolean
+  question: string
+  options: ChoiceOption[]
+  imageLayout: MultiChoiceImageLayout
+  minSelections?: number
+  maxSelections?: number
+}
+
+/** Datums-Eingabe (ISO-8601-Datum, z. B. "2026-01-15"). */
+export interface InputDateBlock {
+  id: string
+  type: 'input_date'
+  fieldKey: string
+  required?: boolean
+  label: string
+  /** Minimalwert, ISO-8601-Datum, z. B. "2024-01-01" */
+  min?: string
+  /** Maximalwert, ISO-8601-Datum */
+  max?: string
+}
+
+/** Uhrzeit-Eingabe (HH:MM). */
+export interface InputTimeBlock {
+  id: string
+  type: 'input_time'
+  fieldKey: string
+  required?: boolean
+  label: string
+  /** Früheste erlaubte Zeit, z. B. "08:00" */
+  min?: string
+  /** Späteste erlaubte Zeit, z. B. "18:00" */
+  max?: string
+}
+
+/** Numerische Eingabe. */
+export interface InputNumberBlock {
+  id: string
+  type: 'input_number'
+  fieldKey: string
+  required?: boolean
+  label: string
+  placeholder?: string
+  min?: number
+  max?: number
+  step?: number
+}
+
+/** Dropdown-Auswahl mit vordefinierten Optionen. */
+export interface InputDropdownBlock {
+  id: string
+  type: 'input_dropdown'
+  fieldKey: string
+  required?: boolean
+  label: string
+  placeholder?: string
+  options: { id: string; label: string; value: string }[]
+}
+
+/** Mehrzeiliges Textfeld. */
+export interface InputTextareaBlock {
+  id: string
+  type: 'input_textarea'
+  fieldKey: string
+  required?: boolean
+  label: string
+  placeholder?: string
+  rows?: number
+}
+
+/**
+ * Bewertungs-Block.
+ *
+ * v-model-Konvention: gewaehlter Wert als String, z. B. "3".
+ * Das Backend speichert lead_answer.value als diesen String.
+ */
+export interface RatingBlock {
+  id: string
+  type: 'rating'
+  fieldKey: string
+  required?: boolean
+  question: string
+  maxRating: number
+  style: 'stars' | 'numbers' | 'emoji'
+}
+
+/** Visuelle Trennlinie. */
+export interface DividerBlock {
+  id: string
+  type: 'divider'
+  styles?: Record<string, string>
+}
+
+/** Vertikaler Leerraum. */
+export interface SpacerBlock {
+  id: string
+  type: 'spacer'
+  /** Hoehe in Pixeln. Standard: 24. */
+  height?: number
+}
+
+/** Video-Einbettung (YouTube oder Vimeo). */
+export interface VideoBlock {
+  id: string
+  type: 'video'
+  url: string
+  provider?: 'youtube' | 'vimeo'
+  autoplay?: boolean
+  showControls?: boolean
+}
+
+/** Einzelnes Icon aus dem Lucide-Icon-Set. */
+export interface IconBlock {
+  id: string
+  type: 'icon'
+  iconName: string
+  /** Groesse in Pixeln. Standard: 32. */
+  size?: number
+  styles?: Record<string, string>
+}
+
 /** Alle Block-Typen als Discriminated Union */
 export type Block =
   | TextBlock
@@ -144,6 +301,17 @@ export type Block =
   | OptinCheckboxBlock
   | ProgressIndicatorBlock
   | LogoBlock
+  | MultiChoiceBlock
+  | InputDateBlock
+  | InputTimeBlock
+  | InputNumberBlock
+  | InputDropdownBlock
+  | InputTextareaBlock
+  | RatingBlock
+  | DividerBlock
+  | SpacerBlock
+  | VideoBlock
+  | IconBlock
 
 export type BlockType = Block['type']
 
@@ -315,10 +483,15 @@ export function createEmptyContent(): FunnelContent {
  * Gibt die Discriminated-Union-Basistype `Block` zurück; Aufrufer,
  * die den konkreten Typ benötigen, können den Rückgabewert mit
  * dem Discriminant `type` verengen.
+ *
+ * Die Funktion ist exhaustiv: jeder der 23 Block-Typen hat einen
+ * expliziten case. TypeScript meldet einen Fehler, wenn ein Typ
+ * fehlt (kein implizites Fallthrough).
  */
 export function createBlock(type: BlockType): Block {
   const id = crypto.randomUUID()
   switch (type) {
+    // --- M1-Typen ---
     case 'text':
       return {
         id,
@@ -402,6 +575,97 @@ export function createBlock(type: BlockType): Block {
         type: 'logo',
         url: '',
         alt: 'Logo',
+      }
+    // --- M2-Typen ---
+    case 'multi_choice':
+      return {
+        id,
+        type: 'multi_choice',
+        fieldKey: `multi_${id.slice(0, 8)}`,
+        question: 'Welche Optionen treffen zu?',
+        options: [
+          { id: crypto.randomUUID(), label: 'Option A', value: 'option_a' },
+          { id: crypto.randomUUID(), label: 'Option B', value: 'option_b' },
+        ],
+        imageLayout: 'none',
+      }
+    case 'input_date':
+      return {
+        id,
+        type: 'input_date',
+        fieldKey: `date_${id.slice(0, 8)}`,
+        label: 'Datum',
+      }
+    case 'input_time':
+      return {
+        id,
+        type: 'input_time',
+        fieldKey: `time_${id.slice(0, 8)}`,
+        label: 'Uhrzeit',
+      }
+    case 'input_number':
+      return {
+        id,
+        type: 'input_number',
+        fieldKey: `number_${id.slice(0, 8)}`,
+        label: 'Deine Zahl',
+        placeholder: '0',
+      }
+    case 'input_dropdown':
+      return {
+        id,
+        type: 'input_dropdown',
+        fieldKey: `dropdown_${id.slice(0, 8)}`,
+        label: 'Deine Auswahl',
+        placeholder: 'Bitte wählen',
+        options: [
+          { id: crypto.randomUUID(), label: 'Option A', value: 'option_a' },
+          { id: crypto.randomUUID(), label: 'Option B', value: 'option_b' },
+        ],
+      }
+    case 'input_textarea':
+      return {
+        id,
+        type: 'input_textarea',
+        fieldKey: `textarea_${id.slice(0, 8)}`,
+        label: 'Deine Nachricht',
+        placeholder: 'Schreib hier ...',
+        rows: 4,
+      }
+    case 'rating':
+      return {
+        id,
+        type: 'rating',
+        fieldKey: `rating_${id.slice(0, 8)}`,
+        question: 'Wie zufrieden bist Du?',
+        maxRating: 5,
+        style: 'stars',
+      }
+    case 'divider':
+      return {
+        id,
+        type: 'divider',
+      }
+    case 'spacer':
+      return {
+        id,
+        type: 'spacer',
+        height: 24,
+      }
+    case 'video':
+      return {
+        id,
+        type: 'video',
+        url: '',
+        provider: 'youtube',
+        showControls: true,
+      }
+    case 'icon':
+      return {
+        id,
+        type: 'icon',
+        iconName: 'star',
+        size: 32,
       }
   }
 }

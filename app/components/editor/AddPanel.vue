@@ -43,14 +43,25 @@ const einfacheBlocks: BlockEntry[] = [
   { type: 'button', label: 'Button' },
   { type: 'logo', label: 'Logo' },
   { type: 'progress_indicator', label: 'Fortschritt' },
+  { type: 'video', label: 'Video' },
+  { type: 'icon', label: 'Icon' },
+  { type: 'divider', label: 'Trenner' },
+  { type: 'spacer', label: 'Abstand' },
 ]
 
 const interaktiveBlocks: BlockEntry[] = [
   { type: 'single_choice', label: 'Einfachauswahl' },
+  { type: 'multi_choice', label: 'Mehrfachauswahl' },
   { type: 'input_text', label: 'Texteingabe' },
   { type: 'input_email', label: 'E-Mail' },
   { type: 'input_phone', label: 'Telefon' },
   { type: 'optin_checkbox', label: 'Opt-in' },
+  { type: 'rating', label: 'Bewertung' },
+  { type: 'input_date', label: 'Datum' },
+  { type: 'input_time', label: 'Uhrzeit' },
+  { type: 'input_number', label: 'Zahl' },
+  { type: 'input_dropdown', label: 'Dropdown' },
+  { type: 'input_textarea', label: 'Textfeld' },
 ]
 
 // ---------------------------------------------------------------------------

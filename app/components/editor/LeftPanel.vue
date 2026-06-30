@@ -77,6 +77,17 @@ const blockContextTitle = computed<string>(() => {
     optin_checkbox: 'Opt-in',
     progress_indicator: 'Fortschritt',
     logo: 'Logo',
+    multi_choice: 'Mehrfachauswahl',
+    input_date: 'Datum',
+    input_time: 'Uhrzeit',
+    input_number: 'Zahl',
+    input_dropdown: 'Dropdown',
+    input_textarea: 'Textfeld',
+    rating: 'Bewertung',
+    divider: 'Trenner',
+    spacer: 'Abstand',
+    video: 'Video',
+    icon: 'Icon',
   }
   return map[type] ?? type
 })
