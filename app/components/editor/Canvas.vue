@@ -293,6 +293,13 @@ function handleTextContentUpdate(blockId: string, html: string): void {
                     @update-content="(html: string) => handleTextContentUpdate(block.id, html)"
                   />
 
+                  <!-- Hover: gestrichelte graue Umrandung (nur wenn nicht selektiert) -->
+                  <div
+                    v-if="editorStore.selectedBlockId !== block.id"
+                    class="pointer-events-none absolute inset-0 z-10 rounded-lg border border-dashed border-gray-300 opacity-0 transition-opacity group-hover:opacity-100"
+                    aria-hidden="true"
+                  />
+
                   <!-- Selektion: blauer Ring -->
                   <div
                     v-if="editorStore.selectedBlockId === block.id"
