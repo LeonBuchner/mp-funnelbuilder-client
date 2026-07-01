@@ -1,19 +1,36 @@
 /**
  * Axe-Playwright A11y-Test fuer den oeffentlichen Funnel-Renderer.
  *
- * Prueft den Demo-Funnel mit axe-core auf WCAG 2.1 AA Violations.
+ * Prueft den Demo-Funnel und einen M2-Test-Funnel mit axe-core auf WCAG 2.1 AA Violations.
  * Kein einziger "critical" oder "serious" AA-Verstoss darf im Renderer vorhanden sein.
  *
  * Voraussetzung:
  *   - Frontend laeuft auf http://localhost:3000
  *   - Backend laeuft auf http://localhost:8000 mit Demo-Funnel
  *   - Demo-Funnel-UUID: d0000001-0000-4000-8000-000000000001
+ *
+ * M2-Test-Funnel:
+ *   Wird per Admin-API mit multi_choice, rating (stars), input_dropdown, input_date,
+ *   icon, divider und spacer Bloecken erstellt, geprueft und danach wieder geloescht.
+ *   Admin-Login: admin@marketing-planet.de / password
  */
-import { test, expect } from '@playwright/test'
+import { test, expect, request as playwrightRequest } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { randomUUID } from 'node:crypto'
 
 const DEMO_HASH = 'd0000001-0000-4000-8000-000000000001'
 const FUNNEL_URL = `/f/${DEMO_HASH}`
+
+const ADMIN_API = 'http://localhost:8000/api/admin'
+const ADMIN_EMAIL = 'admin@marketing-planet.de'
+const ADMIN_PASSWORD = 'password'
+
+/** Hilfsfunktion: details fuer Fehlerausgabe in Assertions. */
+function formatViolations(violations: { impact?: string, id: string, description: string, nodes: { target: string[] }[] }[]): string {
+  return violations
+    .map(v => `[${v.impact}] ${v.id}: ${v.description}\n  Nodes: ${v.nodes.map(n => n.target.join(', ')).join(' | ')}`)
+    .join('\n\n')
+}
 
 test.describe('A11y-Scan: Funnel-Renderer (axe-core WCAG 2.1 AA)', () => {
   test('Erster Schritt: keine kritischen AA-Violations', async ({ page }) => {
@@ -37,11 +54,7 @@ test.describe('A11y-Scan: Funnel-Renderer (axe-core WCAG 2.1 AA)', () => {
     )
 
     if (criticalOrSerious.length > 0) {
-      // Hilfreich: Violations in der Fehlermeldung ausgeben
-      const details = criticalOrSerious
-        .map(v => `[${v.impact}] ${v.id}: ${v.description}\n  Nodes: ${v.nodes.map(n => n.target.join(', ')).join(' | ')}`)
-        .join('\n\n')
-      expect(criticalOrSerious, `Kritische/schwere A11y-Violations gefunden:\n\n${details}`).toHaveLength(0)
+      expect(criticalOrSerious, `Kritische/schwere A11y-Violations gefunden:\n\n${formatViolations(criticalOrSerious)}`).toHaveLength(0)
     }
   })
 
@@ -99,5 +112,264 @@ test.describe('A11y-Scan: Funnel-Renderer (axe-core WCAG 2.1 AA)', () => {
     await page.keyboard.press('Tab')
     const skipLink = page.locator('a[href="#funnel-main"]')
     await expect(skipLink).toBeFocused()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// M2-Bloecke: axe-Scan mit neuen Block-Typen im Renderer
+// ---------------------------------------------------------------------------
+
+test.describe('A11y-Scan: M2-Bloecke im Renderer', () => {
+  /**
+   * Setup: Testfunnel mit M2-Bloecken per Admin-API anlegen und veroeffentlichen.
+   * Teardown: Funnel loeschen.
+   *
+   * Blocktypen im Testfunnel:
+   *   multi_choice (imageLayout=none), rating (stars), input_dropdown,
+   *   input_date, icon, divider, spacer
+   */
+
+  let m2FunnelId: string | null = null
+
+  test.beforeAll(async () => {
+    const apiContext = await playwrightRequest.newContext()
+
+    // Einloggen
+    const loginResp = await apiContext.post(`${ADMIN_API}/auth/login`, {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    })
+    if (!loginResp.ok()) return
+    const { token } = await loginResp.json() as { token: string }
+    const auth = { Authorization: `Bearer ${token}` }
+
+    // Workspace ermitteln (ersten nehmen)
+    const wsResp = await apiContext.get(`${ADMIN_API}/workspaces`, { headers: auth })
+    if (!wsResp.ok()) return
+    const wsData = await wsResp.json() as { data: { id: string }[] }
+    const workspaceId = wsData.data[0]?.id
+    if (!workspaceId) return
+
+    // Testfunnel anlegen
+    const createResp = await apiContext.post(`${ADMIN_API}/workspaces/${workspaceId}/funnels`, {
+      headers: auth,
+      data: { name: '[A11y-Test] M2-Bloecke – automatisch angelegt' },
+    })
+    if (!createResp.ok()) return
+    const createData = await createResp.json() as { data: { id: string } }
+    m2FunnelId = createData.data.id
+
+    // Draft mit M2-Bloecken speichern
+    const content = {
+      schemaVersion: '1.0.0',
+      meta: { defaultLocale: 'de', personalizationVars: [] },
+      settings: {
+        progressBar: false,
+        progressBarStyle: 'bar',
+        animations: 'none',
+        confettiOnComplete: false,
+        mpBrandingPosition: 'footer',
+        startButtonLabel: 'Weiter',
+      },
+      steps: [
+        {
+          id: randomUUID(),
+          type: 'question',
+          internalTitle: 'M2 Test Step',
+          layout: 'single',
+          blocks: [
+            {
+              id: randomUUID(),
+              type: 'multi_choice',
+              fieldKey: 'm2_multi',
+              question: 'Was trifft auf Dich zu?',
+              imageLayout: 'none',
+              required: false,
+              options: [
+                { id: randomUUID(), label: 'Option A', value: 'a' },
+                { id: randomUUID(), label: 'Option B', value: 'b' },
+              ],
+            },
+            {
+              id: randomUUID(),
+              type: 'rating',
+              fieldKey: 'm2_rating',
+              question: 'Wie zufrieden bist Du?',
+              style: 'stars',
+              maxRating: 5,
+              required: false,
+            },
+            {
+              id: randomUUID(),
+              type: 'input_dropdown',
+              fieldKey: 'm2_drop',
+              label: 'Deine Wahl',
+              required: false,
+              options: [
+                { id: randomUUID(), label: 'Wahl A', value: 'a' },
+                { id: randomUUID(), label: 'Wahl B', value: 'b' },
+              ],
+            },
+            {
+              id: randomUUID(),
+              type: 'input_date',
+              fieldKey: 'm2_date',
+              label: 'Wunschtermin',
+              required: false,
+            },
+            {
+              id: randomUUID(),
+              type: 'icon',
+              iconName: 'star',
+              size: 32,
+            },
+            {
+              id: randomUUID(),
+              type: 'divider',
+            },
+            {
+              id: randomUUID(),
+              type: 'spacer',
+              height: 16,
+            },
+          ],
+          logicRules: [],
+        },
+      ],
+    }
+
+    const draftResp = await apiContext.put(`${ADMIN_API}/funnels/${m2FunnelId}/draft`, {
+      headers: auth,
+      data: { content },
+    })
+    if (!draftResp.ok()) {
+      m2FunnelId = null
+      return
+    }
+
+    // Veroeffentlichen
+    const pubResp = await apiContext.post(`${ADMIN_API}/funnels/${m2FunnelId}/publish`, {
+      headers: auth,
+      data: {},
+    })
+    if (!pubResp.ok()) m2FunnelId = null
+
+    await apiContext.dispose()
+  })
+
+  test.afterAll(async () => {
+    if (!m2FunnelId) return
+
+    const apiContext = await playwrightRequest.newContext()
+    const loginResp = await apiContext.post(`${ADMIN_API}/auth/login`, {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    })
+    if (!loginResp.ok()) { await apiContext.dispose(); return }
+    const { token } = await loginResp.json() as { token: string }
+
+    await apiContext.delete(`${ADMIN_API}/funnels/${m2FunnelId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    await apiContext.dispose()
+  })
+
+  test('M2-Bloecke: keine kritischen AA-Violations im Renderer', async ({ page }) => {
+    if (!m2FunnelId) {
+      test.skip()
+      return
+    }
+
+    const response = await page.goto(`/f/${m2FunnelId}`, { waitUntil: 'networkidle' })
+
+    if (response?.status() !== 200) {
+      test.skip()
+      return
+    }
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+
+    const criticalOrSerious = results.violations.filter(
+      v => v.impact === 'critical' || v.impact === 'serious',
+    )
+
+    if (criticalOrSerious.length > 0) {
+      expect(
+        criticalOrSerious,
+        `Kritische/schwere A11y-Violations in M2-Bloecken:\n\n${formatViolations(criticalOrSerious)}`,
+      ).toHaveLength(0)
+    }
+  })
+
+  test('M2 multi_choice: fieldset/legend semantik korrekt', async ({ page }) => {
+    if (!m2FunnelId) {
+      test.skip()
+      return
+    }
+
+    await page.goto(`/f/${m2FunnelId}`, { waitUntil: 'networkidle' })
+
+    // multi_choice rendert als fieldset mit legend (sr-only)
+    await expect(page.locator('fieldset')).toHaveCount(1)
+    // legend muss im DOM vorhanden sein (sr-only bedeutet visuell versteckt, nicht entfernt)
+    await expect(page.locator('fieldset legend')).toHaveCount(1)
+    // Checkboxen muessen per label erreichbar sein
+    await expect(page.locator('fieldset input[type="checkbox"]')).toHaveCount(2)
+  })
+
+  test('M2 rating: Sterne per Tastatur bedienbar (Tab + Enter)', async ({ page }) => {
+    if (!m2FunnelId) {
+      test.skip()
+      return
+    }
+
+    await page.goto(`/f/${m2FunnelId}`, { waitUntil: 'networkidle' })
+
+    // Sterne-Buttons muessen fokussierbar sein
+    const starButtons = page.locator('[role="group"] button[aria-label^="Bewertung"]')
+    const count = await starButtons.count()
+    expect(count).toBe(5)
+
+    // Ersten Stern fokussieren und mit Enter ausloesen
+    await starButtons.first().focus()
+    await expect(starButtons.first()).toBeFocused()
+    await page.keyboard.press('Enter')
+    // Erwarte: aria-pressed=true am ersten Stern
+    await expect(starButtons.first()).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('M2 input_dropdown: label-for Verknuepfung korrekt', async ({ page }) => {
+    if (!m2FunnelId) {
+      test.skip()
+      return
+    }
+
+    await page.goto(`/f/${m2FunnelId}`, { waitUntil: 'networkidle' })
+
+    // select muss eine zugehoerige label haben
+    const select = page.locator('select[name="m2_drop"]')
+    await expect(select).toBeVisible()
+    const selectId = await select.getAttribute('id')
+    expect(selectId).toBeTruthy()
+
+    const label = page.locator(`label[for="${selectId}"]`)
+    await expect(label).toHaveCount(1)
+  })
+
+  test('M2 input_date: label-for Verknuepfung und type=date korrekt', async ({ page }) => {
+    if (!m2FunnelId) {
+      test.skip()
+      return
+    }
+
+    await page.goto(`/f/${m2FunnelId}`, { waitUntil: 'networkidle' })
+
+    const dateInput = page.locator('input[type="date"]')
+    await expect(dateInput).toBeVisible()
+    const dateId = await dateInput.getAttribute('id')
+    expect(dateId).toBeTruthy()
+
+    const label = page.locator(`label[for="${dateId}"]`)
+    await expect(label).toHaveCount(1)
   })
 })

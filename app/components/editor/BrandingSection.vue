@@ -385,10 +385,10 @@ function getBrandingSwatches(branding: Branding): string[] {
             </svg>
           </button>
 
-          <!-- Aktions-Buttons (Hover) -->
+          <!-- Aktions-Buttons (Hover und Tastatur-Fokus) -->
           <div
             v-if="!props.isReadonly"
-            class="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+            class="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
             @click.stop
           >
             <!-- Bearbeiten -->

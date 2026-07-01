@@ -387,16 +387,29 @@ export function useRendererState(hash: string, steps: Step[]) {
       case 'submit':
         await submitLead()
         break
-      case 'external_url':
-        if (extras?.externalUrl && import.meta.client) {
-          if (extras.openInNewTab) {
-            window.open(extras.externalUrl, '_blank', 'noopener,noreferrer')
+      case 'external_url': {
+        // Nur http/https erlauben – blockiert javascript:, data:, vbscript: usw.
+        const url = extras?.externalUrl
+        let safeUrl: string | null = null
+        if (url && import.meta.client) {
+          try {
+            const parsed = new URL(url)
+            if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+              safeUrl = url
+            }
+          }
+          catch { /* ungueltige URL ignorieren */ }
+        }
+        if (safeUrl) {
+          if (extras?.openInNewTab) {
+            window.open(safeUrl, '_blank', 'noopener,noreferrer')
           }
           else {
-            window.location.href = extras.externalUrl
+            window.location.href = safeUrl
           }
         }
         break
+      }
       case 'restart':
         reset()
         break

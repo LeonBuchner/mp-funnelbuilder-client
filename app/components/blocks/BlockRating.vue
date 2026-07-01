@@ -99,6 +99,7 @@ function ratingLabel(value: number): string {
       class="flex justify-center gap-2"
       role="group"
       :aria-label="block.question"
+      :aria-describedby="error ? `field-error-${block.id}` : undefined"
       @mouseleave="handleHoverLeave"
     >
       <button
@@ -134,6 +135,7 @@ function ratingLabel(value: number): string {
       class="flex flex-wrap justify-center gap-2"
       role="group"
       :aria-label="block.question"
+      :aria-describedby="error ? `field-error-${block.id}` : undefined"
     >
       <button
         v-for="n in block.maxRating"
@@ -161,6 +163,7 @@ function ratingLabel(value: number): string {
       class="flex justify-center gap-3"
       role="group"
       :aria-label="block.question"
+      :aria-describedby="error ? `field-error-${block.id}` : undefined"
     >
       <button
         v-for="n in block.maxRating"

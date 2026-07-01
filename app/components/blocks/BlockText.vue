@@ -1,7 +1,19 @@
 <script setup lang="ts">
 import type { TextBlock } from '~/types/funnel'
-import BlockTextTipTap from './BlockTextTipTap.vue'
 import { sanitizeHtml } from '~/utils/sanitizeHtml'
+
+/**
+ * BlockTextTipTap wird dynamisch geladen, weil:
+ * 1. Es liegt in <ClientOnly v-else> – SSR rendert es nie.
+ * 2. isEditable ist im live-Modus immer false – die Komponente wird nie gemountet.
+ * 3. TipTap (~500 KB Chunk) darf nicht im Renderer-Preload-Graph landen.
+ * Ein statischer Import wuerde den TipTap-Chunk als modulepreload einfuegen
+ * und 106 KB ungenutztes JS auf jede /f/-Seite laden.
+ * defineAsyncComponent innerhalb von <ClientOnly> ist hydration-safe.
+ */
+const BlockTextTipTap = defineAsyncComponent(
+  () => import('./BlockTextTipTap.vue'),
+)
 
 const props = defineProps<{
   block: TextBlock

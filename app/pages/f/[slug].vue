@@ -80,8 +80,13 @@ const seoTitle = funnelData.settings.seo_title ?? funnelData.name
 const seoDescription = funnelData.settings.seo_description ?? ''
 const ogImage = funnelData.settings.og_image_path ?? undefined
 
+// Favicon: settings.favicon_path hat Prioritaet (per-Funnel), dann Workspace-Branding
+const faviconPath = funnelData.settings.favicon_path ?? funnelData.branding?.favicon_path ?? null
+
 const requestOrigin = useRequestURL().origin
-const canonicalUrl = `${requestOrigin}/f/${slug}`
+// Bevorzugte kanonische URL ist die kurze public_id-URL; UUID-Zugriffe zeigen dieselbe Canonical.
+const canonicalSlug = funnelData.public_id ?? slug
+const canonicalUrl = `${requestOrigin}/f/${canonicalSlug}`
 
 useSeoMeta({
   title: seoTitle,
@@ -127,10 +132,8 @@ useHead({
   link: [
     // Canonical auf die Funnel-URL (absolute URL gemaess SEO-Standard)
     { rel: 'canonical', href: canonicalUrl },
-    // Benutzerdefiniertes Favicon (falls vorhanden)
-    ...(funnelData.settings.favicon_path
-      ? [{ rel: 'icon', href: funnelData.settings.favicon_path }]
-      : []),
+    // Benutzerdefiniertes Favicon: settings.favicon_path > branding.favicon_path
+    ...(faviconPath ? [{ rel: 'icon', href: faviconPath }] : []),
   ],
   script: [
     {
@@ -215,13 +218,28 @@ function handleAnswerUpdate(block: Block, value: string | boolean): void {
   renderer.updateAnswer(block, value)
 }
 
+/**
+ * Prueft ob eine URL sicher fuer externe Navigation ist.
+ * Erlaubt nur http:// und https:// – blockiert javascript:, data:, vbscript: usw.
+ */
+function isSafeExternalUrl(url: string | undefined): url is string {
+  if (!url) return false
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+  }
+  catch {
+    return false
+  }
+}
+
 /** Wird aufgerufen, wenn ein Button-Block seine action ausfuehrt. */
 async function handleBlockAction(action: string, block: Block): Promise<void> {
   trackStart()
 
   if (action === 'external_url' && block.type === 'button') {
     const btn = block as ButtonBlock
-    if (btn.externalUrl) {
+    if (isSafeExternalUrl(btn.externalUrl)) {
       if (btn.openInNewTab) {
         window.open(btn.externalUrl, '_blank', 'noopener,noreferrer')
       }

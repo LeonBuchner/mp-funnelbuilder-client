@@ -285,6 +285,7 @@ function handleTextContentUpdate(blockId: string, html: string): void {
                   :aria-label="`Block bearbeiten: ${blockLabel(block.type)}`"
                   @click.stop="onBlockClick(block.id)"
                   @keyup.enter.stop="onBlockClick(block.id)"
+                  @keydown.space.prevent.stop="onBlockClick(block.id)"
                 >
                   <BlockRenderer
                     :block="block"

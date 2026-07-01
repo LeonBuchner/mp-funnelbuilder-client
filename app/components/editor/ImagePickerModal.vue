@@ -343,18 +343,22 @@ function tabButtonCls(tab: ActiveTab): string {
         >
           <button
             v-if="!isReadonly"
+            id="ipm-tab-upload"
             type="button"
             role="tab"
             :aria-selected="activeTab === 'upload'"
+            :aria-controls="'ipm-tabpanel'"
             :class="tabButtonCls('upload')"
             @click="activeTab = 'upload'"
           >
             Hochladen
           </button>
           <button
+            id="ipm-tab-library"
             type="button"
             role="tab"
             :aria-selected="activeTab === 'library'"
+            :aria-controls="'ipm-tabpanel'"
             :class="tabButtonCls('library')"
             @click="activeTab = 'library'"
           >
@@ -364,8 +368,10 @@ function tabButtonCls(tab: ActiveTab): string {
 
         <!-- Tab-Inhalte -->
         <div
+          id="ipm-tabpanel"
           class="flex-1 overflow-y-auto p-5"
           role="tabpanel"
+          :aria-labelledby="activeTab === 'upload' ? 'ipm-tab-upload' : 'ipm-tab-library'"
         >
           <!-- -------- Upload-Tab -------- -->
           <div v-if="activeTab === 'upload'">

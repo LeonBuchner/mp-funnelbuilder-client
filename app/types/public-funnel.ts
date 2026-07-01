@@ -38,6 +38,8 @@ export interface PublicFunnelBranding {
 
 export interface PublicFunnel {
   id: string
+  /** Kurze oeffentliche ID (public_id, z.B. "demo0001") – bevorzugte kanonische URL. */
+  public_id: string | null
   name: string
   schema_version: string
   content: FunnelContent
