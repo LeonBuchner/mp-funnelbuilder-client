@@ -307,7 +307,16 @@ function handleTextContentUpdate(blockId: string, html: string): void {
                     aria-hidden="true"
                   />
 
-                  <!-- Label-Tag oben links -->
+                  <!-- Hover-Label-Tag oben links (grau, nur wenn nicht selektiert) -->
+                  <span
+                    v-if="editorStore.selectedBlockId !== block.id"
+                    class="pointer-events-none absolute -top-2.5 left-2 z-20 select-none rounded bg-gray-500 px-1.5 py-0.5 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    aria-hidden="true"
+                  >
+                    {{ blockLabel(block.type) }}
+                  </span>
+
+                  <!-- Label-Tag oben links (blau, bei Auswahl) -->
                   <span
                     v-if="editorStore.selectedBlockId === block.id"
                     class="absolute -top-2.5 left-2 z-20 select-none rounded bg-ui-accent px-1.5 py-0.5 text-xs font-medium text-white"
