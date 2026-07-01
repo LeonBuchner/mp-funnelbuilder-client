@@ -49,16 +49,14 @@ const localBlocks = ref<Block[]>([...storeBlocks.value])
 watch(
   storeBlocks,
   (newBlocks) => {
-    // Nur neu setzen, wenn sich die Reihenfolge/Menge tatsaechlich geaendert hat
-    // (z.B. Step-Wechsel, Block-Hinzufuegen/-Loeschen). Verhindert
-    // unnoetige Re-Renders nach dem eigenen reorderBlocks-Aufruf.
-    const newIds = newBlocks.map(b => b.id).join(',')
-    const localIds = localBlocks.value.map(b => b.id).join(',')
-    if (newIds !== localIds) {
-      localBlocks.value = [...newBlocks]
-    }
+    // Bei JEDER Aenderung im Store neu spiegeln: Reihenfolge, Hinzufuegen/Loeschen
+    // UND Inhaltsaenderungen (updateBlock ersetzt das Block-Objekt). Nur so ist
+    // eine Bearbeitung sofort im Frame sichtbar, ohne Reload.
+    // Waehrend eines Drags wird der Store nicht veraendert, daher kein Konflikt;
+    // nach dem Drop synchronisiert reorderBlocks -> gleiche Reihenfolge, kein Glitch.
+    localBlocks.value = [...newBlocks]
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 
 function onBlockDragEnd(evt: DraggableEvent<Block>): void {

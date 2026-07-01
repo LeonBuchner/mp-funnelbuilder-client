@@ -46,28 +46,23 @@ const resultSteps = computed<Step[]>(() =>
 const localPageSteps = ref<Step[]>([...pageSteps.value])
 const localResultSteps = ref<Step[]>([...resultSteps.value])
 
+// Deep-Sync: auch Inhaltsaenderungen (z.B. umbenannter Step) sofort spiegeln,
+// nicht nur Reihenfolge/Menge. Waehrend eines Drags wird der Store nicht
+// veraendert, daher kein Konflikt mit vue-draggable-plus.
 watch(
   pageSteps,
   (newSteps) => {
-    const newIds = newSteps.map(s => s.id).join(',')
-    const localIds = localPageSteps.value.map(s => s.id).join(',')
-    if (newIds !== localIds) {
-      localPageSteps.value = [...newSteps]
-    }
+    localPageSteps.value = [...newSteps]
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 
 watch(
   resultSteps,
   (newSteps) => {
-    const newIds = newSteps.map(s => s.id).join(',')
-    const localIds = localResultSteps.value.map(s => s.id).join(',')
-    if (newIds !== localIds) {
-      localResultSteps.value = [...newSteps]
-    }
+    localResultSteps.value = [...newSteps]
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 
 // ---------------------------------------------------------------------------
