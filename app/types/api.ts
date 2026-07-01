@@ -16,9 +16,23 @@ export interface Workspace {
   name: string
   slug: string
   logo_path: string | null
+  /** Öffentliche URL des Workspace-Logos (seit WV.7). */
+  logo_url: string | null
   mp_branding_enabled: boolean
   settings: WorkspaceSettings
   created_at: string
+}
+
+/**
+ * Mitglied eines Workspaces (GET /workspaces/{ws}/members).
+ */
+export interface WorkspaceMember {
+  id: string
+  name: string
+  email: string
+  role: WorkspaceRole
+  accepted_at: string | null
+  is_current_user: boolean
 }
 
 export interface Membership {

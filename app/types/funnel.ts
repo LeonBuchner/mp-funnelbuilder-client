@@ -460,6 +460,25 @@ export interface PaginatedFunnelList {
   total: number
 }
 
+/**
+ * Funnel-Eintrag mit Workspace-Kontext (WV.8).
+ * Wird von GET /funnels (workspace-übergreifend, nur mp_admin) zurückgegeben.
+ */
+export interface FunnelWithWorkspace extends FunnelListItem {
+  workspace: {
+    id: string
+    name: string
+  }
+}
+
+export interface AllWorkspacesFunnelList {
+  data: FunnelWithWorkspace[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+}
+
 // ---------------------------------------------------------------------------
 // Template (B14 Vorlagen-Galerie)
 // ---------------------------------------------------------------------------

@@ -3,11 +3,12 @@ const { toasts, remove } = useToast()
 </script>
 
 <template>
-  <!-- aria-live: Screenreader liest neue Toasts vor -->
+  <!-- role="log" erlaubt aria-label und hat implizit aria-live="polite" -->
   <div
     class="fixed right-4 top-4 z-50 flex flex-col gap-2"
-    aria-live="polite"
+    role="log"
     aria-label="Benachrichtigungen"
+    aria-live="polite"
     aria-atomic="false"
   >
     <TransitionGroup

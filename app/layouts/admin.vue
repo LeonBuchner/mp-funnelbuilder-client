@@ -11,14 +11,78 @@ const route = useRoute()
 // ---------------------------------------------------------------------------
 const wsDropdownOpen = ref(false)
 const wsDropdownEl = ref<HTMLElement | null>(null)
+const wsTriggerRef = ref<HTMLButtonElement | null>(null)
 
 onClickOutside(wsDropdownEl, () => {
   wsDropdownOpen.value = false
 })
 
+function toggleWsDropdown(): void {
+  wsDropdownOpen.value = !wsDropdownOpen.value
+}
+
+function closeWsDropdown(): void {
+  wsDropdownOpen.value = false
+}
+
 function handleWorkspaceSelect(id: string): void {
   workspaceStore.setActive(id)
   wsDropdownOpen.value = false
+}
+
+function handleDropdownKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    wsDropdownOpen.value = false
+    wsTriggerRef.value?.focus()
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rollen-Guard: Nur mp_admin sieht Verwaltungsoptionen
+// ---------------------------------------------------------------------------
+const isMpAdmin = computed(() => workspaceStore.activeRole === 'mp_admin')
+
+// ---------------------------------------------------------------------------
+// Modals
+// ---------------------------------------------------------------------------
+const showMembersModal = ref(false)
+const showSettingsModal = ref(false)
+const showNewWorkspaceModal = ref(false)
+const showInviteModal = ref(false)
+
+function openMembersModal(): void {
+  closeWsDropdown()
+  showMembersModal.value = true
+}
+
+function openSettingsModal(): void {
+  closeWsDropdown()
+  showSettingsModal.value = true
+}
+
+function openNewWorkspaceModal(): void {
+  closeWsDropdown()
+  showNewWorkspaceModal.value = true
+}
+
+function closeMembersModal(): void {
+  showMembersModal.value = false
+  wsTriggerRef.value?.focus()
+}
+
+function closeSettingsModal(): void {
+  showSettingsModal.value = false
+  wsTriggerRef.value?.focus()
+}
+
+function closeNewWorkspaceModal(): void {
+  showNewWorkspaceModal.value = false
+  wsTriggerRef.value?.focus()
+}
+
+function navigateAllWorkspaces(): void {
+  closeWsDropdown()
+  router.push('/admin/funnels/all')
 }
 
 // ---------------------------------------------------------------------------
@@ -49,10 +113,8 @@ async function handleLogout(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Einladen-Modal
+// Einladen (Berechtigungscheck: mp_admin + mp_team)
 // ---------------------------------------------------------------------------
-const showInviteModal = ref(false)
-
 const canInvite = computed<boolean>(
   () =>
     workspaceStore.activeRole === 'mp_admin' || workspaceStore.activeRole === 'mp_team',
@@ -90,14 +152,16 @@ const workspaceInitial = computed<string>(() =>
       <div
         ref="wsDropdownEl"
         class="relative flex-shrink-0 pl-4"
+        @keydown="handleDropdownKeydown"
       >
         <button
+          ref="wsTriggerRef"
           type="button"
           class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
           :aria-expanded="wsDropdownOpen"
-          aria-haspopup="listbox"
-          aria-label="Workspace wechseln"
-          @click="wsDropdownOpen = !wsDropdownOpen"
+          aria-haspopup="menu"
+          aria-label="Workspace-Menü öffnen"
+          @click="toggleWsDropdown"
         >
           <!-- Workspace-Initial-Kreis -->
           <span
@@ -125,20 +189,74 @@ const workspaceInitial = computed<string>(() =>
         <!-- Workspace-Dropdown -->
         <div
           v-if="wsDropdownOpen"
-          class="absolute left-0 top-full mt-1 min-w-[240px] rounded-xl border border-ui-border bg-ui-surface py-1.5 shadow-lg"
-          role="listbox"
-          aria-label="Workspace auswählen"
+          class="absolute left-0 top-full mt-1 min-w-[260px] rounded-xl border border-ui-border bg-ui-surface py-1.5 shadow-lg"
+          role="menu"
+          aria-label="Workspace-Optionen"
         >
+          <!-- Admin-Aktionen (nur mp_admin) -->
+          <template v-if="isMpAdmin">
+            <button
+              type="button"
+              role="menuitem"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+              @click="openMembersModal"
+            >
+              <!-- Personen-Icon -->
+              <svg class="h-4 w-4 flex-shrink-0 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Mitglieder verwalten
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+              @click="openSettingsModal"
+            >
+              <!-- Zahnrad-Icon -->
+              <svg class="h-4 w-4 flex-shrink-0 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Workspace-Einstellungen
+            </button>
+
+            <!-- Trenner -->
+            <div class="my-1.5 border-t border-ui-border" role="separator" />
+          </template>
+
+          <!-- Workspace wechseln -->
+          <p class="px-3.5 pb-1 pt-0.5 text-xs font-medium text-ui-muted" aria-hidden="true">
+            Workspace wechseln
+          </p>
+
+          <!-- Alle Workspaces (nur mp_admin) -->
+          <button
+            v-if="isMpAdmin"
+            type="button"
+            role="menuitem"
+            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+            @click="navigateAllWorkspaces"
+          >
+            <!-- Grid-Icon -->
+            <svg class="h-4 w-4 flex-shrink-0 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            Alle Workspaces
+          </button>
+
+          <!-- Workspace-Liste -->
           <button
             v-for="ws in workspaceStore.list"
             :key="ws.id"
             type="button"
-            role="option"
-            :aria-selected="ws.id === workspaceStore.activeWorkspace?.id"
+            role="menuitemradio"
+            :aria-checked="ws.id === workspaceStore.activeWorkspace?.id"
             class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
             :class="
               ws.id === workspaceStore.activeWorkspace?.id
-                ? 'font-medium text-ui-accent'
+                ? 'font-semibold text-ui-accent'
                 : 'text-ui-text'
             "
             @click="handleWorkspaceSelect(ws.id)"
@@ -167,6 +285,23 @@ const workspaceInitial = computed<string>(() =>
           >
             Kein Workspace verfügbar.
           </p>
+
+          <!-- Trenner + Neuer Workspace (nur mp_admin) -->
+          <template v-if="isMpAdmin">
+            <div class="my-1.5 border-t border-ui-border" role="separator" />
+            <button
+              type="button"
+              role="menuitem"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+              @click="openNewWorkspaceModal"
+            >
+              <!-- Plus-Icon -->
+              <svg class="h-4 w-4 flex-shrink-0 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Neuer Workspace
+            </button>
+          </template>
         </div>
       </div>
 
@@ -175,7 +310,7 @@ const workspaceInitial = computed<string>(() =>
         class="mx-auto flex items-center gap-0.5"
         aria-label="Hauptbereiche"
       >
-        <!-- Funnels (aktiv und navigierbar) -->
+        <!-- Funnels -->
         <NuxtLink
           to="/admin/funnels"
           class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
@@ -185,14 +320,13 @@ const workspaceInitial = computed<string>(() =>
               : 'text-ui-muted hover:bg-ui-bg hover:text-ui-text'
           "
         >
-          <!-- Funnel/Filter-Icon -->
           <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
           </svg>
           Funnels
         </NuxtLink>
 
-        <!-- Performance (deaktiviert, kommt bald) -->
+        <!-- Performance (deaktiviert) -->
         <button
           type="button"
           disabled
@@ -237,7 +371,7 @@ const workspaceInitial = computed<string>(() =>
 
       <!-- Rechts: Einladen + Avatar -->
       <div class="flex flex-shrink-0 items-center gap-2 pr-4">
-        <!-- Einladen (nur für Admin/Team sichtbar) -->
+        <!-- Einladen (Admin + Team) -->
         <button
           v-if="canInvite"
           type="button"
@@ -309,13 +443,25 @@ const workspaceInitial = computed<string>(() =>
     <!-- Toast-Nachrichten -->
     <ToastContainer />
 
-    <!-- Einladen-Modal -->
+    <!-- Modals (via Teleport in die jeweiligen Komponenten, daher hier nur v-if) -->
     <AdminInviteModal
       v-if="showInviteModal"
       @close="showInviteModal = false"
     />
+    <AdminMembersModal
+      v-if="showMembersModal"
+      @close="closeMembersModal"
+    />
+    <AdminWorkspaceSettingsModal
+      v-if="showSettingsModal"
+      @close="closeSettingsModal"
+    />
+    <AdminNewWorkspaceModal
+      v-if="showNewWorkspaceModal"
+      @close="closeNewWorkspaceModal"
+    />
   </div>
 </template>
 
-<!-- Volles CSS-Bundle fuer Admin-Bereich (alle Utility-Klassen) -->
+<!-- Volles CSS-Bundle für Admin-Bereich -->
 <style src="~/assets/css/main.css" />

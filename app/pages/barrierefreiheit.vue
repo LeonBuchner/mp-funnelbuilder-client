@@ -62,11 +62,6 @@ useSeoMeta({
             Ist kein Text hinterlegt, wird ein leeres Alt-Attribut gesetzt.
             (WCAG 1.1.1)
           </li>
-          <li>
-            Modale Dialoge im Administrationsbereich verfügen noch nicht über
-            eine vollständige Fokus-Falle. Diese wird in einem der nächsten
-            Updates ergänzt. (WCAG 2.1.2)
-          </li>
         </ul>
       </section>
 

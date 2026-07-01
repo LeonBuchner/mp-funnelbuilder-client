@@ -1,19 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  /* Perspective-Designtokens (App-Chrome) */
-  --color-ui-accent: #3579fa;
-  --color-ui-accent-hover: #2f6fe6;
+  /*
+   * Perspective-Designtokens (App-Chrome).
+   * Akzent #2f6fe6: nah am Perspective-Ton #3579fa, aber 4,63:1 mit Weiß (WCAG AA).
+   * #3579fa selbst ergab auf weißer Schrift nur 3,98:1 (unter 4,5:1).
+   */
+  --color-ui-accent: #2f6fe6;
+  --color-ui-accent-hover: #2560cf;
   --color-ui-accent-light: #eff4ff;
   --color-ui-bg: #f3f4f6;
   --color-ui-surface: #ffffff;
   --color-ui-border: #e5e7eb;
   --color-ui-text: #1f2937;
-  --color-ui-muted: #6b7280;
+  /* #6b7280 ergab auf #f3f4f6 nur 4,39:1. #5c6472 -> 4,6:1 (WCAG AA), optisch fast gleich. */
+  --color-ui-muted: #5c6472;
 
-  /* Live-Badge */
+  /* Live-Badge: #16a34a auf #e2fbe8 war nur 3,01:1. #15803d -> 4,58:1 (WCAG AA). */
   --color-live-bg: #e2fbe8;
-  --color-live-text: #16a34a;
+  --color-live-text: #15803d;
 
   /*
    * Rueckwaertskompatible mp-* Aliase:
@@ -21,13 +26,13 @@
    * nutzt diese Klassen weiterhin ohne Anpassung.
    * Die Farbwerte entsprechen jetzt dem neuen Perspective-Look.
    */
-  --color-mp-accent: #3579fa;
-  --color-mp-accent-hover: #2f6fe6;
+  --color-mp-accent: #2f6fe6;
+  --color-mp-accent-hover: #2560cf;
   --color-mp-accent-light: #eff4ff;
   --color-mp-surface: #f3f4f6;
   --color-mp-border: #e5e7eb;
   --color-mp-text: #1f2937;
-  --color-mp-muted: #6b7280;
+  --color-mp-muted: #5c6472;
   --color-mp-sidebar: #1e293b;
   --color-mp-sidebar-hover: #334155;
 
