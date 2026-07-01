@@ -260,6 +260,26 @@ test('WV.8 – Navigation ueber Dropdown oeffnet Alle-Workspaces-Seite', async (
   await expect(page.getByRole('heading', { name: 'Alle Workspaces', level: 1 })).toBeVisible()
 })
 
+test('WV.8 – Workspace waehlen fuehrt von der Alle-Workspaces-Seite zur gescopten Liste', async ({ page }) => {
+  if (!sharedToken) { test.skip(); return }
+  await loginAsAdmin(page)
+
+  // Auf der uebergreifenden Ansicht starten
+  await page.goto('/admin/funnels/all')
+  await page.waitForSelector('#main-content', { state: 'attached', timeout: 10000 })
+
+  // Einen (anderen) Workspace aus dem Umschalter waehlen
+  await page.getByRole('button', { name: 'Workspace-Menü öffnen' }).click()
+  const workspaceItems = page.getByRole('menuitemradio')
+  await expect(workspaceItems.first()).toBeVisible()
+  await workspaceItems.nth(1).click()
+
+  // Regression: Auswahl darf NICHT auf der Alle-Workspaces-Seite verharren,
+  // sondern muss auf die gescopte Funnel-Liste fuehren.
+  await page.waitForURL('**/admin/funnels', { timeout: 10000 })
+  expect(new URL(page.url()).pathname).toBe('/admin/funnels')
+})
+
 test('WV.8 – Axe: keine kritischen Violations auf Alle-Workspaces-Seite', async ({ page }) => {
   if (!sharedToken) { test.skip(); return }
   await loginAsAdmin(page)

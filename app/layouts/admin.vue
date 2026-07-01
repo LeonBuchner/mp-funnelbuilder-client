@@ -28,6 +28,10 @@ function closeWsDropdown(): void {
 function handleWorkspaceSelect(id: string): void {
   workspaceStore.setActive(id)
   wsDropdownOpen.value = false
+  // Einen Workspace zu waehlen fuehrt auf dessen (gescopte) Funnel-Liste, auch von der
+  // "Alle Workspaces"-Seite aus. Sonst bliebe man auf der uebergreifenden Ansicht und
+  // saehe trotz Wechsel weiter alle Funnels.
+  router.push('/admin/funnels')
 }
 
 function handleDropdownKeydown(event: KeyboardEvent): void {
@@ -125,6 +129,10 @@ const canInvite = computed<boolean>(
 // ---------------------------------------------------------------------------
 const isFunnelsActive = computed(() => route.path.startsWith('/admin/funnels'))
 
+// Ob die workspace-uebergreifende "Alle Workspaces"-Ansicht aktiv ist. In dem Fall
+// zeigt der Umschalter "Alle Workspaces" statt eines einzelnen Workspace.
+const isAllWorkspacesView = computed(() => route.path === '/admin/funnels/all')
+
 // ---------------------------------------------------------------------------
 // Workspace-Initial
 // ---------------------------------------------------------------------------
@@ -163,15 +171,25 @@ const workspaceInitial = computed<string>(() =>
           aria-label="Workspace-Menü öffnen"
           @click="toggleWsDropdown"
         >
-          <!-- Workspace-Initial-Kreis -->
+          <!-- Grid-Symbol fuer "Alle Workspaces", sonst Workspace-Initial-Kreis -->
           <span
+            v-if="isAllWorkspacesView"
+            class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-ui-accent/10 text-ui-accent"
+            aria-hidden="true"
+          >
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          </span>
+          <span
+            v-else
             class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-ui-accent text-xs font-bold text-white"
             aria-hidden="true"
           >
             {{ workspaceInitial }}
           </span>
           <span class="max-w-[200px] truncate">
-            {{ workspaceStore.activeWorkspace?.name ?? 'Workspace' }}
+            {{ isAllWorkspacesView ? 'Alle Workspaces' : (workspaceStore.activeWorkspace?.name ?? 'Workspace') }}
           </span>
           <svg
             class="h-3.5 w-3.5 flex-shrink-0 text-ui-muted transition-transform duration-150"
@@ -236,14 +254,27 @@ const workspaceInitial = computed<string>(() =>
             v-if="isMpAdmin"
             type="button"
             role="menuitem"
-            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+            :aria-current="isAllWorkspacesView ? 'page' : undefined"
+            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+            :class="isAllWorkspacesView ? 'font-semibold text-ui-accent' : 'text-ui-text'"
             @click="navigateAllWorkspaces"
           >
             <!-- Grid-Icon -->
-            <svg class="h-4 w-4 flex-shrink-0 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <svg
+              class="h-4 w-4 flex-shrink-0"
+              :class="isAllWorkspacesView ? 'text-ui-accent' : 'text-ui-muted'"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"
+            >
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
             </svg>
-            Alle Workspaces
+            <span class="min-w-0 flex-1">Alle Workspaces</span>
+            <svg
+              v-if="isAllWorkspacesView"
+              class="ml-auto h-3.5 w-3.5 flex-shrink-0 text-ui-accent"
+              fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+            >
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+            </svg>
           </button>
 
           <!-- Workspace-Liste -->
@@ -252,10 +283,10 @@ const workspaceInitial = computed<string>(() =>
             :key="ws.id"
             type="button"
             role="menuitemradio"
-            :aria-checked="ws.id === workspaceStore.activeWorkspace?.id"
+            :aria-checked="!isAllWorkspacesView && ws.id === workspaceStore.activeWorkspace?.id"
             class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
             :class="
-              ws.id === workspaceStore.activeWorkspace?.id
+              !isAllWorkspacesView && ws.id === workspaceStore.activeWorkspace?.id
                 ? 'font-semibold text-ui-accent'
                 : 'text-ui-text'
             "
@@ -269,7 +300,7 @@ const workspaceInitial = computed<string>(() =>
             </span>
             <span class="min-w-0 flex-1 truncate">{{ ws.name }}</span>
             <svg
-              v-if="ws.id === workspaceStore.activeWorkspace?.id"
+              v-if="!isAllWorkspacesView && ws.id === workspaceStore.activeWorkspace?.id"
               class="ml-auto h-3.5 w-3.5 flex-shrink-0 text-ui-accent"
               fill="currentColor"
               viewBox="0 0 24 24"
