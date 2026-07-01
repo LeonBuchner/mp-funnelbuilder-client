@@ -26,6 +26,42 @@ import {
   type StepType,
 } from '~/types/funnel'
 
+// ---------------------------------------------------------------------------
+// Modul-Hilfsfunktion: Block tief klonen mit neuen UUIDs
+// ---------------------------------------------------------------------------
+
+/**
+ * Klont einen Block tief mit neuer uuid fuer den Block selbst sowie neuen
+ * uuids fuer alle Optionen bei Typen mit options-Array
+ * (single_choice, multi_choice, input_dropdown).
+ * Nutzt JSON-Roundtrip, um reaktive Vue-Proxies sicher zu traversieren.
+ */
+export function cloneBlockWithNewIds(block: Block): Block {
+  const raw = JSON.parse(JSON.stringify(block)) as Block
+  if (raw.type === 'single_choice') {
+    return {
+      ...raw,
+      id: crypto.randomUUID(),
+      options: raw.options.map(o => ({ ...o, id: crypto.randomUUID() })),
+    }
+  }
+  if (raw.type === 'multi_choice') {
+    return {
+      ...raw,
+      id: crypto.randomUUID(),
+      options: raw.options.map(o => ({ ...o, id: crypto.randomUUID() })),
+    }
+  }
+  if (raw.type === 'input_dropdown') {
+    return {
+      ...raw,
+      id: crypto.randomUUID(),
+      options: raw.options.map(o => ({ ...o, id: crypto.randomUUID() })),
+    }
+  }
+  return { ...raw, id: crypto.randomUUID() }
+}
+
 export type ValidationErrors = Record<string, string[]>
 
 /** Fehlerstruktur eines $fetch-422-Fehlers */
@@ -359,7 +395,8 @@ export const useEditorStore = defineStore('editor', () => {
 
   /**
    * Dupliziert einen Block direkt nach dem Original.
-   * SingleChoiceBlock-Optionen erhalten neue UUIDs damit sie unabhängig sind.
+   * Nutzt cloneBlockWithNewIds, sodass auch multi_choice- und
+   * input_dropdown-Optionen neue UUIDs erhalten.
    */
   function duplicateBlock(stepId: string, blockId: string): void {
     if (!content.value) return
@@ -368,17 +405,49 @@ export const useEditorStore = defineStore('editor', () => {
     const idx = step.blocks.findIndex(b => b.id === blockId)
     if (idx < 0) return
     snapshot()
-    const original = step.blocks[idx]!
-    const duplicate: Block =
-      original.type === 'single_choice'
-        ? {
-            ...original,
-            id: crypto.randomUUID(),
-            options: original.options.map(o => ({ ...o, id: crypto.randomUUID() })),
-          }
-        : { ...original, id: crypto.randomUUID() }
+    const duplicate = cloneBlockWithNewIds(step.blocks[idx]!)
     step.blocks.splice(idx + 1, 0, duplicate)
     selectedBlockId.value = duplicate.id
+    isDirty.value = true
+  }
+
+  /**
+   * Kopiert einen Block aus einem Step in einen anderen Step.
+   * Erzeugt einen tiefen Klon mit neuer uuid (und neuen option-uuids) und
+   * haengt ihn ans Ende des Ziel-Steps. Das Original bleibt unveraendert.
+   */
+  function copyBlockToStep(blockId: string, fromStepId: string, toStepId: string): void {
+    if (!content.value) return
+    const fromStep = content.value.steps.find(s => s.id === fromStepId)
+    const toStep = content.value.steps.find(s => s.id === toStepId)
+    if (!fromStep || !toStep) return
+    const block = fromStep.blocks.find(b => b.id === blockId)
+    if (!block) return
+    snapshot()
+    toStep.blocks.push(cloneBlockWithNewIds(block))
+    isDirty.value = true
+  }
+
+  /**
+   * Dupliziert einen kompletten Step mit neuer step-uuid und neuen uuids fuer
+   * alle enthaltenen Bloecke (und deren options). Der Klon wird direkt nach
+   * dem Original eingefuegt und anschliessend selektiert.
+   * Funktioniert fuer alle StepTypes (content, result, usw.).
+   */
+  function duplicateStep(stepId: string): void {
+    if (!content.value) return
+    const idx = content.value.steps.findIndex(s => s.id === stepId)
+    if (idx < 0) return
+    snapshot()
+    const rawStep = JSON.parse(JSON.stringify(content.value.steps[idx]!)) as Step
+    const clonedStep: Step = {
+      ...rawStep,
+      id: crypto.randomUUID(),
+      blocks: rawStep.blocks.map(cloneBlockWithNewIds),
+    }
+    content.value.steps.splice(idx + 1, 0, clonedStep)
+    selectedStepId.value = clonedStep.id
+    selectedBlockId.value = null
     isDirty.value = true
   }
 
@@ -496,6 +565,8 @@ export const useEditorStore = defineStore('editor', () => {
     reorderBlocks,
     reorderSteps,
     duplicateBlock,
+    copyBlockToStep,
+    duplicateStep,
     updateBlock,
     updateStep,
     updateSettings,

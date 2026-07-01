@@ -461,6 +461,43 @@ export interface PaginatedFunnelList {
 }
 
 // ---------------------------------------------------------------------------
+// Template (B14 Vorlagen-Galerie)
+// ---------------------------------------------------------------------------
+
+/**
+ * Funnel-Vorlage (System- oder Workspace-Vorlage).
+ * GET /api/admin/templates
+ */
+export interface Template {
+  id: string
+  name: string
+  category: string
+  description: string | null
+  thumbnail_url: string | null
+  schema_version: string
+  is_system: boolean
+  sort_order: number
+  created_at: string
+}
+
+export interface TemplateListMeta {
+  current_page?: number
+  last_page?: number
+  per_page?: number
+  total?: number
+  [key: string]: unknown
+}
+
+export interface TemplateListResponse {
+  data: Template[]
+  meta: TemplateListMeta
+}
+
+export interface TemplateResponse {
+  data: Template
+}
+
+// ---------------------------------------------------------------------------
 // Factory-Funktionen
 // ---------------------------------------------------------------------------
 

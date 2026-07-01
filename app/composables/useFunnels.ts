@@ -5,6 +5,7 @@
 import type {
   Funnel,
   FunnelContent,
+  FunnelListItem,
   FunnelVersion,
   PaginatedFunnelList,
 } from '~/types/funnel'
@@ -33,6 +34,10 @@ export interface FunnelVersionResponse {
 export interface ToggleFavoriteResponse {
   id: string
   is_favorite: boolean
+}
+
+export interface CloneFunnelResponse {
+  data: FunnelListItem
 }
 
 export function useFunnels() {
@@ -123,5 +128,17 @@ export function useFunnels() {
     })
   }
 
-  return { list, create, get, update, remove, saveDraft, publish, toggleFavorite }
+  /**
+   * Dupliziert einen Funnel (B12).
+   * POST /funnels/{funnelUuid}/clone
+   * Erlaubt: mp_team, mp_admin. Client: 403.
+   * Gibt den Klon zurück (Name „… (Kopie)", Status draft).
+   */
+  async function clone(funnelUuid: string): Promise<CloneFunnelResponse> {
+    return api<CloneFunnelResponse>(`/funnels/${funnelUuid}/clone`, {
+      method: 'POST',
+    })
+  }
+
+  return { list, create, get, update, remove, saveDraft, publish, toggleFavorite, clone }
 }

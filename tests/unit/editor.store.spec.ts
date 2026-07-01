@@ -877,4 +877,244 @@ describe('useEditorStore', () => {
 
     expect(store.isDirty).toBe(true)
   })
+
+  // -------------------------------------------------------------------------
+  // copyBlockToStep()
+  // -------------------------------------------------------------------------
+
+  it('copyBlockToStep() erzeugt im Ziel-Step einen Block mit anderer uuid', () => {
+    const store = setupStoreWithContent()
+    store.addStep()
+    const step1Id = store.steps[0]!.id
+    const step2Id = store.steps[1]!.id
+
+    store.addBlock(step1Id, 'text')
+    const originalBlockId = store.steps[0]!.blocks[0]!.id
+
+    store.copyBlockToStep(originalBlockId, step1Id, step2Id)
+
+    const step2Blocks = store.steps[1]!.blocks
+    expect(step2Blocks).toHaveLength(1)
+    expect(step2Blocks[0]!.id).not.toBe(originalBlockId)
+    expect(step2Blocks[0]!.type).toBe('text')
+    expect(store.isDirty).toBe(true)
+  })
+
+  it('copyBlockToStep() laesst Original-Block und Original-Step unveraendert', () => {
+    const store = setupStoreWithContent()
+    store.addStep()
+    const step1Id = store.steps[0]!.id
+    const step2Id = store.steps[1]!.id
+
+    store.addBlock(step1Id, 'button')
+    const originalBlockId = store.steps[0]!.blocks[0]!.id
+
+    store.copyBlockToStep(originalBlockId, step1Id, step2Id)
+
+    // Original-Step unveraendert
+    expect(store.steps[0]!.blocks).toHaveLength(1)
+    expect(store.steps[0]!.blocks[0]!.id).toBe(originalBlockId)
+  })
+
+  it('copyBlockToStep() gibt options bei single_choice neue uuids', () => {
+    const store = setupStoreWithContent()
+    store.addStep()
+    const step1Id = store.steps[0]!.id
+    const step2Id = store.steps[1]!.id
+
+    store.addBlock(step1Id, 'single_choice')
+    const originalBlock = store.steps[0]!.blocks[0]!
+
+    store.copyBlockToStep(originalBlock.id, step1Id, step2Id)
+
+    const copiedBlock = store.steps[1]!.blocks[0]!
+    expect(copiedBlock.type).toBe('single_choice')
+
+    if (originalBlock.type === 'single_choice' && copiedBlock.type === 'single_choice') {
+      originalBlock.options.forEach((opt, i) => {
+        expect(opt.id).not.toBe(copiedBlock.options[i]!.id)
+        expect(opt.label).toBe(copiedBlock.options[i]!.label)
+      })
+    }
+  })
+
+  it('copyBlockToStep() gibt options bei multi_choice neue uuids', () => {
+    const store = setupStoreWithContent()
+    store.addStep()
+    const step1Id = store.steps[0]!.id
+    const step2Id = store.steps[1]!.id
+
+    store.addBlock(step1Id, 'multi_choice')
+    const originalBlock = store.steps[0]!.blocks[0]!
+
+    store.copyBlockToStep(originalBlock.id, step1Id, step2Id)
+
+    const copiedBlock = store.steps[1]!.blocks[0]!
+    expect(copiedBlock.type).toBe('multi_choice')
+
+    if (originalBlock.type === 'multi_choice' && copiedBlock.type === 'multi_choice') {
+      originalBlock.options.forEach((opt, i) => {
+        expect(opt.id).not.toBe(copiedBlock.options[i]!.id)
+      })
+    }
+  })
+
+  it('copyBlockToStep() gibt options bei input_dropdown neue uuids', () => {
+    const store = setupStoreWithContent()
+    store.addStep()
+    const step1Id = store.steps[0]!.id
+    const step2Id = store.steps[1]!.id
+
+    store.addBlock(step1Id, 'input_dropdown')
+    const originalBlock = store.steps[0]!.blocks[0]!
+
+    store.copyBlockToStep(originalBlock.id, step1Id, step2Id)
+
+    const copiedBlock = store.steps[1]!.blocks[0]!
+    expect(copiedBlock.type).toBe('input_dropdown')
+
+    if (originalBlock.type === 'input_dropdown' && copiedBlock.type === 'input_dropdown') {
+      originalBlock.options.forEach((opt, i) => {
+        expect(opt.id).not.toBe(copiedBlock.options[i]!.id)
+      })
+    }
+  })
+
+  it('copyBlockToStep() ist undobar', () => {
+    const store = setupStoreWithContent()
+    store.addStep()
+    const step1Id = store.steps[0]!.id
+    const step2Id = store.steps[1]!.id
+
+    store.addBlock(step1Id, 'text')
+    const originalBlockId = store.steps[0]!.blocks[0]!.id
+
+    const contentBefore = JSON.parse(JSON.stringify(store.content))
+
+    store.copyBlockToStep(originalBlockId, step1Id, step2Id)
+    store.undo()
+
+    expect(store.content).toEqual(contentBefore)
+  })
+
+  it('copyBlockToStep() tut nichts bei ungueltigem blockId', () => {
+    const store = setupStoreWithContent()
+    store.addStep()
+    const step1Id = store.steps[0]!.id
+    const step2Id = store.steps[1]!.id
+    const contentBefore = JSON.parse(JSON.stringify(store.content))
+    store.isDirty = false
+
+    store.copyBlockToStep('kein-gueltiger-block', step1Id, step2Id)
+
+    expect(store.content).toEqual(contentBefore)
+    expect(store.isDirty).toBe(false)
+  })
+
+  // -------------------------------------------------------------------------
+  // duplicateStep()
+  // -------------------------------------------------------------------------
+
+  it('duplicateStep() erzeugt einen neuen Step direkt nach dem Original', () => {
+    const store = setupStoreWithContent()
+    store.addStep()
+    const step1Id = store.steps[0]!.id
+    const originalCount = store.steps.length
+
+    store.duplicateStep(step1Id)
+
+    expect(store.steps).toHaveLength(originalCount + 1)
+    // Klon sitzt an Index 1, direkt nach dem Original an Index 0
+    expect(store.steps[1]!.id).not.toBe(step1Id)
+    expect(store.isDirty).toBe(true)
+  })
+
+  it('duplicateStep() selektiert den geklonten Step', () => {
+    const store = setupStoreWithContent()
+    const step1Id = store.steps[0]!.id
+
+    store.duplicateStep(step1Id)
+
+    // Klon ist an Index 1
+    expect(store.selectedStepId).toBe(store.steps[1]!.id)
+    expect(store.selectedBlockId).toBeNull()
+  })
+
+  it('duplicateStep() vergibt neue uuids fuer Bloecke und deren options', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.steps[0]!.id
+
+    store.addBlock(stepId, 'single_choice')
+    const originalBlock = store.steps[0]!.blocks[0]!
+
+    store.duplicateStep(stepId)
+
+    const clonedStep = store.steps[1]!
+    const clonedBlock = clonedStep.blocks[0]!
+
+    expect(clonedStep.id).not.toBe(stepId)
+    expect(clonedBlock.id).not.toBe(originalBlock.id)
+
+    if (originalBlock.type === 'single_choice' && clonedBlock.type === 'single_choice') {
+      originalBlock.options.forEach((opt, i) => {
+        expect(opt.id).not.toBe(clonedBlock.options[i]!.id)
+        expect(opt.label).toBe(clonedBlock.options[i]!.label)
+      })
+    }
+  })
+
+  it('duplicateStep() laesst den Original-Step unveraendert', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.steps[0]!.id
+
+    store.addBlock(stepId, 'text')
+    store.addBlock(stepId, 'button')
+    const originalBlockIds = store.steps[0]!.blocks.map(b => b.id)
+    const originalTitle = store.steps[0]!.internalTitle
+
+    store.duplicateStep(stepId)
+
+    expect(store.steps[0]!.id).toBe(stepId)
+    expect(store.steps[0]!.internalTitle).toBe(originalTitle)
+    expect(store.steps[0]!.blocks.map(b => b.id)).toEqual(originalBlockIds)
+  })
+
+  it('duplicateStep() dupliziert auch result-Steps', () => {
+    const store = setupStoreWithContent()
+    store.addStep('result')
+    const resultStepId = store.steps[store.steps.length - 1]!.id
+
+    const totalBefore = store.steps.length
+
+    store.duplicateStep(resultStepId)
+
+    expect(store.steps).toHaveLength(totalBefore + 1)
+    // Klon hat type 'result'
+    const clonedStep = store.steps.find(s => s.id === store.selectedStepId)
+    expect(clonedStep?.type).toBe('result')
+  })
+
+  it('duplicateStep() ist undobar', () => {
+    const store = setupStoreWithContent()
+    const step1Id = store.steps[0]!.id
+
+    store.addBlock(step1Id, 'text')
+    const contentBefore = JSON.parse(JSON.stringify(store.content))
+
+    store.duplicateStep(step1Id)
+    store.undo()
+
+    expect(store.content).toEqual(contentBefore)
+  })
+
+  it('duplicateStep() tut nichts bei ungueltigem stepId', () => {
+    const store = setupStoreWithContent()
+    const originalCount = store.steps.length
+    store.isDirty = false
+
+    store.duplicateStep('kein-gueltiger-step')
+
+    expect(store.steps).toHaveLength(originalCount)
+    expect(store.isDirty).toBe(false)
+  })
 })

@@ -538,6 +538,37 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
                       />
                     </svg>
                   </button>
+                  <!-- Seite duplizieren -->
+                  <button
+                    type="button"
+                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+                    aria-label="Seite duplizieren"
+                    title="Duplizieren"
+                    @click="editorStore.duplicateStep(step.id)"
+                  >
+                    <svg
+                      class="h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      aria-hidden="true"
+                    >
+                      <rect
+                        x="8"
+                        y="8"
+                        width="10"
+                        height="10"
+                        rx="1.5"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M4 14V5a1 1 0 011-1h9"
+                      />
+                    </svg>
+                  </button>
                   <button
                     type="button"
                     :disabled="editorStore.steps.length <= 1"
@@ -694,6 +725,37 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
                   :class="{ 'opacity-100': editorStore.selectedStepId === step.id }"
                   @click.stop
                 >
+                  <!-- Ergebnis duplizieren -->
+                  <button
+                    type="button"
+                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+                    aria-label="Ergebnis duplizieren"
+                    title="Duplizieren"
+                    @click="editorStore.duplicateStep(step.id)"
+                  >
+                    <svg
+                      class="h-3 w-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      aria-hidden="true"
+                    >
+                      <rect
+                        x="8"
+                        y="8"
+                        width="10"
+                        height="10"
+                        rx="1.5"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M4 14V5a1 1 0 011-1h9"
+                      />
+                    </svg>
+                  </button>
                   <button
                     type="button"
                     :disabled="editorStore.steps.length <= 1"

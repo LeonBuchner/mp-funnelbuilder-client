@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { FunnelListItem } from '~/types/funnel'
+import type { FunnelListItem, Template } from '~/types/funnel'
 import type { CreateFunnelPayload } from '~/composables/useFunnels'
+import type { SaveAsTemplatePayload } from '~/composables/useTemplates'
 
 definePageMeta({
   layout: 'admin',
@@ -13,7 +14,10 @@ useSeoMeta({
 })
 
 const workspaceStore = useWorkspaceStore()
+const authStore = useAuthStore()
 const funnelsApi = useFunnels()
+const templatesApi = useTemplates()
+const { trapFocus } = useFocusTrap()
 const toast = useToast()
 const router = useRouter()
 
@@ -74,23 +78,67 @@ const filteredFunnels = computed<FunnelListItem[]>(() => {
 const isReadonly = computed(() => workspaceStore.activeRole === 'client')
 
 // ---------------------------------------------------------------------------
-// Funnel anlegen
+// Funnel anlegen (Dialog: Leerer Funnel + Vorlagen-Galerie)
 // ---------------------------------------------------------------------------
 const showCreateDialog = ref(false)
+const createDialogInnerRef = ref<HTMLElement | null>(null)
+const createDialogTab = ref<'blank' | 'template'>('blank')
+
+// Tab: Leerer Funnel
 const newFunnelName = ref('')
+const newFunnelNameInputRef = ref<HTMLInputElement | null>(null)
 const isCreating = ref(false)
 const createError = ref<string | null>(null)
+
+// Tab: Aus Vorlage
+const templates = ref<Template[]>([])
+const isLoadingTemplates = ref(false)
+const templatesLoadError = ref<string | null>(null)
+const isCreatingFromTemplate = ref(false)
 
 function openCreateDialog(): void {
   newFunnelName.value = ''
   createError.value = null
+  createDialogTab.value = 'blank'
   showCreateDialog.value = true
+  nextTick(() => newFunnelNameInputRef.value?.focus())
 }
 
 function closeCreateDialog(): void {
   showCreateDialog.value = false
   newFunnelName.value = ''
   createError.value = null
+}
+
+function handleCreateKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    closeCreateDialog()
+    return
+  }
+  if (createDialogInnerRef.value) trapFocus(event, createDialogInnerRef.value)
+}
+
+function switchCreateTab(tab: 'blank' | 'template'): void {
+  createDialogTab.value = tab
+  if (tab === 'template') {
+    loadTemplates()
+  } else {
+    nextTick(() => newFunnelNameInputRef.value?.focus())
+  }
+}
+
+async function loadTemplates(): Promise<void> {
+  if (templates.value.length > 0) return
+  isLoadingTemplates.value = true
+  templatesLoadError.value = null
+  try {
+    const response = await templatesApi.list()
+    templates.value = response.data
+  } catch {
+    templatesLoadError.value = 'Vorlagen konnten nicht geladen werden. Bitte erneut versuchen.'
+  } finally {
+    isLoadingTemplates.value = false
+  }
 }
 
 async function handleCreate(): Promise<void> {
@@ -116,8 +164,38 @@ async function handleCreate(): Promise<void> {
   }
 }
 
-function handleCreateKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') closeCreateDialog()
+async function handleCreateFromTemplate(template: Template): Promise<void> {
+  const wsId = workspaceStore.activeWorkspace?.id
+  if (!wsId) return
+  isCreatingFromTemplate.value = true
+  try {
+    const response = await templatesApi.createFunnelFromTemplate(wsId, template.id)
+    closeCreateDialog()
+    await router.push(`/admin/funnels/${response.data.id}/editor`)
+  } catch {
+    toast.error('Funnel aus Vorlage konnte nicht erstellt werden. Bitte erneut versuchen.')
+  } finally {
+    isCreatingFromTemplate.value = false
+  }
+}
+
+// ---------------------------------------------------------------------------
+// B12: Funnel duplizieren
+// ---------------------------------------------------------------------------
+const isCloningId = ref<string | null>(null)
+
+async function handleClone(funnel: FunnelListItem): Promise<void> {
+  isCloningId.value = funnel.id
+  openMenuId.value = null
+  try {
+    const response = await funnelsApi.clone(funnel.id)
+    closeAllMenus()
+    await router.push(`/admin/funnels/${response.data.id}/editor`)
+  } catch {
+    toast.error('Duplizieren fehlgeschlagen. Bitte erneut versuchen.')
+  } finally {
+    isCloningId.value = null
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -125,6 +203,7 @@ function handleCreateKeydown(event: KeyboardEvent): void {
 // ---------------------------------------------------------------------------
 const deletingFunnelId = ref<string | null>(null)
 const deletingFunnelName = ref('')
+const deleteDialogInnerRef = ref<HTMLElement | null>(null)
 
 function confirmDelete(funnel: FunnelListItem): void {
   deletingFunnelId.value = funnel.id
@@ -153,7 +232,11 @@ async function handleDelete(): Promise<void> {
 }
 
 function handleDeleteKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') cancelDelete()
+  if (event.key === 'Escape') {
+    cancelDelete()
+    return
+  }
+  if (deleteDialogInnerRef.value) trapFocus(event, deleteDialogInnerRef.value)
 }
 
 // ---------------------------------------------------------------------------
@@ -162,7 +245,6 @@ function handleDeleteKeydown(event: KeyboardEvent): void {
 async function handleToggleFavorite(funnel: FunnelListItem): Promise<void> {
   if (isReadonly.value) return
   const prev = funnel.is_favorite
-  // Optimistisch umschalten
   funnels.value = funnels.value.map(f =>
     f.id === funnel.id ? { ...f, is_favorite: !f.is_favorite } : f,
   )
@@ -172,12 +254,83 @@ async function handleToggleFavorite(funnel: FunnelListItem): Promise<void> {
       f.id === funnel.id ? { ...f, is_favorite: response.is_favorite } : f,
     )
   } catch {
-    // Zustand zurücksetzen
     funnels.value = funnels.value.map(f =>
       f.id === funnel.id ? { ...f, is_favorite: prev } : f,
     )
     toast.error('Favorit konnte nicht geändert werden.')
   }
+}
+
+// ---------------------------------------------------------------------------
+// B14: Als Vorlage speichern (nur mp_admin)
+// ---------------------------------------------------------------------------
+const showSaveAsTemplateDialog = ref(false)
+const saveAsTemplateFunnelId = ref<string | null>(null)
+const saveAsTemplateName = ref('')
+const saveAsTemplateCategory = ref('')
+const saveAsTemplateDescription = ref('')
+const isSavingAsTemplate = ref(false)
+const saveAsTemplateError = ref<string | null>(null)
+const saveAsTemplateDialogInnerRef = ref<HTMLElement | null>(null)
+const saveAsTemplateNameInputRef = ref<HTMLInputElement | null>(null)
+
+function openSaveAsTemplateDialog(funnel: FunnelListItem): void {
+  saveAsTemplateFunnelId.value = funnel.id
+  saveAsTemplateName.value = funnel.name
+  saveAsTemplateCategory.value = ''
+  saveAsTemplateDescription.value = ''
+  saveAsTemplateError.value = null
+  showSaveAsTemplateDialog.value = true
+  openMenuId.value = null
+  nextTick(() => saveAsTemplateNameInputRef.value?.focus())
+}
+
+function closeSaveAsTemplateDialog(): void {
+  showSaveAsTemplateDialog.value = false
+  saveAsTemplateFunnelId.value = null
+  saveAsTemplateName.value = ''
+  saveAsTemplateCategory.value = ''
+  saveAsTemplateDescription.value = ''
+  saveAsTemplateError.value = null
+}
+
+async function handleSaveAsTemplate(): Promise<void> {
+  const id = saveAsTemplateFunnelId.value
+  const name = saveAsTemplateName.value.trim()
+  const category = saveAsTemplateCategory.value
+
+  if (!id || !name || !category) {
+    saveAsTemplateError.value = 'Bitte Name und Kategorie ausfüllen.'
+    return
+  }
+
+  isSavingAsTemplate.value = true
+  saveAsTemplateError.value = null
+
+  try {
+    const payload: SaveAsTemplatePayload = {
+      name,
+      category,
+      ...(saveAsTemplateDescription.value.trim()
+        ? { description: saveAsTemplateDescription.value.trim() }
+        : {}),
+    }
+    await templatesApi.saveAsTemplate(id, payload)
+    toast.success('Vorlage wurde gespeichert.')
+    closeSaveAsTemplateDialog()
+  } catch {
+    saveAsTemplateError.value = 'Speichern fehlgeschlagen. Bitte erneut versuchen.'
+  } finally {
+    isSavingAsTemplate.value = false
+  }
+}
+
+function handleSaveAsTemplateKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    closeSaveAsTemplateDialog()
+    return
+  }
+  if (saveAsTemplateDialogInnerRef.value) trapFocus(event, saveAsTemplateDialogInnerRef.value)
 }
 
 // ---------------------------------------------------------------------------
@@ -240,6 +393,23 @@ function thumbnailColor(name: string): string {
     hash = (hash * 31 + name.charCodeAt(i)) | 0
   }
   return colors[Math.abs(hash) % colors.length] ?? '#3579fa'
+}
+
+/** Farb-Palette für Template-Kategorie-Badges (bg + text). */
+function categoryColors(category: string): { bg: string; text: string } {
+  const palette = [
+    { bg: '#dbeafe', text: '#1d4ed8' },
+    { bg: '#ede9fe', text: '#7c3aed' },
+    { bg: '#fce7f3', text: '#be185d' },
+    { bg: '#fef3c7', text: '#b45309' },
+    { bg: '#d1fae5', text: '#065f46' },
+    { bg: '#cffafe', text: '#0e7490' },
+  ]
+  let hash = 0
+  for (let i = 0; i < category.length; i++) {
+    hash = (hash * 31 + category.charCodeAt(i)) | 0
+  }
+  return palette[Math.abs(hash) % palette.length] ?? palette[0]!
 }
 </script>
 
@@ -481,7 +651,6 @@ function thumbnailColor(name: string): string {
             <!-- Name + Thumbnail -->
             <td class="px-4 py-3">
               <div class="flex items-center gap-3">
-                <!-- Thumbnail -->
                 <div class="flex-shrink-0">
                   <img
                     v-if="funnel.thumbnail_url"
@@ -502,7 +671,6 @@ function thumbnailColor(name: string): string {
                   </div>
                 </div>
 
-                <!-- Name + Zeitstempel -->
                 <div class="min-w-0">
                   <NuxtLink
                     :to="`/admin/funnels/${funnel.id}/editor`"
@@ -554,7 +722,6 @@ function thumbnailColor(name: string): string {
                 >
                   {{ statusLabel(funnel.status) }}
                 </span>
-                <!-- Link-Icon bei veröffentlichten Funnels -->
                 <a
                   v-if="funnel.status === 'published'"
                   :href="`/f/${funnel.id}`"
@@ -604,12 +771,24 @@ function thumbnailColor(name: string): string {
               <button
                 type="button"
                 class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                :class="{ 'opacity-50': isCloningId === funnel.id }"
+                :disabled="isCloningId === funnel.id"
                 :aria-expanded="openMenuId === funnel.id"
                 aria-haspopup="true"
                 :aria-label="`Aktionen für ${funnel.name}`"
                 @click="(e) => toggleMenu(funnel.id, e)"
               >
-                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg
+                  v-if="isCloningId === funnel.id"
+                  class="h-4 w-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <svg v-else class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 5c-.828 0-1.5-.672-1.5-1.5S11.172 2 12 2s1.5.672 1.5 1.5S12.828 5 12 5zm0 7c-.828 0-1.5-.672-1.5-1.5S11.172 10 12 10s1.5.672 1.5 1.5S12.828 12 12 12zm0 7c-.828 0-1.5-.672-1.5-1.5S11.172 17 12 17s1.5.672 1.5 1.5S12.828 19 12 19z" />
                 </svg>
               </button>
@@ -617,9 +796,10 @@ function thumbnailColor(name: string): string {
               <!-- Dropdown-Menu -->
               <div
                 v-if="openMenuId === funnel.id"
-                class="absolute right-4 top-12 z-20 min-w-[140px] rounded-xl border border-ui-border bg-ui-surface py-1 shadow-lg"
+                class="absolute right-4 top-12 z-20 min-w-[180px] rounded-xl border border-ui-border bg-ui-surface py-1 shadow-lg"
                 role="menu"
               >
+                <!-- Bearbeiten -->
                 <NuxtLink
                   :to="`/admin/funnels/${funnel.id}/editor`"
                   role="menuitem"
@@ -630,6 +810,39 @@ function thumbnailColor(name: string): string {
                   </svg>
                   Bearbeiten
                 </NuxtLink>
+
+                <!-- B12: Duplizieren (mp_team + mp_admin) -->
+                <button
+                  v-if="!isReadonly"
+                  type="button"
+                  role="menuitem"
+                  class="flex w-full items-center gap-2 px-3.5 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+                  @click="handleClone(funnel)"
+                >
+                  <svg class="h-3.5 w-3.5 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Duplizieren
+                </button>
+
+                <!-- B14: Als Vorlage speichern (nur mp_admin) -->
+                <button
+                  v-if="authStore.isMpAdmin"
+                  type="button"
+                  role="menuitem"
+                  class="flex w-full items-center gap-2 px-3.5 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+                  @click="openSaveAsTemplateDialog(funnel)"
+                >
+                  <svg class="h-3.5 w-3.5 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  Als Vorlage speichern
+                </button>
+
+                <!-- Trennlinie vor Löschen -->
+                <div v-if="!isReadonly" class="my-1 border-t border-ui-border" role="separator" />
+
+                <!-- Löschen -->
                 <button
                   v-if="!isReadonly"
                   type="button"
@@ -746,28 +959,69 @@ function thumbnailColor(name: string): string {
     </div>
 
     <!-- ------------------------------------------------------------------ -->
-    <!-- Dialog: Neuen Funnel anlegen                                        -->
+    <!-- Dialog: Neuen Funnel anlegen (Leerer Funnel + Vorlagen-Galerie)     -->
     <!-- ------------------------------------------------------------------ -->
     <Teleport to="body">
       <div
         v-if="showCreateDialog"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+        class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 p-4 pt-16 backdrop-blur-sm"
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-dialog-title"
         @click.self="closeCreateDialog"
         @keydown="handleCreateKeydown"
       >
-        <div class="w-full max-w-sm rounded-2xl bg-ui-surface shadow-xl">
+        <div
+          ref="createDialogInnerRef"
+          class="w-full rounded-2xl bg-ui-surface shadow-xl transition-all duration-200"
+          :class="createDialogTab === 'template' ? 'max-w-3xl' : 'max-w-sm'"
+        >
+          <!-- Header -->
           <div class="border-b border-ui-border px-6 py-4">
             <h2
               id="create-dialog-title"
-              class="text-base font-semibold text-ui-text"
+              class="mb-3 text-base font-semibold text-ui-text"
             >
               Neuer Funnel
             </h2>
+
+            <!-- Tab-Umschalter -->
+            <div
+              role="tablist"
+              aria-label="Erstellungsmethode wählen"
+              class="flex gap-1 rounded-lg bg-ui-bg p-1"
+            >
+              <button
+                role="tab"
+                :aria-selected="createDialogTab === 'blank'"
+                type="button"
+                class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                :class="createDialogTab === 'blank'
+                  ? 'bg-white text-ui-text shadow-sm'
+                  : 'text-ui-muted hover:text-ui-text'"
+                @click="switchCreateTab('blank')"
+              >
+                Leerer Funnel
+              </button>
+              <button
+                role="tab"
+                :aria-selected="createDialogTab === 'template'"
+                type="button"
+                class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                :class="createDialogTab === 'template'
+                  ? 'bg-white text-ui-text shadow-sm'
+                  : 'text-ui-muted hover:text-ui-text'"
+                @click="switchCreateTab('template')"
+              >
+                Aus Vorlage
+              </button>
+            </div>
           </div>
+
+          <!-- Tab-Inhalt: Leerer Funnel -->
           <form
+            v-if="createDialogTab === 'blank'"
+            role="tabpanel"
             class="p-6"
             @submit.prevent="handleCreate"
           >
@@ -780,11 +1034,11 @@ function thumbnailColor(name: string): string {
               </label>
               <input
                 id="new-funnel-name"
+                ref="newFunnelNameInputRef"
                 v-model="newFunnelName"
                 type="text"
                 placeholder="z. B. Kontaktformular Herbst 2025"
                 required
-                autofocus
                 class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
               >
               <p
@@ -812,12 +1066,160 @@ function thumbnailColor(name: string): string {
               </button>
             </div>
           </form>
+
+          <!-- Tab-Inhalt: Aus Vorlage -->
+          <div
+            v-else
+            role="tabpanel"
+            class="p-6"
+          >
+            <!-- Ladeindikator -->
+            <div
+              v-if="isLoadingTemplates"
+              class="flex items-center justify-center gap-3 py-16 text-ui-muted"
+              aria-busy="true"
+              aria-label="Vorlagen werden geladen"
+            >
+              <svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span class="text-sm">Vorlagen werden geladen...</span>
+            </div>
+
+            <!-- Fehler -->
+            <div
+              v-else-if="templatesLoadError"
+              class="rounded-lg border border-red-200 bg-red-50 px-4 py-6 text-center"
+              role="alert"
+            >
+              <p class="mb-3 text-sm text-red-700">
+                {{ templatesLoadError }}
+              </p>
+              <button
+                type="button"
+                class="text-sm font-medium text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                @click="() => { templates = []; loadTemplates() }"
+              >
+                Erneut versuchen
+              </button>
+            </div>
+
+            <!-- Erstellen läuft -->
+            <div
+              v-else-if="isCreatingFromTemplate"
+              class="flex items-center justify-center gap-3 py-16 text-ui-muted"
+              aria-busy="true"
+              aria-label="Funnel wird erstellt"
+            >
+              <svg class="h-5 w-5 animate-spin text-ui-accent" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span class="text-sm">Funnel wird erstellt...</span>
+            </div>
+
+            <!-- Keine Vorlagen -->
+            <div
+              v-else-if="templates.length === 0"
+              class="py-16 text-center text-sm text-ui-muted"
+            >
+              Noch keine Vorlagen verfügbar.
+            </div>
+
+            <!-- Vorlagen-Grid -->
+            <div
+              v-else
+              class="max-h-[60vh] overflow-y-auto"
+            >
+              <div class="grid grid-cols-2 gap-3 pb-1 sm:grid-cols-3">
+                <button
+                  v-for="template in templates"
+                  :key="template.id"
+                  type="button"
+                  class="group/card overflow-hidden rounded-xl border border-ui-border bg-white text-left transition-all hover:border-ui-accent hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                  :aria-label="`Funnel aus Vorlage '${template.name}' erstellen`"
+                  @click="handleCreateFromTemplate(template)"
+                >
+                  <!-- Thumbnail -->
+                  <div class="h-28 overflow-hidden rounded-t-xl">
+                    <img
+                      v-if="template.thumbnail_url"
+                      :src="template.thumbnail_url"
+                      :alt="`Vorschau der Vorlage ${template.name}`"
+                      width="240"
+                      height="112"
+                      loading="lazy"
+                      class="h-full w-full object-cover transition-transform group-hover/card:scale-105"
+                    >
+                    <div
+                      v-else
+                      class="flex h-full flex-col items-center justify-center gap-1.5"
+                      :style="{ backgroundColor: categoryColors(template.category).bg }"
+                      aria-hidden="true"
+                    >
+                      <!-- Funnel-Icon -->
+                      <svg
+                        class="h-8 w-8"
+                        :style="{ color: categoryColors(template.category).text }"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                      </svg>
+                      <span
+                        class="text-xs font-medium"
+                        :style="{ color: categoryColors(template.category).text }"
+                      >
+                        {{ template.category }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Karten-Text -->
+                  <div class="p-3">
+                    <p class="truncate text-sm font-medium text-ui-text">
+                      {{ template.name }}
+                    </p>
+                    <span
+                      class="mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+                      :style="{
+                        backgroundColor: categoryColors(template.category).bg,
+                        color: categoryColors(template.category).text,
+                      }"
+                    >
+                      {{ template.category }}
+                    </span>
+                    <p
+                      v-if="template.description"
+                      class="mt-1 line-clamp-2 text-xs text-ui-muted"
+                    >
+                      {{ template.description }}
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-4 flex justify-end border-t border-ui-border pt-4">
+              <button
+                type="button"
+                class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                @click="closeCreateDialog"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </Teleport>
 
     <!-- ------------------------------------------------------------------ -->
-    <!-- Dialog: Löschen bestätigen                                        -->
+    <!-- Dialog: Löschen bestätigen                                          -->
     <!-- ------------------------------------------------------------------ -->
     <Teleport to="body">
       <div
@@ -829,7 +1231,7 @@ function thumbnailColor(name: string): string {
         @click.self="cancelDelete"
         @keydown="handleDeleteKeydown"
       >
-        <div class="w-full max-w-sm rounded-2xl bg-ui-surface shadow-xl">
+        <div ref="deleteDialogInnerRef" class="w-full max-w-sm rounded-2xl bg-ui-surface shadow-xl">
           <div class="p-6">
             <h2
               id="delete-dialog-title"
@@ -858,6 +1260,125 @@ function thumbnailColor(name: string): string {
               Löschen
             </button>
           </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Dialog: Als Vorlage speichern (B14, nur mp_admin)                  -->
+    <!-- ------------------------------------------------------------------ -->
+    <Teleport to="body">
+      <div
+        v-if="showSaveAsTemplateDialog"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="save-template-dialog-title"
+        @click.self="closeSaveAsTemplateDialog"
+        @keydown="handleSaveAsTemplateKeydown"
+      >
+        <div
+          ref="saveAsTemplateDialogInnerRef"
+          class="w-full max-w-sm rounded-2xl bg-ui-surface shadow-xl"
+        >
+          <div class="border-b border-ui-border px-6 py-4">
+            <h2
+              id="save-template-dialog-title"
+              class="text-base font-semibold text-ui-text"
+            >
+              Als Vorlage speichern
+            </h2>
+          </div>
+          <form class="p-6" @submit.prevent="handleSaveAsTemplate">
+            <!-- Name -->
+            <div class="mb-4">
+              <label
+                for="save-template-name"
+                class="mb-1.5 block text-sm font-medium text-ui-text"
+              >
+                Name der Vorlage
+              </label>
+              <input
+                id="save-template-name"
+                ref="saveAsTemplateNameInputRef"
+                v-model="saveAsTemplateName"
+                type="text"
+                placeholder="z. B. Lead-Funnel Herbst"
+                required
+                class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              >
+            </div>
+
+            <!-- Kategorie -->
+            <div class="mb-4">
+              <label
+                for="save-template-category"
+                class="mb-1.5 block text-sm font-medium text-ui-text"
+              >
+                Kategorie
+              </label>
+              <select
+                id="save-template-category"
+                v-model="saveAsTemplateCategory"
+                required
+                class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              >
+                <option value="" disabled>
+                  Kategorie wählen
+                </option>
+                <option value="Leadgenerierung">Leadgenerierung</option>
+                <option value="Quiz">Quiz</option>
+                <option value="E-Commerce">E-Commerce</option>
+                <option value="Kontaktformular">Kontaktformular</option>
+                <option value="Bewerbung">Bewerbung</option>
+                <option value="Sonstiges">Sonstiges</option>
+              </select>
+            </div>
+
+            <!-- Beschreibung (optional) -->
+            <div class="mb-5">
+              <label
+                for="save-template-description"
+                class="mb-1.5 block text-sm font-medium text-ui-text"
+              >
+                Beschreibung
+                <span class="ml-1 font-normal text-ui-muted">(optional)</span>
+              </label>
+              <textarea
+                id="save-template-description"
+                v-model="saveAsTemplateDescription"
+                rows="3"
+                placeholder="Kurz erklären, wofür diese Vorlage geeignet ist."
+                class="w-full resize-none rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              />
+            </div>
+
+            <!-- Fehler -->
+            <p
+              v-if="saveAsTemplateError"
+              class="mb-4 text-xs text-red-600"
+              role="alert"
+            >
+              {{ saveAsTemplateError }}
+            </p>
+
+            <div class="flex justify-end gap-2">
+              <button
+                type="button"
+                class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                @click="closeSaveAsTemplateDialog"
+              >
+                Abbrechen
+              </button>
+              <button
+                type="submit"
+                :disabled="isSavingAsTemplate"
+                class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              >
+                {{ isSavingAsTemplate ? 'Wird gespeichert...' : 'Als Vorlage speichern' }}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </Teleport>
