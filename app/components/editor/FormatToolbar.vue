@@ -1,10 +1,11 @@
 <!--
-  EditorFormatToolbar: Format-Toolbar fuer Text-Bloecke im Kontext-Panel.
+  EditorFormatToolbar: Format-Toolbar für Text-Blöcke im Kontext-Panel.
   Layout nach 08-element-ausgewaehlt-formatierung.jpg:
-    Zeile 1: S / M / L / XL / ...  (textSize via editorStore)
+    Zeile 1: S / M / L / XL / •••  (Schnell-Buttons + "Mehr"-Dropdown für alle Größen)
     Zeile 2: B / I / U              (TipTap chain commands)
-    Zeile 3: Emoji | Link           (TipTap insertContent / setLink)
-    Zeile 4: Textfarbe | Hintergrund (styles.color / styles.backgroundColor)
+    Zeile 3: Ausrichtung links / zentriert / rechts  (styles.textAlign)
+    Zeile 4: Emoji | Link           (TipTap insertContent / setLink)
+    Zeile 5: Textfarbe | Hintergrund (styles.color / styles.backgroundColor)
 
   B/I/U/Link nutzen useActiveEditor(), um den TipTap-Editor des
   aktuell selektierten Text-Blocks anzusprechen.
@@ -12,8 +13,17 @@
   damit die Selektion erhalten bleibt.
 -->
 <script setup lang="ts">
+import { onClickOutside } from '@vueuse/core'
 import type { TextBlock } from '~/types/funnel'
 import { useActiveEditor } from '~/composables/useActiveEditor'
+import {
+  FONT_SIZE_PX_OPTIONS,
+  FONT_SIZE_BADGE,
+  FONT_SIZE_QUICK_BUTTONS,
+  getActiveFontSizePx,
+  getActiveTextAlign,
+  type TextAlignKey,
+} from '~/utils/textSizes'
 
 const props = defineProps<{
   isReadonly: boolean
@@ -37,30 +47,80 @@ const showLinkInput = ref(false)
 const linkUrl = ref('https://')
 
 // -------------------------------------------------------------------------
-// TextSize (Block-Ebene, kein TipTap noetig)
+// TextSize – Schnell-Buttons + •••-Dropdown
 // -------------------------------------------------------------------------
 
-type TextSizeKey = 'small' | 'normal' | 'large' | 'xl' | 'hero'
+const showSizeDropdown = ref(false)
+const sizeContainerRef = ref<HTMLElement | null>(null)
+const moreButtonRef = ref<HTMLButtonElement | null>(null)
 
-const SIZE_BUTTONS: { label: string; value: TextSizeKey }[] = [
-  { label: 'S', value: 'small' },
-  { label: 'M', value: 'normal' },
-  { label: 'L', value: 'large' },
-  { label: 'XL', value: 'xl' },
-  { label: '...', value: 'hero' },
-]
-
-const activeSize = computed<TextSizeKey>(() => {
-  const s = block.value?.styles?.textSize as TextSizeKey | undefined
-  if (!s || s === 'normal') return 'normal'
-  return s
+/** Schließt das Dropdown wenn außerhalb geklickt wird */
+onClickOutside(sizeContainerRef, () => {
+  showSizeDropdown.value = false
 })
 
-function setTextSize(size: TextSizeKey): void {
+/** Aktive Schriftgröße in px (aus neuem "16px"-Format oder Legacy-Token-Mapping). */
+const activePx = computed<number>(() => getActiveFontSizePx(block.value?.styles))
+
+/** Speichert den px-Wert als "16px"-String in styles.textSize. */
+function setFontSizePx(px: number): void {
   if (!block.value || !stepId.value || props.isReadonly) return
-  const currentStyles = block.value.styles ?? {}
   editorStore.updateBlock(stepId.value, block.value.id, {
-    styles: { ...currentStyles, textSize: size === 'normal' ? '' : size },
+    styles: { ...(block.value.styles ?? {}), textSize: `${px}px` },
+  })
+}
+
+function toggleSizeDropdown(): void {
+  if (props.isReadonly) return
+  showEmojiPicker.value = false
+  showLinkInput.value = false
+  showSizeDropdown.value = !showSizeDropdown.value
+  // Programmatisch fokussieren, damit Tastatur-Events (Escape) am Container ankommen.
+  // Nötig weil @mousedown.prevent auf dem Button den Browser-eigenen Fokus verhindert.
+  if (showSizeDropdown.value) {
+    nextTick(() => moreButtonRef.value?.focus())
+  }
+}
+
+function closeSizeDropdown(): void {
+  showSizeDropdown.value = false
+  // Fokus zurück zum ••• Button geben
+  nextTick(() => moreButtonRef.value?.focus())
+}
+
+function selectSizeFromDropdown(px: number): void {
+  setFontSizePx(px)
+  closeSizeDropdown()
+}
+
+function onDropdownFocusout(event: FocusEvent): void {
+  // Dropdown schließen wenn Fokus den Container verlässt
+  if (!sizeContainerRef.value?.contains(event.relatedTarget as Node)) {
+    showSizeDropdown.value = false
+  }
+}
+
+/**
+ * Escape-Behandlung für den Container: fängt Escape ab wenn das Dropdown offen ist,
+ * unabhängig davon ob Fokus auf dem Trigger-Button oder einem Menü-Item liegt.
+ */
+function handleContainerEscape(event: KeyboardEvent): void {
+  if (showSizeDropdown.value) {
+    event.stopPropagation()
+    closeSizeDropdown()
+  }
+}
+
+// -------------------------------------------------------------------------
+// TextAlign (Block-Ebene, kein TipTap nötig)
+// -------------------------------------------------------------------------
+
+const activeAlign = computed<TextAlignKey>(() => getActiveTextAlign(block.value?.styles))
+
+function setTextAlign(align: TextAlignKey): void {
+  if (!block.value || !stepId.value || props.isReadonly) return
+  editorStore.updateBlock(stepId.value, block.value.id, {
+    styles: { ...(block.value.styles ?? {}), textAlign: align === 'left' ? '' : align },
   })
 }
 
@@ -84,7 +144,7 @@ function toggleUnderline(): void {
 }
 
 // -------------------------------------------------------------------------
-// Farben (Block-Ebene, kein TipTap noetig)
+// Farben (Block-Ebene, kein TipTap nötig)
 // -------------------------------------------------------------------------
 
 const currentColor = computed<string>(() => block.value?.styles?.color ?? '')
@@ -119,7 +179,7 @@ function resetBgColor(): void {
 }
 
 // -------------------------------------------------------------------------
-// Emoji-Picker: Emoji per TipTap am Cursor einfuegen
+// Emoji-Picker: Emoji per TipTap am Cursor einfügen
 // -------------------------------------------------------------------------
 
 function onEmojiPick(emoji: string): void {
@@ -132,7 +192,6 @@ function onEmojiPick(emoji: string): void {
 // -------------------------------------------------------------------------
 
 function openLinkInput(): void {
-  // Bestehenden Link-Href vorbelegen, falls Selektion einen Link enthaelt
   const existing = activeEditor.value?.getAttributes('link')?.href as string | undefined
   linkUrl.value = existing ?? 'https://'
   showLinkInput.value = true
@@ -164,31 +223,115 @@ function cancelLink(): void {
     v-if="block"
     class="space-y-1.5 pb-3"
   >
-    <!-- Zeile 1: Groessen-Buttons S / M / L / XL / ... -->
+    <!-- Zeile 1: Schnell-Buttons S / M / L / XL + ••• Dropdown -->
     <div
-      class="flex"
-      role="group"
-      aria-label="Textgroesse"
+      ref="sizeContainerRef"
+      class="relative"
+      @focusout="onDropdownFocusout"
+      @keydown.escape="handleContainerEscape"
     >
-      <button
-        v-for="btn in SIZE_BUTTONS"
-        :key="btn.value"
-        type="button"
-        :aria-label="`Groesse ${btn.label}`"
-        :aria-pressed="activeSize === btn.value"
-        :disabled="isReadonly"
-        :class="[
-          'flex-1 rounded px-1.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-ui-accent/50',
-          activeSize === btn.value
-            ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
-            : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
-          isReadonly ? 'cursor-not-allowed opacity-40' : '',
-        ]"
-        @mousedown.prevent
-        @click="setTextSize(btn.value)"
+      <div
+        class="flex"
+        role="group"
+        aria-label="Textgröße"
       >
-        {{ btn.label }}
-      </button>
+        <!-- Schnell-Buttons S / M / L / XL -->
+        <button
+          v-for="btn in FONT_SIZE_QUICK_BUTTONS"
+          :key="btn.px"
+          type="button"
+          :aria-label="`Größe ${btn.label} (${btn.px}px)`"
+          :aria-pressed="activePx === btn.px"
+          :disabled="isReadonly"
+          :class="[
+            'flex-1 rounded px-1.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-ui-accent/50',
+            activePx === btn.px
+              ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
+              : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
+            isReadonly ? 'cursor-not-allowed opacity-40' : '',
+          ]"
+          @mousedown.prevent
+          @click="setFontSizePx(btn.px)"
+        >
+          {{ btn.label }}
+        </button>
+
+        <!-- ••• Mehr-Button öffnet Dropdown mit allen Größen -->
+        <button
+          ref="moreButtonRef"
+          type="button"
+          aria-label="Weitere Textgrößen"
+          aria-haspopup="menu"
+          :aria-expanded="showSizeDropdown"
+          :disabled="isReadonly"
+          :class="[
+            'flex-1 rounded px-1.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-ui-accent/50',
+            showSizeDropdown || !FONT_SIZE_QUICK_BUTTONS.some(b => b.px === activePx)
+              ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
+              : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
+            isReadonly ? 'cursor-not-allowed opacity-40' : '',
+          ]"
+          @mousedown.prevent
+          @click="toggleSizeDropdown"
+        >
+          •••
+        </button>
+      </div>
+
+      <!-- Größen-Dropdown mit allen 9 px-Werten -->
+      <div
+        v-if="showSizeDropdown"
+        role="menu"
+        aria-label="Textgröße wählen"
+        class="absolute right-0 top-full z-50 mt-1 min-w-[9.5rem] rounded-lg border border-ui-border bg-white py-1 shadow-lg"
+        @keydown.escape.stop="closeSizeDropdown"
+      >
+        <button
+          v-for="px in FONT_SIZE_PX_OPTIONS"
+          :key="px"
+          type="button"
+          role="menuitemradio"
+          :aria-checked="activePx === px"
+          :aria-label="`${px}px${FONT_SIZE_BADGE[px] ? ` (${FONT_SIZE_BADGE[px]})` : ''}`"
+          :class="[
+            'flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent/40',
+            activePx === px
+              ? 'bg-ui-bg/60 text-ui-text'
+              : 'text-ui-text hover:bg-ui-bg/40',
+          ]"
+          @mousedown.prevent
+          @click="selectSizeFromDropdown(px)"
+        >
+          <!-- Häkchen für aktive Größe -->
+          <span
+            class="flex h-3.5 w-3.5 shrink-0 items-center justify-center"
+            aria-hidden="true"
+          >
+            <svg
+              v-if="activePx === px"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-3 w-3 text-ui-accent"
+            >
+              <path d="M2 6l3 3 5-5" />
+            </svg>
+          </span>
+
+          <!-- px-Label -->
+          <span class="flex-1 text-sm">{{ px }}px</span>
+
+          <!-- S / M / L / XL Badge rechts -->
+          <span
+            v-if="FONT_SIZE_BADGE[px]"
+            class="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-ui-muted"
+            aria-hidden="true"
+          >{{ FONT_SIZE_BADGE[px] }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- Trennlinie -->
@@ -232,17 +375,120 @@ function cancelLink(): void {
     <!-- Trennlinie -->
     <div class="h-px bg-ui-border" />
 
-    <!-- Zeile 3: Emoji | Link -->
+    <!-- Zeile 3: Textausrichtung links / zentriert / rechts -->
+    <div
+      class="flex"
+      role="group"
+      aria-label="Textausrichtung"
+    >
+      <!-- Links -->
+      <button
+        type="button"
+        aria-label="Linksbündig"
+        :aria-pressed="activeAlign === 'left'"
+        :disabled="isReadonly"
+        :class="[
+          'flex flex-1 items-center justify-center rounded py-1.5 transition-colors focus:outline-none focus:ring-1 focus:ring-ui-accent/50',
+          activeAlign === 'left'
+            ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
+            : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
+          isReadonly ? 'cursor-not-allowed opacity-40' : '',
+        ]"
+        @mousedown.prevent
+        @click="setTextAlign('left')"
+      >
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M1.5 3h13M1.5 6.5h8M1.5 10h13M1.5 13.5h8"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+
+      <!-- Zentriert -->
+      <button
+        type="button"
+        aria-label="Zentriert"
+        :aria-pressed="activeAlign === 'center'"
+        :disabled="isReadonly"
+        :class="[
+          'flex flex-1 items-center justify-center rounded py-1.5 transition-colors focus:outline-none focus:ring-1 focus:ring-ui-accent/50',
+          activeAlign === 'center'
+            ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
+            : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
+          isReadonly ? 'cursor-not-allowed opacity-40' : '',
+        ]"
+        @mousedown.prevent
+        @click="setTextAlign('center')"
+      >
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M1.5 3h13M3.5 6.5h9M1.5 10h13M3.5 13.5h9"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+
+      <!-- Rechtsbündig -->
+      <button
+        type="button"
+        aria-label="Rechtsbündig"
+        :aria-pressed="activeAlign === 'right'"
+        :disabled="isReadonly"
+        :class="[
+          'flex flex-1 items-center justify-center rounded py-1.5 transition-colors focus:outline-none focus:ring-1 focus:ring-ui-accent/50',
+          activeAlign === 'right'
+            ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
+            : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
+          isReadonly ? 'cursor-not-allowed opacity-40' : '',
+        ]"
+        @mousedown.prevent
+        @click="setTextAlign('right')"
+      >
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M1.5 3h13M6.5 6.5h8M1.5 10h13M6.5 13.5h8"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Trennlinie -->
+    <div class="h-px bg-ui-border" />
+
+    <!-- Zeile 4: Emoji | Link -->
     <div
       class="relative flex"
       role="group"
-      aria-label="Einfuegen"
+      aria-label="Einfügen"
     >
       <!-- Emoji-Button -->
       <div class="relative flex-1">
         <button
           type="button"
-          aria-label="Emoji einfuegen"
+          aria-label="Emoji einfügen"
           :aria-expanded="showEmojiPicker"
           :disabled="isReadonly"
           class="flex w-full items-center justify-center rounded py-1.5 text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
@@ -300,7 +546,7 @@ function cancelLink(): void {
       <div class="relative flex-1">
         <button
           type="button"
-          aria-label="Link einfuegen"
+          aria-label="Link einfügen"
           :aria-expanded="showLinkInput"
           :disabled="isReadonly"
           class="flex w-full items-center justify-center rounded py-1.5 text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
@@ -332,7 +578,7 @@ function cancelLink(): void {
           v-if="showLinkInput"
           class="absolute left-0 top-full z-50 mt-1 w-64 rounded-lg border border-ui-border bg-white p-2 shadow-lg"
           role="dialog"
-          aria-label="Link einfuegen"
+          aria-label="Link einfügen"
         >
           <label
             for="fmt-link-url"
@@ -362,7 +608,7 @@ function cancelLink(): void {
               class="rounded bg-ui-accent px-2 py-1 text-xs font-medium text-white hover:bg-ui-accent-hover focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
               @click="applyLink"
             >
-              Einfuegen
+              Einfügen
             </button>
           </div>
         </div>
@@ -372,7 +618,7 @@ function cancelLink(): void {
     <!-- Trennlinie -->
     <div class="h-px bg-ui-border" />
 
-    <!-- Zeile 4: Farb-Swatches (Textfarbe | Hintergrundfarbe) -->
+    <!-- Zeile 5: Farb-Swatches (Textfarbe | Hintergrundfarbe) -->
     <div
       class="flex items-center gap-2 px-0.5"
       role="group"
@@ -400,7 +646,7 @@ function cancelLink(): void {
             :value="currentColor || '#1f2937'"
             :disabled="isReadonly"
             class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            aria-label="Textfarbe waehlen"
+            aria-label="Textfarbe wählen"
             @input="setColor(($event.target as HTMLInputElement).value)"
           >
         </div>
@@ -408,8 +654,8 @@ function cancelLink(): void {
           v-if="currentColor"
           type="button"
           class="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ui-border text-ui-muted hover:bg-red-100 hover:text-red-500"
-          aria-label="Textfarbe zuruecksetzen"
-          title="Zuruecksetzen"
+          aria-label="Textfarbe zurücksetzen"
+          title="Zurücksetzen"
           @mousedown.prevent="resetColor"
         >
           <svg
@@ -450,7 +696,7 @@ function cancelLink(): void {
             :value="currentBgColor || '#ffffff'"
             :disabled="isReadonly"
             class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            aria-label="Hintergrundfarbe waehlen"
+            aria-label="Hintergrundfarbe wählen"
             @input="setBgColor(($event.target as HTMLInputElement).value)"
           >
         </div>
@@ -458,8 +704,8 @@ function cancelLink(): void {
           v-if="currentBgColor"
           type="button"
           class="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ui-border text-ui-muted hover:bg-red-100 hover:text-red-500"
-          aria-label="Hintergrundfarbe zuruecksetzen"
-          title="Zuruecksetzen"
+          aria-label="Hintergrundfarbe zurücksetzen"
+          title="Zurücksetzen"
           @mousedown.prevent="resetBgColor"
         >
           <svg

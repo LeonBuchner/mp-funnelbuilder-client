@@ -32,10 +32,30 @@ const isEditable = computed<boolean>(
 )
 
 /**
+ * Gibt den px-String zurück, wenn styles.textSize im neuen Format ist
+ * ("16px", "30px" etc.), sonst undefined.
+ * Eigene Berechnung statt direktem Type-Guard, um TypeScript-Verengung
+ * in switch/case-Zweigen zu vermeiden.
+ */
+const fontSizeFromPx = computed<string | undefined>(() => {
+  const v = props.block.styles?.textSize
+  return typeof v === 'string' && /^\d+px$/.test(v) ? v : undefined
+})
+
+/**
  * Tailwind-Klassen je nach block.styles.textSize.
- * small -> xs, normal -> base (default), large -> xl, xl -> 2xl, hero -> 1.75rem
+ *
+ * Neues Format ("16px"): font-size kommt als inline-style (fontSizeFromPx),
+ * daher hier nur Gewicht und Zeilenhöhe ohne Tailwind font-size-Klasse.
+ *
+ * Altes Format (named token): weiterhin Tailwind-Klassen für Abwärtskompatibilität.
+ *   small -> xs, normal -> base (default), large -> xl, xl -> 2xl, hero -> 1.75rem
  */
 const sizeClass = computed<string>(() => {
+  if (fontSizeFromPx.value !== undefined) {
+    // px-Wert: font-size via inlineStyle; hier nur Basis-Styling
+    return 'font-normal leading-relaxed'
+  }
   switch (props.block.styles?.textSize) {
     case 'hero':
       return 'text-[1.75rem] font-bold leading-tight'
@@ -75,10 +95,12 @@ const sharedClass = computed<string>(() =>
   ].join(' '),
 )
 
-const inlineStyle = computed(() => ({
+const inlineStyle = computed<Record<string, string | undefined>>(() => ({
   color: props.block.styles?.color || 'var(--funnel-text)',
   backgroundColor: props.block.styles?.backgroundColor || undefined,
   fontFamily: 'var(--funnel-font)',
+  // Neues px-Format: font-size inline setzen (deterministisch, kein Hydration-Mismatch)
+  fontSize: fontSizeFromPx.value,
 }))
 
 /**

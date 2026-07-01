@@ -106,35 +106,9 @@ onBeforeUnmount(() => {
 <template>
   <div class="flex h-full flex-col overflow-hidden">
     <!-- ----------------------------------------------------------------- -->
-    <!-- Ladezustand                                                        -->
+    <!-- Ladezustand: Skeleton-Artboard                                    -->
     <!-- ----------------------------------------------------------------- -->
-    <div
-      v-if="isLoadingFunnel"
-      class="flex flex-1 items-center justify-center"
-      aria-busy="true"
-      aria-label="Editor wird geladen"
-    >
-      <svg
-        class="h-6 w-6 animate-spin text-ui-accent"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <circle
-          class="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          stroke-width="4"
-        />
-        <path
-          class="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-        />
-      </svg>
-    </div>
+    <EditorSkeleton v-if="isLoadingFunnel" />
 
     <!-- Fehler beim Laden -->
     <div
