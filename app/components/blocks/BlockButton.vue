@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ButtonBlock } from '~/types/funnel'
+import { usePersonalizationContext } from '~/composables/usePersonalizationContext'
 
 const props = defineProps<{
   block: ButtonBlock
@@ -15,6 +16,17 @@ function handleClick(): void {
     emit('action', props.block.action)
   }
 }
+
+/**
+ * Personalisierung (M3.5): Im live-Modus werden {{key}}-Platzhalter im Label ersetzt.
+ * Vue-Template-Engine codiert den Wert bei {{ }}-Interpolation automatisch (kein XSS).
+ * Im Editor-Modus bleibt das Raw-Label unveraendert sichtbar.
+ */
+const pCtx = usePersonalizationContext()
+const displayLabel = computed<string>(() => {
+  if (props.mode !== 'live' || !pCtx) return props.block.label
+  return pCtx.interpolateText(props.block.label)
+})
 </script>
 
 <template>
@@ -54,7 +66,7 @@ function handleClick(): void {
       "
       @click="handleClick"
     >
-      {{ block.label }}
+      {{ displayLabel }}
     </button>
   </div>
 </template>

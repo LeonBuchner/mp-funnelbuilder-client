@@ -18,7 +18,7 @@
  *   - SingleChoiceBlock.options[].label  (v-html im icon-Layout)
  *   - MultiChoiceBlock.options[].label   (v-html im icon-Layout)
  */
-import type { Block } from '~/types/funnel'
+import type { Block, FunnelContent } from '~/types/funnel'
 import type { PublicFunnel } from '~/types/public-funnel'
 import { sanitizeHtml } from '~/utils/sanitizeHtml'
 
@@ -44,18 +44,26 @@ function sanitizeBlock(block: Block): Block {
 }
 
 /**
+ * Bereinigt alle HTML-Felder eines FunnelContent-Objekts einmalig.
+ * Wird von sanitizeFunnelContent und useAbVariant (Varianten-Content) genutzt.
+ */
+export function sanitizeContent(content: FunnelContent): FunnelContent {
+  return {
+    ...content,
+    steps: content.steps.map(step => ({
+      ...step,
+      blocks: step.blocks.map(sanitizeBlock),
+    })),
+  }
+}
+
+/**
  * Bereinigt alle HTML-Felder des geladenen Funnels einmalig beim Laden.
  * Als transform-Option in useAsyncData verwenden.
  */
 export function sanitizeFunnelContent(data: PublicFunnel): PublicFunnel {
   return {
     ...data,
-    content: {
-      ...data.content,
-      steps: data.content.steps.map(step => ({
-        ...step,
-        blocks: step.blocks.map(sanitizeBlock),
-      })),
-    },
+    content: sanitizeContent(data.content),
   }
 }

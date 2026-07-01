@@ -5,6 +5,28 @@
 import type { FunnelContent, BrandingColors } from '~/types/funnel'
 
 // ---------------------------------------------------------------------------
+// A/B-Varianten-Zuweisung: POST /api/public/f/{hash}/ab-assign
+// ---------------------------------------------------------------------------
+
+export interface AbAssignBody {
+  session_id: string
+  /** Varianten-ID aus dem Session-Cookie (fuer Sticky-Zuweisung). */
+  existing_variant_id?: number
+}
+
+/**
+ * 200-Antwort von /ab-assign.
+ * 204 No Content bedeutet: kein laufender A/B-Test -> Standard-Content rendern.
+ */
+export interface AbAssignResponse {
+  ab_variant_id: number
+  funnel_version: {
+    content: FunnelContent
+    schema_version: string
+  }
+}
+
+// ---------------------------------------------------------------------------
 // API-Response: GET /api/public/f/{hash}
 // ---------------------------------------------------------------------------
 
@@ -75,6 +97,8 @@ export interface LeadSubmitBody {
   consent: boolean
   consent_text: string
   utm?: UtmParams
+  /** Zugewiesene A/B-Varianten-ID, falls ein A/B-Test laeuft. */
+  ab_variant_id?: number
 }
 
 export interface LeadSubmitResponse {
@@ -104,4 +128,6 @@ export interface EventBody {
   device_type?: string
   utm?: Record<string, string>
   referrer?: string
+  /** Zugewiesene A/B-Varianten-ID, falls ein A/B-Test laeuft. */
+  ab_variant_id?: number
 }

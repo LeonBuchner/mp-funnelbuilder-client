@@ -289,8 +289,138 @@ export interface IconBlock {
   styles?: Record<string, string>
 }
 
-/** Alle Block-Typen als Discriminated Union */
-export type Block =
+// ---------------------------------------------------------------------------
+// Logik-Engine: Bedingungen, Regeln, Ziele (M3.1, Schema v1.1.0)
+// ---------------------------------------------------------------------------
+
+/**
+ * Alle 8 Operatoren fuer Logik-Bedingungen (exakt nach Schema v1.1.0).
+ * 'is_answered' und 'is_empty' benoetigen keinen value.
+ */
+export type LogicConditionOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'greater_than'
+  | 'less_than'
+  | 'is_answered'
+  | 'is_empty'
+  | 'in_list'
+
+/** Eine einzelne Bedingung innerhalb einer Logik-Regel. */
+export interface LogicCondition {
+  /** UUID des Blocks, dessen Antwort ausgewertet wird. */
+  blockId: string
+  operator: LogicConditionOperator
+  /** Vergleichswert. Nicht benoetigt fuer 'is_answered' und 'is_empty'. */
+  value?: unknown
+}
+
+/**
+ * Ziel eines Step-Sprungs.
+ * Discriminated Union: 'step' erfordert stepId, 'url' erfordert url.
+ */
+export type LogicTarget =
+  | { type: 'next' }
+  | { type: 'submit' }
+  | { type: 'step'; stepId: string }
+  | { type: 'url'; url: string }
+
+/**
+ * Steuerungsregel fuer den Step-Sprung (exakt nach Schema v1.1.0).
+ * operator: 'AND' = alle conditions muessen zutreffen, 'OR' = mindestens eine.
+ */
+export interface LogicRule {
+  /** UUID der Regel. */
+  id: string
+  operator: 'AND' | 'OR'
+  /** Mindestens eine Bedingung erforderlich (minItems: 1 im Schema). */
+  conditions: LogicCondition[]
+  target: LogicTarget
+}
+
+/**
+ * 6 Operatoren fuer Display-Conditions (exakt nach Schema v1.1.0).
+ * Kein greater_than/less_than (im Gegensatz zu LogicConditionOperator).
+ */
+export type DisplayConditionOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'is_answered'
+  | 'is_empty'
+  | 'in_list'
+
+/** Bedingte Block-Sichtbarkeit: Block wird nur angezeigt wenn Bedingung zutrifft. */
+export interface DisplayCondition {
+  /** UUID des referenzierten Blocks. */
+  blockId: string
+  operator: DisplayConditionOperator
+  value?: unknown
+}
+
+// ---------------------------------------------------------------------------
+// Personalisierung (M3.1, Schema v1.1.0)
+// ---------------------------------------------------------------------------
+
+/** Quell-Typ fuer Personalisierungs-Variablen (exakt nach Schema v1.1.0). */
+export type PersonalizationVarSource = 'utm_param' | 'url_param' | 'answer'
+
+/**
+ * Personalisierungs-Variable: Platzhalter in Texten (z. B. {{vorname}}).
+ * Felder exakt nach Schema v1.1.0 (key, source, paramName, sourceBlockId, fallback).
+ */
+export interface PersonalizationVar {
+  /** Platzhalter-Schluessel im Text, z. B. 'vorname'. */
+  key: string
+  source: PersonalizationVarSource
+  /** URL-Parameter-Name (fuer source='utm_param' oder 'url_param'). */
+  paramName?: string
+  /** Block-ID fuer source='answer'. */
+  sourceBlockId?: string
+  /** Fallback-Wert wenn die Quelle keinen Wert liefert. */
+  fallback?: string
+}
+
+// ---------------------------------------------------------------------------
+// Type-Guards (M3.1)
+// ---------------------------------------------------------------------------
+
+/**
+ * Prueft die Pflichtfelder einer LogicRule (id, operator, conditions, target).
+ * Kein Deep-Check der nested-Typen.
+ */
+export function isLogicRule(x: unknown): x is LogicRule {
+  if (x === null || typeof x !== 'object') return false
+  const obj = x as Record<string, unknown>
+  return (
+    typeof obj['id'] === 'string' &&
+    (obj['operator'] === 'AND' || obj['operator'] === 'OR') &&
+    Array.isArray(obj['conditions']) &&
+    typeof obj['target'] === 'object' &&
+    obj['target'] !== null
+  )
+}
+
+/**
+ * Prueft die Pflichtfelder einer DisplayCondition (blockId, operator).
+ */
+export function isDisplayCondition(x: unknown): x is DisplayCondition {
+  if (x === null || typeof x !== 'object') return false
+  const obj = x as Record<string, unknown>
+  return (
+    typeof obj['blockId'] === 'string' &&
+    typeof obj['operator'] === 'string'
+  )
+}
+
+// ---------------------------------------------------------------------------
+
+/**
+ * Alle Block-Typen als Discriminated Union.
+ * displayConditions ist schema-konform fuer alle Block-Typen optional verfuegbar.
+ */
+export type Block = (
   | TextBlock
   | ImageBlock
   | ButtonBlock
@@ -312,6 +442,7 @@ export type Block =
   | SpacerBlock
   | VideoBlock
   | IconBlock
+) & { displayConditions?: DisplayCondition[] }
 
 export type BlockType = Block['type']
 
@@ -328,7 +459,10 @@ export interface Step {
   internalTitle: string
   layout: StepLayout
   blocks: Block[]
-  logicRules: []
+  /** Sprung-Regeln fuer diesen Step (exakt nach Schema v1.1.0). */
+  logicRules: LogicRule[]
+  /** Optionales Analytics-Label fuer diesen Step. */
+  trackingLabel?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -337,7 +471,8 @@ export interface Step {
 
 export interface FunnelMeta {
   defaultLocale: string
-  personalizationVars: string[]
+  /** Personalisierungs-Variablen (exakt nach Schema v1.1.0, vorher string[]). */
+  personalizationVars: PersonalizationVar[]
   /** Aktives Theme-ID aus der useFunnelThemes-Registry. Standard: 'mp'. */
   themeId?: string
 }
@@ -537,7 +672,7 @@ export function createEmptyStep(): Step {
 /** Legt einen leeren FunnelContent mit einem ersten Schritt an */
 export function createEmptyContent(): FunnelContent {
   return {
-    schemaVersion: '1.0.0',
+    schemaVersion: '1.1.0',
     meta: {
       defaultLocale: 'de',
       personalizationVars: [],

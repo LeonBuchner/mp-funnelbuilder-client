@@ -362,6 +362,9 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
           >
             <EditorBlockLinkTarget :is-readonly="props.isReadonly" />
           </div>
+
+          <!-- Sichtbarkeits-Bedingungen (Block-Ebene) -->
+          <EditorDisplayConditionsEditor :is-readonly="props.isReadonly" />
         </div>
       </template>
 
@@ -809,6 +812,14 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
               Ergebnis hinzufuegen
             </button>
           </section>
+
+          <!-- SPRUNGREGELN (Step-Ebene) -->
+          <EditorLogicRulePanel :is-readonly="props.isReadonly" />
+
+          <div class="mx-4 my-2 h-px bg-ui-border" />
+
+          <!-- PERSONALISIERUNG (M3.5): Variablen fuer {{Platzhalter}} in Texten -->
+          <EditorPersonalizationPanel :is-readonly="props.isReadonly" />
 
           <div class="mx-4 my-2 h-px bg-ui-border" />
 

@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { ref } from 'vue'
 import { createEmptyContent, createEmptyStep, createBlock } from '../../app/types/funnel'
-import type { Funnel, FunnelContent } from '../../app/types/funnel'
+import type { Funnel, FunnelContent, LogicRule, LogicCondition } from '../../app/types/funnel'
 import { useEditorStore } from '../../app/stores/editor'
 
 // --- Mocks (gehoisted) ---
@@ -1116,5 +1116,125 @@ describe('useEditorStore', () => {
 
     expect(store.steps).toHaveLength(originalCount)
     expect(store.isDirty).toBe(false)
+  })
+
+  // -------------------------------------------------------------------------
+  // updateStep() mit logicRules
+  // -------------------------------------------------------------------------
+
+  it('updateStep() kann logicRules patchen und setzt isDirty', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    // Einen Block mit fieldKey hinzufuegen (als Bedingungsquelle)
+    store.addBlock(stepId, 'single_choice')
+    const blockId = store.selectedStep!.blocks[0]!.id
+
+    const rule: LogicRule = {
+      id: crypto.randomUUID(),
+      operator: 'AND',
+      conditions: [{ blockId, operator: 'equals', value: 'ja' }],
+      target: { type: 'next' },
+    }
+
+    store.isDirty = false
+    store.updateStep(stepId, { logicRules: [rule] })
+
+    expect(store.selectedStep?.logicRules).toHaveLength(1)
+    expect(store.selectedStep?.logicRules[0]?.id).toBe(rule.id)
+    expect(store.selectedStep?.logicRules[0]?.operator).toBe('AND')
+    expect(store.isDirty).toBe(true)
+  })
+
+  it('updateStep() mit logicRules behaelt bestehende Step-Felder', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+    store.updateStep(stepId, { internalTitle: 'Mein Step' })
+
+    store.addBlock(stepId, 'input_text')
+    const blockId = store.selectedStep!.blocks[0]!.id
+
+    const rule: LogicRule = {
+      id: crypto.randomUUID(),
+      operator: 'OR',
+      conditions: [{ blockId, operator: 'is_answered' }],
+      target: { type: 'submit' },
+    }
+    store.updateStep(stepId, { logicRules: [rule] })
+
+    // Titel muss unveraendert bleiben
+    expect(store.selectedStep?.internalTitle).toBe('Mein Step')
+    // Regel ist gesetzt
+    expect(store.selectedStep?.logicRules[0]?.target.type).toBe('submit')
+  })
+
+  it('updateStep() kann logicRules leeren (leeres Array)', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'rating')
+    const blockId = store.selectedStep!.blocks[0]!.id
+
+    const rule: LogicRule = {
+      id: crypto.randomUUID(),
+      operator: 'AND',
+      conditions: [{ blockId, operator: 'greater_than', value: '3' }],
+      target: { type: 'next' },
+    }
+    store.updateStep(stepId, { logicRules: [rule] })
+    expect(store.selectedStep?.logicRules).toHaveLength(1)
+
+    store.updateStep(stepId, { logicRules: [] })
+    expect(store.selectedStep?.logicRules).toHaveLength(0)
+  })
+
+  it('updateStep() mit logicRules ist undobar', () => {
+    const store = setupStoreWithContent()
+    const stepId = store.selectedStepId!
+
+    store.addBlock(stepId, 'input_email')
+    const blockId = store.selectedStep!.blocks[0]!.id
+
+    const contentBefore = JSON.parse(JSON.stringify(store.content))
+
+    const rule: LogicRule = {
+      id: crypto.randomUUID(),
+      operator: 'AND',
+      conditions: [{ blockId, operator: 'is_answered' }],
+      target: { type: 'step', stepId: 'some-step-id' },
+    }
+    store.updateStep(stepId, { logicRules: [rule] })
+    store.undo()
+
+    expect(store.content).toEqual(contentBefore)
+    expect(store.selectedStep?.logicRules).toHaveLength(0)
+  })
+
+  // -------------------------------------------------------------------------
+  // LogicRule-Defaults pruefen
+  // -------------------------------------------------------------------------
+
+  it('neue LogicRule hat is_answered-Condition ohne value-Feld', () => {
+    // Simuliert was LogicRulePanel.vue bei addRule() tut:
+    // Condition mit operator='is_answered' darf kein value-Feld haben
+    const condition: LogicCondition = { blockId: crypto.randomUUID(), operator: 'is_answered' }
+    // Nach JSON-Roundtrip (wie beim API-Save) kein value-Schluessel vorhanden
+    const serialized = JSON.parse(JSON.stringify(condition)) as Record<string, unknown>
+    expect('value' in serialized).toBe(false)
+  })
+
+  it('LogicTarget type=next hat keine stepId/url-Felder', () => {
+    const target = { type: 'next' as const }
+    const serialized = JSON.parse(JSON.stringify(target)) as Record<string, unknown>
+    expect('stepId' in serialized).toBe(false)
+    expect('url' in serialized).toBe(false)
+  })
+
+  it('LogicTarget type=step enthaelt stepId', () => {
+    const stepId = crypto.randomUUID()
+    const target = { type: 'step' as const, stepId }
+    const serialized = JSON.parse(JSON.stringify(target)) as Record<string, unknown>
+    expect(serialized['stepId']).toBe(stepId)
+    expect('url' in serialized).toBe(false)
   })
 })

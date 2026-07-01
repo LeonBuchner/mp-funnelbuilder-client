@@ -9,17 +9,28 @@
  * - A11y: <main>, semantisches <form>, visuell verstecktes <h1>, sichtbarer Fokus.
  * - Events: best-effort Tracking (view, start, step_view, step_complete, lead_submit).
  * - PWA: Layout renderer, SSR aktiv (nicht in ssr:false-Regel).
+ *
+ * A/B-Varianten (M3.7):
+ * - SSR rendert immer den Standard-Content (Kontrolle).
+ * - Nach onMounted wird useAbVariant aufgerufen (clientseitig).
+ * - 204 -> kein A/B-Test -> Standard-Content bleibt unveraendert.
+ * - 200 -> abContent wird reaktiv aktiviert (setActiveSteps + activeContent).
+ * - Der Swap geschieht NACH der Hydration -> kein Hydration-Mismatch.
+ * - ab_variant_id fliesst per setAbVariantId in Tracking und Lead-Submit.
  */
-import { provide, computed, ref, watch, onMounted, nextTick } from 'vue'
+import { provide, computed, ref, watch, onMounted, nextTick, shallowRef } from 'vue'
 import BlockRenderer from '~/components/blocks/BlockRenderer.vue'
 import { funnelStepContextKey } from '~/composables/useFunnelStepContext'
+import { personalizationKey } from '~/composables/usePersonalizationContext'
+import { usePersonalization } from '~/composables/usePersonalization'
 import { useFunnelThemes } from '~/composables/useFunnelThemes'
 import { brandingToFunnelVars } from '~/composables/useBrandings'
 import { useRendererState } from '~/composables/useRendererState'
+import { useAbVariant } from '~/composables/useAbVariant'
 import { usePublicApi } from '~/composables/usePublicApi'
 import { sanitizeFunnelContent } from '~/utils/sanitizeFunnelContent'
 import type { PublicFunnel } from '~/types/public-funnel'
-import type { Block, ButtonBlock } from '~/types/funnel'
+import type { FunnelContent, Block, ButtonBlock } from '~/types/funnel'
 
 // ---------------------------------------------------------------------------
 // Layout + Route
@@ -177,6 +188,73 @@ const renderer = useRendererState(slug, funnelData.content.steps)
 provide(funnelStepContextKey, renderer.stepContext)
 
 // ---------------------------------------------------------------------------
+// A/B-Varianten-Zuweisung (M3.7)
+//
+// SSR/Hydration-Sicherheit:
+//   - activeContent startet mit funnelData.content (Standard, identisch mit SSR).
+//   - useAbVariant laeuft nur im onMounted (clientseitig).
+//   - Der Swap auf abContent geschieht reaktiv NACH der Hydration.
+//   - Kein Hydration-Mismatch: erster Client-Render = SSR-Render (Standard-Content).
+//
+// onMounted-Reihenfolge (garantiert durch Vue):
+//   1. renderer (useRendererState) setzt sessionId in localStorage.
+//   2. ab (useAbVariant) liest sessionId und ruft /ab-assign auf.
+// ---------------------------------------------------------------------------
+
+/**
+ * Aktiver Content: Standard-Content (SSR) bis useAbVariant eine Variante liefert.
+ * shallowRef: Nur Referenzaenderungen werden getrackt (kein Deep-Tracking noetig).
+ */
+const activeContent = shallowRef<FunnelContent>(funnelData.content)
+
+// A/B-Composable (nach renderer initialisieren, damit sessionId onMounted zuerst gesetzt wird)
+const { abVariantId, abContent, isResolving: isAbResolving } = useAbVariant(slug, renderer.sessionId)
+
+/**
+ * Wenn useAbVariant eine Variante zuweist: activeContent und renderer-Steps aktualisieren.
+ * Nur beim ersten Nicht-null-Wert relevant (der Cookie sorgt danach fuer Sticky-Zuweisung).
+ */
+watch(abContent, (newContent) => {
+  if (newContent) {
+    activeContent.value = newContent
+    renderer.setActiveSteps(newContent.steps)
+  }
+})
+
+/**
+ * ab_variant_id an Tracking und Lead-Submit weitergeben.
+ * Wird unmittelbar gesetzt, sobald useAbVariant die Zuweisung abgeschlossen hat.
+ */
+watch(abVariantId, (id) => {
+  renderer.setAbVariantId(id)
+})
+
+// ---------------------------------------------------------------------------
+// Personalisierungs-Kontext bereitstellen (M3.5)
+// ---------------------------------------------------------------------------
+
+/**
+ * personalizationVars reaktiv an activeContent binden, damit beim A/B-Content-Swap
+ * auch die Variablen-Definitionen des Varianten-Contents verwendet werden.
+ *
+ * Die Funktionen interpolateText/interpolateHtml schliessen ueber personalizationVars.value
+ * und renderer.answersByBlockId.value, sodass Vue die Abhaengigkeiten in den Block-Komponenten
+ * korrekt trackt und bei Aenderungen neu auswertet.
+ */
+const personalizationVars = computed(() => activeContent.value.meta.personalizationVars)
+
+const personalization = usePersonalization()
+
+provide(personalizationKey, {
+  interpolateText: (text: string) =>
+    personalization.interpolate(text, personalizationVars.value, renderer.answersByBlockId.value),
+  interpolateHtml: (text: string) =>
+    personalization.interpolate(text, personalizationVars.value, renderer.answersByBlockId.value, {
+      htmlContext: true,
+    }),
+})
+
+// ---------------------------------------------------------------------------
 // UTM-Parameter aus URL
 // ---------------------------------------------------------------------------
 
@@ -260,14 +338,15 @@ async function handleBlockAction(action: string, block: Block): Promise<void> {
     transitionDirection.value = 'forward'
   }
 
-  await renderer.handleAction(action)
+  // Block wird weitergegeben, damit die Logik-Engine block.target auswertet (M3)
+  await renderer.handleAction(action, undefined, block)
 }
 
 // Hilfsfunktion: prueft ob aktuell der result- oder letzte Step sichtbar ist
 const isResultStep = computed<boolean>(() => {
   const step = renderer.currentStep.value
   return step?.type === 'result'
-    || renderer.currentStepIndex.value === funnelData.content.steps.length - 1
+    || renderer.currentStepIndex.value === activeContent.value.steps.length - 1
 })
 
 // Schritttypen, fuer die ein Zurueck-Button sinnvoll ist
@@ -355,9 +434,13 @@ function getBlockError(block: Block): string | undefined {
       Kein Card-Rahmen, kein Schatten – der Viewport-Hintergrund (--funnel-bg)
       fuellt die gesamte Breite. Auf mobilen Screens volle Breite, auf Desktop
       auf max. 460 px zentriert (mx-auto als Absicherung neben items-center).
+
+      Transition-opacity: dezenter Uebergang waehrend der A/B-Aufloesung (M3.7).
+      isAbResolving ist false waehrend SSR und Hydration -> kein Hydration-Mismatch.
     -->
     <div
-      class="w-full max-w-[460px] mx-auto"
+      class="w-full max-w-[460px] mx-auto transition-opacity duration-150"
+      :class="{ 'opacity-0': isAbResolving }"
       role="region"
       aria-label="Funnel"
     >
@@ -409,13 +492,13 @@ function getBlockError(block: Block): string | undefined {
           <form
             :key="renderer.currentStepIndex.value"
             class="px-6 py-8"
-            :aria-label="`Schritt ${renderer.currentStepIndex.value + 1} von ${funnelData.content.steps.length}`"
+            :aria-label="`Schritt ${renderer.currentStepIndex.value + 1} von ${activeContent.steps.length}`"
             novalidate
             @submit.prevent="handleFormSubmit"
           >
-            <!-- Bloecke des aktuellen Steps -->
+            <!-- Bloecke des aktuellen Steps (gefiltert durch DisplayConditions, M3) -->
             <div
-              v-for="block in renderer.currentStep.value.blocks"
+              v-for="block in renderer.visibleBlocksForCurrentStep.value"
               :key="block.id"
               class="mb-4 last:mb-0"
             >

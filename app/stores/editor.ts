@@ -468,7 +468,11 @@ export const useEditorStore = defineStore('editor', () => {
     isDirty.value = true
   }
 
-  function updateStep(stepId: string, patch: Partial<Omit<Step, 'id' | 'blocks' | 'logicRules'>>): void {
+  /**
+   * Aktualisiert einzelne Felder eines Steps, inklusive logicRules.
+   * Blocks und id koennen nicht per Patch geaendert werden (eigene Actions).
+   */
+  function updateStep(stepId: string, patch: Partial<Omit<Step, 'id' | 'blocks'>>): void {
     if (!content.value) return
     const idx = content.value.steps.findIndex(s => s.id === stepId)
     if (idx < 0) return

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { TextBlock } from '~/types/funnel'
 import { sanitizeHtml } from '~/utils/sanitizeHtml'
+import { usePersonalizationContext } from '~/composables/usePersonalizationContext'
 
 /**
  * BlockTextTipTap wird dynamisch geladen, weil:
@@ -112,10 +113,25 @@ const inlineStyle = computed<Record<string, string | undefined>>(() => ({
  * Im editor-Modus (ssr:false, client-only) wird clientseitig sanitisiert.
  * Der Editor erzeugt sauberes TipTap-HTML, die Bereinigung ist eine
  * zusaetzliche Absicherung.
+ *
+ * Personalisierung (M3.5): Im live-Modus werden {{key}}-Platzhalter durch
+ * HTML-escapte Werte aus URL-Parametern oder Antworten ersetzt. Die Reihenfolge
+ * ist entscheidend: zuerst sanitizeHtml (beim Laden), dann interpolate (im Render).
+ * Damit kann weder Autoren-Inhalt noch der eingesetzte Variablenwert Script einfuehren.
+ * Im Editor-Modus (kein pCtx) bleiben Platzhalter sichtbar.
+ *
+ * SSR/Hydration: Der Personalisierungs-Kontext (pCtx) liest urlParams.value (null vor
+ * onMounted) und answersByBlockId.value (leer auf SSR und erstem Client-Render).
+ * Beide sind auf SSR und initialem Client-Render identisch -> kein Hydration-Mismatch.
+ * Nach onMounted aktualisiert Vue die Platzhalter reaktiv mit echten Werten.
  */
-const safeContent = computed<string>(() =>
-  props.mode === 'live' ? props.block.content : sanitizeHtml(props.block.content),
-)
+const pCtx = usePersonalizationContext()
+
+const safeContent = computed<string>(() => {
+  const html = props.mode === 'live' ? props.block.content : sanitizeHtml(props.block.content)
+  if (props.mode !== 'live' || !pCtx) return html
+  return pCtx.interpolateHtml(html)
+})
 </script>
 
 <template>

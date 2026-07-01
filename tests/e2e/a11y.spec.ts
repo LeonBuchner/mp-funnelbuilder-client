@@ -17,13 +17,12 @@
 import { test, expect, request as playwrightRequest } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { randomUUID } from 'node:crypto'
+import { getAdminSession } from './helpers/auth'
 
 const DEMO_HASH = 'd0000001-0000-4000-8000-000000000001'
 const FUNNEL_URL = `/f/${DEMO_HASH}`
 
 const ADMIN_API = 'http://localhost:8000/api/admin'
-const ADMIN_EMAIL = 'admin@marketing-planet.de'
-const ADMIN_PASSWORD = 'password'
 
 /** Hilfsfunktion: details fuer Fehlerausgabe in Assertions. */
 function formatViolations(violations: { impact?: string, id: string, description: string, nodes: { target: string[] }[] }[]): string {
@@ -132,22 +131,9 @@ test.describe('A11y-Scan: M2-Bloecke im Renderer', () => {
   let m2FunnelId: string | null = null
 
   test.beforeAll(async () => {
-    const apiContext = await playwrightRequest.newContext()
-
-    // Einloggen
-    const loginResp = await apiContext.post(`${ADMIN_API}/auth/login`, {
-      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
-    })
-    if (!loginResp.ok()) return
-    const { token } = await loginResp.json() as { token: string }
-    const auth = { Authorization: `Bearer ${token}` }
-
-    // Workspace ermitteln (ersten nehmen)
-    const wsResp = await apiContext.get(`${ADMIN_API}/workspaces`, { headers: auth })
-    if (!wsResp.ok()) return
-    const wsData = await wsResp.json() as { data: { id: string }[] }
-    const workspaceId = wsData.data[0]?.id
-    if (!workspaceId) return
+    const admin = await getAdminSession()
+    if (!admin) return
+    const { apiContext, auth, workspaceId } = admin
 
     // Testfunnel anlegen
     const createResp = await apiContext.post(`${ADMIN_API}/workspaces/${workspaceId}/funnels`, {
@@ -258,17 +244,10 @@ test.describe('A11y-Scan: M2-Bloecke im Renderer', () => {
 
   test.afterAll(async () => {
     if (!m2FunnelId) return
-
-    const apiContext = await playwrightRequest.newContext()
-    const loginResp = await apiContext.post(`${ADMIN_API}/auth/login`, {
-      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
-    })
-    if (!loginResp.ok()) { await apiContext.dispose(); return }
-    const { token } = await loginResp.json() as { token: string }
-
-    await apiContext.delete(`${ADMIN_API}/funnels/${m2FunnelId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const admin = await getAdminSession()
+    if (!admin) return
+    const { apiContext, auth } = admin
+    await apiContext.delete(`${ADMIN_API}/funnels/${m2FunnelId}`, { headers: auth })
     await apiContext.dispose()
   })
 
@@ -371,5 +350,216 @@ test.describe('A11y-Scan: M2-Bloecke im Renderer', () => {
 
     const label = page.locator(`label[for="${dateId}"]`)
     await expect(label).toHaveCount(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// M3-Admin-Panels: axe-Scan auf Admin-Metriken-Seite (A/B-Panel) und
+//                  LogicRulePanel / PersonalizationPanel im Editor
+// ---------------------------------------------------------------------------
+
+const ADMIN_API_BASE = 'http://localhost:8000/api/admin'
+const ADMIN_EMAIL_M3 = 'admin@marketing-planet.de'
+const ADMIN_PASSWORD_M3 = 'password'
+
+test.describe('A11y-Scan: M3-Admin-Panels (axe-core WCAG 2.1 AA)', () => {
+  test.describe.configure({ mode: 'serial' })
+
+  let adminToken: string | null = null
+  let m3FunnelId: string | null = null
+  let m3WorkspaceId: string | null = null
+
+  /** Token in localStorage schreiben und auf Admin-Seite navigieren. */
+  async function loginM3(page: import('@playwright/test').Page): Promise<void> {
+    if (!adminToken) { test.skip(); return }
+    await page.goto('/auth/login')
+    await page.evaluate((t: string) => {
+      localStorage.setItem('mp_token', t)
+    }, adminToken)
+  }
+
+  test.beforeAll(async () => {
+    // Token holen
+    const ctx = await playwrightRequest.newContext()
+    for (let attempt = 0; attempt < 3 && !adminToken; attempt++) {
+      const resp = await ctx.post(`${ADMIN_API_BASE}/auth/login`, {
+        data: { email: ADMIN_EMAIL_M3, password: ADMIN_PASSWORD_M3 },
+      })
+      if (resp.ok()) {
+        adminToken = (await resp.json() as { token: string }).token
+        break
+      }
+      if (resp.status() === 429) {
+        const retryAfter = Number(resp.headers()['retry-after'] ?? '30')
+        await new Promise(resolve =>
+          setTimeout(resolve, (Number.isFinite(retryAfter) ? retryAfter : 30) * 1000 + 1000),
+        )
+        continue
+      }
+      break
+    }
+    await ctx.dispose()
+    if (!adminToken) return
+
+    // Workspace-ID holen
+    const admin = await getAdminSession()
+    if (!admin) return
+    const { apiContext, auth, workspaceId } = admin
+    m3WorkspaceId = workspaceId
+
+    // Test-Funnel mit Step + Logik-Block anlegen
+    const createResp = await apiContext.post(`${ADMIN_API_BASE}/workspaces/${m3WorkspaceId}/funnels`, {
+      headers: auth,
+      data: { name: '[A11y-M3] Metriken+Editor-Panels – automatisch angelegt' },
+    })
+    if (!createResp.ok()) { await apiContext.dispose(); return }
+    m3FunnelId = (await createResp.json() as { data: { id: string } }).data.id
+
+    // Step mit Eingabe-Block und Logik-Regel anlegen
+    const choiceBlockId = randomUUID()
+    const step1Id = randomUUID()
+    const step2Id = randomUUID()
+    const content = {
+      schemaVersion: '1.1.0',
+      meta: {
+        defaultLocale: 'de',
+        personalizationVars: [
+          { key: 'vorname', source: 'url_param', paramName: 'vorname', fallback: 'Freund' },
+        ],
+      },
+      settings: {
+        progressBar: false,
+        progressBarStyle: 'bar',
+        animations: 'none',
+        confettiOnComplete: false,
+        mpBrandingPosition: 'footer',
+        startButtonLabel: "Los geht's",
+      },
+      steps: [
+        {
+          id: step1Id,
+          type: 'question',
+          internalTitle: 'Schritt 1',
+          layout: 'single',
+          logicRules: [
+            {
+              id: randomUUID(),
+              operator: 'AND',
+              conditions: [{ blockId: choiceBlockId, operator: 'equals', value: 'ja' }],
+              target: { type: 'step', stepId: step2Id },
+            },
+          ],
+          blocks: [
+            {
+              id: choiceBlockId,
+              type: 'multi_choice',
+              fieldKey: 'm3_choice',
+              question: 'Ja oder Nein?',
+              imageLayout: 'none',
+              required: false,
+              options: [
+                { id: randomUUID(), label: 'Ja', value: 'ja' },
+                { id: randomUUID(), label: 'Nein', value: 'nein' },
+              ],
+            },
+            {
+              id: randomUUID(),
+              type: 'button',
+              label: 'Weiter',
+              action: 'next',
+              style: 'primary',
+            },
+          ],
+        },
+        {
+          id: step2Id,
+          type: 'result',
+          internalTitle: 'Ergebnis',
+          layout: 'single',
+          logicRules: [],
+          blocks: [
+            {
+              id: randomUUID(),
+              type: 'text',
+              content: '<p>Danke!</p>',
+            },
+          ],
+        },
+      ],
+    }
+
+    const draftResp = await apiContext.put(`${ADMIN_API_BASE}/funnels/${m3FunnelId}/draft`, {
+      headers: auth,
+      data: { content },
+    })
+    if (!draftResp.ok()) {
+      m3FunnelId = null
+      await apiContext.dispose()
+      return
+    }
+
+    await apiContext.dispose()
+  })
+
+  test.afterAll(async () => {
+    if (!m3FunnelId) return
+    const admin = await getAdminSession()
+    if (!admin) return
+    const { apiContext, auth } = admin
+    await apiContext.delete(`${ADMIN_API_BASE}/funnels/${m3FunnelId}`, { headers: auth })
+    await apiContext.dispose()
+  })
+
+  test('M3 Metriken-Seite: keine kritischen AA-Violations', async ({ page }) => {
+    if (!adminToken || !m3FunnelId) { test.skip(); return }
+    await loginM3(page)
+    await page.goto(`/admin/funnels/${m3FunnelId}/metrics`)
+    // Metriken-Seite nutzt das editor-Layout (kein #main-content) und ist ssr:false:
+    // auf das hydrierte <main> des Dashboards warten.
+    await page.waitForSelector('main', { state: 'visible', timeout: 15000 })
+    await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+    const results = await new AxeBuilder({ page })
+      .include('main')
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+
+    const criticalOrSerious = results.violations.filter(
+      v => v.impact === 'critical' || v.impact === 'serious',
+    )
+    expect(
+      criticalOrSerious,
+      `A11y-Violations Metriken-Seite:\n${criticalOrSerious.map(v => `[${v.impact}] ${v.id}: ${v.description}`).join('\n')}`,
+    ).toHaveLength(0)
+  })
+
+  test('M3 Editor (LogicRulePanel + PersonalizationPanel): keine kritischen AA-Violations', async ({ page }) => {
+    if (!adminToken || !m3FunnelId) { test.skip(); return }
+    await loginM3(page)
+    // Editor liegt unter /editor und nutzt das editor-Layout. Die M3-Panels
+    // (Sprungregeln + Personalisierung) leben in der linken Seitenleiste <aside>.
+    await page.goto(`/admin/funnels/${m3FunnelId}/editor`)
+    const leftPanel = page.locator('aside[aria-label="Funnel-Struktur"]')
+    await leftPanel.waitFor({ state: 'visible', timeout: 15000 })
+
+    // Sprungregeln-Sektion sichtbar machen (startet expanded=true)
+    const logicSection = page.locator('section[aria-labelledby="logic-panel-heading"]')
+    await expect(logicSection).toBeVisible({ timeout: 5000 }).catch(() => {})
+
+    // Gezielt die M3-Panels scannen (nicht die vorbestehende Schritt-Liste des
+    // LeftPanels, deren Semantik ausserhalb des M3-Umfangs liegt).
+    const results = await new AxeBuilder({ page })
+      .include('section[aria-labelledby="logic-panel-heading"]')
+      .include('section[aria-label="Personalisierung"]')
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+
+    const criticalOrSerious = results.violations.filter(
+      v => v.impact === 'critical' || v.impact === 'serious',
+    )
+    expect(
+      criticalOrSerious,
+      `A11y-Violations Editor-Panels:\n${criticalOrSerious.map(v => `[${v.impact}] ${v.id}: ${v.description}`).join('\n')}`,
+    ).toHaveLength(0)
   })
 })

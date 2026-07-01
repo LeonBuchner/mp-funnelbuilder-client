@@ -1,10 +1,22 @@
 <script setup lang="ts">
 import type { ImageBlock } from '~/types/funnel'
+import { usePersonalizationContext } from '~/composables/usePersonalizationContext'
 
-defineProps<{
+const props = defineProps<{
   block: ImageBlock
   mode: 'editor' | 'live'
 }>()
+
+/**
+ * Personalisierung (M3.5): Im live-Modus werden {{key}}-Platzhalter im Alt-Text ersetzt.
+ * Vue setzt den Attributwert direkt via setAttribute() -> Browser encodiert sicher.
+ * Im Editor-Modus bleibt der Raw-Alt-Text unveraendert.
+ */
+const pCtx = usePersonalizationContext()
+const displayAlt = computed<string>(() => {
+  if (props.mode !== 'live' || !pCtx) return props.block.alt
+  return pCtx.interpolateText(props.block.alt)
+})
 </script>
 
 <template>
@@ -12,7 +24,7 @@ defineProps<{
     <img
       v-if="block.url"
       :src="block.url"
-      :alt="block.alt"
+      :alt="displayAlt"
       :width="block.width ?? undefined"
       :height="block.height ?? undefined"
       loading="lazy"
@@ -23,7 +35,7 @@ defineProps<{
       v-else-if="mode === 'editor'"
       class="flex h-36 flex-col items-center justify-center gap-2 rounded-[var(--funnel-radius)] border-2 border-dashed border-gray-200 bg-gray-50 text-sm"
       :style="{ color: 'var(--funnel-muted)' }"
-      aria-label="Kein Bild gewaehlt"
+      aria-label="Kein Bild gewählt"
     >
       <svg
         class="h-8 w-8 opacity-40"
