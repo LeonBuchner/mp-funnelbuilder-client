@@ -414,7 +414,7 @@ function categoryColors(category: string): { bg: string; text: string } {
 </script>
 
 <template>
-  <div class="p-6">
+  <div class="mx-auto max-w-4xl p-6">
     <!-- ------------------------------------------------------------------ -->
     <!-- Seitenkopf                                                          -->
     <!-- ------------------------------------------------------------------ -->

@@ -206,9 +206,11 @@ function formatRate(value: number): string {
       <!-- Hauptbereich                                                       -->
       <!-- ----------------------------------------------------------------- -->
       <main
-        class="flex-1 overflow-y-auto bg-ui-bg p-6"
+        class="flex-1 overflow-y-auto bg-ui-bg"
         aria-label="Metriken-Dashboard"
       >
+        <!-- Zentrierter Inhalt (grauer Hintergrund bleibt full-width) -->
+        <div class="mx-auto max-w-4xl p-6">
         <!-- ---------------------------------------------------------------- -->
         <!-- Kopfzeile: Titel + Zeitraum-Auswahl                             -->
         <!-- ---------------------------------------------------------------- -->
@@ -402,6 +404,7 @@ function formatRate(value: number): string {
             Seite-zu-Seite-Konvertierung, Conversion Rate über Zeit, Geräteverteilung und
             Kontaktentwicklung werden dort ergänzt.
           </p>
+        </div>
         </div>
       </main>
     </template>
