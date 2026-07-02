@@ -123,6 +123,38 @@ export interface OptinCheckboxBlock {
   checkboxLabel: string
 }
 
+/**
+ * Double-Opt-in-Block (Schema v1.1.0).
+ * Backend setzt den Lead nach Submit auf 'pending' und verschickt eine
+ * Bestaetigungs-E-Mail. Der Renderer zeigt danach einen Bestaetigungs-Hinweis.
+ */
+export interface OptinDoubleBlock {
+  id: string
+  type: 'optin_double'
+  fieldKey: string
+  required: boolean
+  checkboxLabel: string
+  /** Hinweistext unter der Checkbox. Standard: "Du erhältst eine Bestätigungs-E-Mail." */
+  hintText?: string
+}
+
+/**
+ * OTP-Block (Schema v1.2.0).
+ * Zeigt ein E-Mail-Feld + N einzelne Ziffernslots.
+ * Nach erfolgreicher Verifikation wird otp_verified_token im Renderer-State gesetzt.
+ */
+export interface OptinOtpBlock {
+  id: string
+  type: 'optin_otp'
+  fieldKey: string
+  required: boolean
+  /** Anzahl der OTP-Stellen. Standard: 6. */
+  digits?: number
+  label?: string
+  emailLabel?: string
+  emailPlaceholder?: string
+}
+
 export interface ProgressIndicatorBlock {
   id: string
   type: 'progress_indicator'
@@ -429,6 +461,8 @@ export type Block = (
   | InputEmailBlock
   | InputPhoneBlock
   | OptinCheckboxBlock
+  | OptinDoubleBlock
+  | OptinOtpBlock
   | ProgressIndicatorBlock
   | LogoBlock
   | MultiChoiceBlock
@@ -480,6 +514,11 @@ export interface FunnelMeta {
 export type ProgressBarStyle = 'dots' | 'bar' | 'steps'
 export type AnimationsStyle = 'slide' | 'fade' | 'none'
 
+export interface FunnelTrackingSettings {
+  ga4MeasurementId?: string
+  metaPixelId?: string
+}
+
 export interface FunnelSettings {
   progressBar: boolean
   progressBarStyle: ProgressBarStyle
@@ -487,6 +526,8 @@ export interface FunnelSettings {
   confettiOnComplete: boolean
   mpBrandingPosition: 'footer'
   startButtonLabel: string
+  /** Tracking-Einstellungen (GA4 + Meta Pixel). Nur wenn Consent erteilt. */
+  tracking?: FunnelTrackingSettings
 }
 
 export interface FunnelContent {
@@ -770,6 +811,27 @@ export function createBlock(type: BlockType): Block {
         required: true,
         checkboxLabel:
           'Ich stimme den <a href="/datenschutz" class="underline">Datenschutzbestimmungen</a> zu.',
+      }
+    case 'optin_double':
+      return {
+        id,
+        type: 'optin_double',
+        fieldKey: `optin_double_${id.slice(0, 8)}`,
+        required: true,
+        checkboxLabel:
+          'Ich stimme den <a href="/datenschutz" class="underline">Datenschutzbestimmungen</a> zu.',
+        hintText: 'Du erhältst eine Bestätigungs-E-Mail.',
+      }
+    case 'optin_otp':
+      return {
+        id,
+        type: 'optin_otp',
+        fieldKey: `optin_otp_${id.slice(0, 8)}`,
+        required: true,
+        digits: 6,
+        label: 'Bestätigungscode',
+        emailLabel: 'Deine E-Mail-Adresse',
+        emailPlaceholder: 'beispiel@email.de',
       }
     case 'progress_indicator':
       return {

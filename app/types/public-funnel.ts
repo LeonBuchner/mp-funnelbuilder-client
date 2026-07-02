@@ -99,6 +99,10 @@ export interface LeadSubmitBody {
   utm?: UtmParams
   /** Zugewiesene A/B-Varianten-ID, falls ein A/B-Test laeuft. */
   ab_variant_id?: number
+  /** Tracking-Consent (true/false). null = nicht gesetzt (kein Consent-Banner gezeigt). */
+  tracking_consent?: boolean | null
+  /** OTP-Verifikations-Token, wenn ein optin_otp-Block im Funnel vorhanden ist. */
+  otp_verified_token?: string | null
 }
 
 export interface LeadSubmitResponse {

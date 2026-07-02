@@ -15,6 +15,22 @@
 import type { MetricsPeriod, MetricsData } from '~/composables/useMetrics'
 import { getMetricsDateRange } from '~/composables/useMetrics'
 import type { AbTest } from '~/types/ab-test'
+import type { DropoffStep } from '~/composables/useMetricsDropoff'
+import {
+  getDropoffMaxViews,
+  getDropoffBarPercent,
+  formatDropoffRate,
+} from '~/composables/useMetricsDropoff'
+import type { DeviceMetric } from '~/composables/useMetricsDevices'
+import { getDeviceLabel } from '~/composables/useMetricsDevices'
+import type { TimelinePoint } from '~/composables/useMetricsTimeline'
+import {
+  getTimelineYMax,
+  getTimelineBarPercent,
+  formatTimelineDate,
+} from '~/composables/useMetricsTimeline'
+import type { AnswersBlock } from '~/composables/useMetricsAnswers'
+import { getAnswerDistributionMax, getAnswerBarPercent, getAnswerBlockTypeLabel } from '~/composables/useMetricsAnswers'
 
 definePageMeta({
   layout: 'editor',
@@ -54,6 +70,59 @@ const metricsError = ref<string | null>(null)
 const abTests = ref<AbTest[]>([])
 const isLoadingAbTests = ref(false)
 const abTestsApi = useAbTests()
+
+// ---------------------------------------------------------------------------
+// Chart-Composables (M4.7)
+// ---------------------------------------------------------------------------
+const dropoffApi = useMetricsDropoff()
+const devicesApi = useMetricsDevices()
+const timelineApi = useMetricsTimeline()
+const answersApi = useMetricsAnswers()
+
+const dropoffSteps = ref<DropoffStep[]>([])
+const deviceMetrics = ref<DeviceMetric[]>([])
+const timelinePoints = ref<TimelinePoint[]>([])
+const answerBlocks = ref<AnswersBlock[]>([])
+const isLoadingCharts = ref(false)
+const chartsError = ref<string | null>(null)
+
+// Offene Antworten-Sektionen (fuer den aufklappbaren Bereich)
+const openAnswerBlocks = ref<Set<string>>(new Set())
+
+function toggleAnswerBlock(blockId: string): void {
+  if (openAnswerBlocks.value.has(blockId)) {
+    openAnswerBlocks.value.delete(blockId)
+  } else {
+    openAnswerBlocks.value.add(blockId)
+  }
+}
+
+async function loadCharts(): Promise<void> {
+  isLoadingCharts.value = true
+  chartsError.value = null
+  try {
+    const [dropoff, devices, timeline, answers] = await Promise.allSettled([
+      dropoffApi.get(funnelId.value),
+      devicesApi.get(funnelId.value),
+      timelineApi.get(funnelId.value),
+      answersApi.get(funnelId.value),
+    ])
+    if (dropoff.status === 'fulfilled') dropoffSteps.value = dropoff.value
+    if (devices.status === 'fulfilled') deviceMetrics.value = devices.value
+    if (timeline.status === 'fulfilled') timelinePoints.value = timeline.value
+    if (answers.status === 'fulfilled') {
+      answerBlocks.value = answers.value
+      // Ersten Block standardmaessig aufklappen
+      if (answers.value.length > 0 && answers.value[0]) {
+        openAnswerBlocks.value.add(answers.value[0].block_id)
+      }
+    }
+  } catch {
+    chartsError.value = 'Charts konnten nicht geladen werden.'
+  } finally {
+    isLoadingCharts.value = false
+  }
+}
 
 async function loadAbTests(): Promise<void> {
   isLoadingAbTests.value = true
@@ -125,8 +194,8 @@ onMounted(async () => {
       title: `Metriken - ${editorStore.funnel?.name ?? 'Funnel'} - MP Funnel-Builder`,
       description: `Metriken und Kennzahlen für den Funnel ${editorStore.funnel?.name ?? ''}.`,
     })
-    // Metriken und A/B-Tests parallel laden
-    await Promise.all([loadMetrics(), loadAbTests()])
+    // Metriken, A/B-Tests und Charts parallel laden
+    await Promise.all([loadMetrics(), loadAbTests(), loadCharts()])
     isFirstLoad.value = false
   } catch {
     loadError.value = 'Funnel konnte nicht geladen werden.'
@@ -188,6 +257,58 @@ function formatInteger(value: number): string {
 function formatRate(value: number): string {
   return value.toFixed(2).replace('.', ',')
 }
+
+// ---------------------------------------------------------------------------
+// Chart-Hilfsfunktionen (Weiterleitung an exportierte Pure-Functions)
+// ---------------------------------------------------------------------------
+
+const dropoffMaxViews = computed(() => getDropoffMaxViews(dropoffSteps.value))
+
+function dropoffBarPercent(step: DropoffStep): number {
+  return getDropoffBarPercent(step, dropoffMaxViews.value)
+}
+
+const timelineYMax = computed(() => getTimelineYMax(timelinePoints.value))
+
+function timelineViewsPercent(point: TimelinePoint): number {
+  return getTimelineBarPercent(point.views, timelineYMax.value)
+}
+
+function timelineLeadsPercent(point: TimelinePoint): number {
+  return getTimelineBarPercent(point.leads, timelineYMax.value)
+}
+
+/**
+ * Erstellt eine barrierefreie Textzusammenfassung der Dropoff-Daten
+ * als sr-only Inhalt.
+ */
+function getDropoffSummary(): string {
+  return dropoffSteps.value
+    .map(
+      (s) =>
+        `Seite ${s.step_index + 1}: ${s.step_views} Aufrufe, ${s.step_completions} Abschlüsse, ${formatDropoffRate(s.dropoff_rate)} Absprung`,
+    )
+    .join('. ')
+}
+
+function getTimelineSummary(): string {
+  if (timelinePoints.value.length === 0) return 'Keine Daten vorhanden.'
+  const totalViews = timelinePoints.value.reduce((s, p) => s + p.views, 0)
+  const totalLeads = timelinePoints.value.reduce((s, p) => s + p.leads, 0)
+  return `${timelinePoints.value.length} Tage. Gesamt: ${totalViews} Aufrufe, ${totalLeads} Leads.`
+}
+
+function getDevicesSummary(): string {
+  return deviceMetrics.value
+    .map((d) => `${getDeviceLabel(d.device_type)}: ${d.count} (${d.percent} %)`)
+    .join(', ')
+}
+
+// Pruefen ob Chart-Daten vorhanden (nicht nur leere Arrays)
+const hasDropoffData = computed(() => dropoffSteps.value.length > 0)
+const hasDevicesData = computed(() => deviceMetrics.value.length > 0)
+const hasTimelineData = computed(() => timelinePoints.value.length > 0)
+const hasAnswersData = computed(() => answerBlocks.value.length > 0)
 </script>
 
 <template>
@@ -509,33 +630,383 @@ function formatRate(value: number): string {
           </section>
 
           <!-- --------------------------------------------------------------- -->
-          <!-- Platzhalter-Hinweis: Charts kommen in M4                        -->
+          <!-- Charts-Bereich (M4.7)                                          -->
           <!-- --------------------------------------------------------------- -->
           <div
             v-if="!isLoadingMetrics && !metricsError"
-            class="mt-6 rounded-xl border border-dashed border-ui-border p-8 text-center"
+            class="mt-6 space-y-6"
           >
-            <svg
-              class="mx-auto mb-3 h-8 w-8 text-ui-muted"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
+            <!-- Charts-Fehler -->
+            <div
+              v-if="chartsError"
+              class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              role="alert"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-            <p class="text-sm font-medium text-ui-text">
-              Charts folgen in M4
-            </p>
-            <p class="mt-1 text-xs text-ui-muted">
-              Seite-zu-Seite-Konvertierung, Conversion Rate über Zeit, Geräteverteilung und
-              Kontaktentwicklung werden dort ergänzt.
-            </p>
+              {{ chartsError }}
+            </div>
+
+            <!-- Charts-Skeleton -->
+            <div
+              v-if="isLoadingCharts"
+              class="grid grid-cols-1 gap-6 lg:grid-cols-2"
+              aria-busy="true"
+              aria-label="Charts werden geladen"
+            >
+              <div
+                v-for="n in 4"
+                :key="n"
+                class="animate-pulse rounded-xl border border-ui-border bg-white p-5"
+                aria-hidden="true"
+              >
+                <div class="mb-4 h-4 w-48 rounded bg-gray-200" />
+                <div class="space-y-2">
+                  <div
+                    v-for="m in 4"
+                    :key="m"
+                    class="h-7 rounded bg-gray-200"
+                    :style="{ width: `${80 - m * 12}%` }"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <template v-else>
+              <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <!-- --------------------------------------------------------- -->
+                <!-- Chart 1: Seite-zu-Seite-Konvertierung (Dropoff)           -->
+                <!-- --------------------------------------------------------- -->
+                <section
+                  class="rounded-xl border border-ui-border bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.06)]"
+                  aria-labelledby="chart-dropoff-heading"
+                  data-testid="chart-dropoff"
+                >
+                  <h2
+                    id="chart-dropoff-heading"
+                    class="mb-4 text-sm font-semibold text-ui-text"
+                  >
+                    Seite-zu-Seite-Konvertierung
+                  </h2>
+
+                  <div
+                    v-if="!hasDropoffData"
+                    class="py-6 text-center text-sm text-ui-muted"
+                  >
+                    Noch keine Daten vorhanden.
+                  </div>
+
+                  <div
+                    v-else
+                    aria-label="Seite-zu-Seite-Konvertierung"
+                    role="img"
+                  >
+                    <!-- Barrierefreie Textzusammenfassung -->
+                    <p class="sr-only">
+                      {{ getDropoffSummary() }}
+                    </p>
+
+                    <div
+                      class="space-y-3"
+                      aria-hidden="true"
+                    >
+                      <div
+                        v-for="step in dropoffSteps"
+                        :key="step.step_index"
+                        class="group"
+                      >
+                        <div class="mb-1 flex items-center justify-between text-xs">
+                          <span class="font-medium text-ui-text">
+                            Seite {{ step.step_index + 1 }}
+                          </span>
+                          <span class="text-ui-muted">
+                            {{ step.step_views.toLocaleString('de-DE') }} Aufrufe
+                            <span
+                              v-if="step.dropoff_rate > 0"
+                              class="ml-2 text-red-600"
+                            >
+                              -{{ formatDropoffRate(step.dropoff_rate) }}
+                            </span>
+                          </span>
+                        </div>
+                        <div class="h-7 w-full overflow-hidden rounded-lg bg-gray-100">
+                          <div
+                            class="h-full rounded-lg bg-ui-accent transition-all duration-500"
+                            :style="{ width: dropoffBarPercent(step) + '%' }"
+                          />
+                        </div>
+                        <div class="mt-0.5 flex items-center justify-between text-[10px] text-ui-muted">
+                          <span>{{ step.step_completions.toLocaleString('de-DE') }} Abschlüsse</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- --------------------------------------------------------- -->
+                <!-- Chart 2: Geraeteverteilung                                 -->
+                <!-- --------------------------------------------------------- -->
+                <section
+                  class="rounded-xl border border-ui-border bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.06)]"
+                  aria-labelledby="chart-devices-heading"
+                  data-testid="chart-devices"
+                >
+                  <h2
+                    id="chart-devices-heading"
+                    class="mb-4 text-sm font-semibold text-ui-text"
+                  >
+                    Geräteverteilung
+                  </h2>
+
+                  <div
+                    v-if="!hasDevicesData"
+                    class="py-6 text-center text-sm text-ui-muted"
+                  >
+                    Noch keine Daten vorhanden.
+                  </div>
+
+                  <div
+                    v-else
+                    role="img"
+                    aria-label="Geräteverteilung"
+                  >
+                    <!-- Barrierefreie Textzusammenfassung -->
+                    <p class="sr-only">
+                      {{ getDevicesSummary() }}
+                    </p>
+
+                    <div
+                      class="space-y-4"
+                      aria-hidden="true"
+                    >
+                      <div
+                        v-for="device in deviceMetrics"
+                        :key="device.device_type"
+                        class="flex items-center gap-3"
+                      >
+                        <span class="w-20 flex-shrink-0 text-xs font-medium text-ui-text">
+                          {{ getDeviceLabel(device.device_type) }}
+                        </span>
+                        <div class="flex-1 overflow-hidden rounded-full bg-gray-100">
+                          <div
+                            class="h-5 rounded-full bg-ui-accent transition-all duration-500"
+                            :style="{ width: Math.max(device.percent, 1) + '%' }"
+                          />
+                        </div>
+                        <span class="w-12 flex-shrink-0 text-right text-xs text-ui-muted">
+                          {{ device.percent }} %
+                        </span>
+                        <span class="w-10 flex-shrink-0 text-right text-xs text-ui-muted">
+                          {{ device.count.toLocaleString('de-DE') }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <!-- ----------------------------------------------------------- -->
+              <!-- Chart 3: Conversion ueber Zeit (Timeline)                   -->
+              <!-- ----------------------------------------------------------- -->
+              <section
+                class="rounded-xl border border-ui-border bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.06)]"
+                aria-labelledby="chart-timeline-heading"
+                data-testid="chart-timeline"
+              >
+                <div class="mb-4 flex items-center justify-between">
+                  <h2
+                    id="chart-timeline-heading"
+                    class="text-sm font-semibold text-ui-text"
+                  >
+                    Conversion über Zeit
+                  </h2>
+                  <!-- Legende -->
+                  <div class="flex items-center gap-4 text-xs text-ui-muted">
+                    <span class="flex items-center gap-1.5">
+                      <span class="h-2.5 w-2.5 rounded-sm bg-blue-500" aria-hidden="true" />
+                      Aufrufe
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                      <span class="h-2.5 w-2.5 rounded-sm bg-ui-accent" aria-hidden="true" />
+                      Leads
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  v-if="!hasTimelineData"
+                  class="py-6 text-center text-sm text-ui-muted"
+                >
+                  Noch keine Daten vorhanden.
+                </div>
+
+                <div
+                  v-else
+                  role="img"
+                  aria-label="Conversion über Zeit"
+                >
+                  <!-- Barrierefreie Textzusammenfassung -->
+                  <p class="sr-only">
+                    {{ getTimelineSummary() }}
+                  </p>
+
+                  <!-- Balken-Chart -->
+                  <div
+                    class="flex h-40 items-end gap-1 overflow-x-auto"
+                    aria-hidden="true"
+                  >
+                    <div
+                      v-for="point in timelinePoints"
+                      :key="point.date"
+                      class="group relative flex min-w-[24px] flex-1 flex-col items-center justify-end gap-0.5"
+                      :title="`${formatTimelineDate(point.date)}: ${point.views} Aufrufe, ${point.leads} Leads`"
+                    >
+                      <!-- Aufrufe-Balken -->
+                      <div class="relative flex w-full items-end justify-center gap-0.5">
+                        <div
+                          class="w-1/2 rounded-t-sm bg-blue-500 transition-all duration-500"
+                          :style="{ height: timelineViewsPercent(point) + '%', minHeight: point.views > 0 ? '2px' : '0' }"
+                        />
+                        <!-- Leads-Balken -->
+                        <div
+                          class="w-1/2 rounded-t-sm bg-ui-accent transition-all duration-500"
+                          :style="{ height: timelineLeadsPercent(point) + '%', minHeight: point.leads > 0 ? '2px' : '0' }"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- X-Achse: Datum-Labels (nur jeden N-ten) -->
+                  <div
+                    class="mt-1 flex gap-1 overflow-x-auto"
+                    aria-hidden="true"
+                  >
+                    <div
+                      v-for="(point, i) in timelinePoints"
+                      :key="point.date"
+                      class="min-w-[24px] flex-1 text-center text-[9px] text-ui-muted"
+                    >
+                      <span v-if="i % Math.max(1, Math.floor(timelinePoints.length / 7)) === 0">
+                        {{ formatTimelineDate(point.date) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- ----------------------------------------------------------- -->
+              <!-- Chart 4: Antworten-Insights                                 -->
+              <!-- ----------------------------------------------------------- -->
+              <section
+                v-if="hasAnswersData"
+                class="rounded-xl border border-ui-border bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,.06)]"
+                aria-labelledby="chart-answers-heading"
+                data-testid="chart-answers"
+              >
+                <h2
+                  id="chart-answers-heading"
+                  class="mb-4 text-sm font-semibold text-ui-text"
+                >
+                  Antworten-Insights
+                </h2>
+
+                <div class="space-y-3">
+                  <div
+                    v-for="block in answerBlocks"
+                    :key="block.block_id"
+                    class="rounded-lg border border-ui-border"
+                  >
+                    <!-- Aufklapp-Kopf -->
+                    <button
+                      type="button"
+                      class="flex w-full items-center justify-between px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+                      :aria-expanded="openAnswerBlocks.has(block.block_id)"
+                      :aria-controls="`answers-block-${block.block_id}`"
+                      @click="toggleAnswerBlock(block.block_id)"
+                    >
+                      <div>
+                        <span class="text-sm font-medium text-ui-text">
+                          {{ block.field_key }}
+                        </span>
+                        <span class="ml-2 text-xs text-ui-muted">
+                          {{ getAnswerBlockTypeLabel(block.block_type) }}
+                        </span>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <span class="text-xs text-ui-muted">
+                          {{ block.total }} Antworten
+                        </span>
+                        <svg
+                          :class="[
+                            'h-4 w-4 flex-shrink-0 text-ui-muted transition-transform duration-200',
+                            openAnswerBlocks.has(block.block_id) ? 'rotate-180' : '',
+                          ]"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          aria-hidden="true"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </button>
+
+                    <!-- Antwort-Balken -->
+                    <div
+                      v-show="openAnswerBlocks.has(block.block_id)"
+                      :id="`answers-block-${block.block_id}`"
+                      class="border-t border-ui-border px-4 py-3"
+                    >
+                      <!-- sr-only Zusammenfassung -->
+                      <p class="sr-only">
+                        Antwortverteilung für {{ block.field_key }}:
+                        {{
+                          block.distribution
+                            .map((d) => `${d.value}: ${d.count} (${d.percent} %)`)
+                            .join(', ')
+                        }}
+                      </p>
+
+                      <div
+                        v-if="block.distribution.length === 0"
+                        class="py-2 text-sm text-ui-muted"
+                      >
+                        Keine Verteilungsdaten.
+                      </div>
+
+                      <div
+                        v-else
+                        class="space-y-2"
+                        aria-hidden="true"
+                      >
+                        <div
+                          v-for="item in block.distribution"
+                          :key="item.value"
+                          class="flex items-center gap-3"
+                        >
+                          <span class="w-28 flex-shrink-0 truncate text-xs text-ui-text" :title="item.value">
+                            {{ item.value }}
+                          </span>
+                          <div class="flex-1 overflow-hidden rounded-full bg-gray-100">
+                            <div
+                              class="h-5 rounded-full bg-ui-accent/80 transition-all duration-500"
+                              :style="{
+                                width: getAnswerBarPercent(item, getAnswerDistributionMax(block)) + '%',
+                              }"
+                            />
+                          </div>
+                          <span class="w-8 flex-shrink-0 text-right text-xs text-ui-muted">
+                            {{ item.count }}
+                          </span>
+                          <span class="w-10 flex-shrink-0 text-right text-xs text-ui-muted">
+                            {{ item.percent }} %
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </template>
           </div>
         </div>
       </main>

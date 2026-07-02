@@ -24,6 +24,8 @@ import type {
   InputEmailBlock,
   InputPhoneBlock,
   OptinCheckboxBlock,
+  OptinDoubleBlock,
+  OptinOtpBlock,
   ProgressIndicatorBlock,
   LogoBlock,
   MultiChoiceBlock,
@@ -46,6 +48,8 @@ import BlockButton from './BlockButton.vue'
 import BlockSingleChoice from './BlockSingleChoice.vue'
 import BlockInput from './BlockInput.vue'
 import BlockOptinCheckbox from './BlockOptinCheckbox.vue'
+import BlockOptinDouble from './BlockOptinDouble.vue'
+import BlockOptinOtp from './BlockOptinOtp.vue'
 import BlockProgress from './BlockProgress.vue'
 import BlockLogo from './BlockLogo.vue'
 
@@ -72,6 +76,10 @@ const props = defineProps<{
    *  Wird an interaktive Bloecke weitergereicht, damit sie aria-invalid und
    *  aria-describedby korrekt setzen koennen. */
   error?: string
+  /** Funnel-Hash fuer OTP-API-Aufrufe (wird nur von BlockOptinOtp benoetigt). */
+  hash?: string
+  /** Session-ID fuer OTP-API-Aufrufe (wird nur von BlockOptinOtp benoetigt). */
+  sessionId?: string
 }>()
 
 defineEmits<{
@@ -79,6 +87,8 @@ defineEmits<{
   'action': [action: string]
   /** Weiterleitung aus BlockText: neuer HTML-Inhalt nach Inline-Bearbeitung */
   'update-content': [html: string]
+  /** OTP-Verifikation erfolgreich: Token fuer Lead-Submit */
+  'otp-verified': [token: string]
 }>()
 
 // ---------------------------------------------------------------------------
@@ -142,6 +152,26 @@ const boolModelValue = computed<boolean | undefined>(() =>
     :model-value="boolModelValue"
     :error="props.error"
     @update:model-value="$emit('update:modelValue', $event)"
+  />
+  <!-- M4-Bloecke: statische Imports (kein defineAsyncComponent) -->
+  <BlockOptinDouble
+    v-else-if="block.type === 'optin_double'"
+    :block="(block as OptinDoubleBlock)"
+    :mode="mode"
+    :model-value="boolModelValue"
+    :error="props.error"
+    @update:model-value="$emit('update:modelValue', $event)"
+  />
+  <BlockOptinOtp
+    v-else-if="block.type === 'optin_otp'"
+    :block="(block as OptinOtpBlock)"
+    :mode="mode"
+    :model-value="stringModelValue"
+    :error="props.error"
+    :hash="props.hash"
+    :session-id="props.sessionId"
+    @update:model-value="$emit('update:modelValue', $event)"
+    @otp-verified="$emit('otp-verified', $event)"
   />
   <BlockProgress
     v-else-if="block.type === 'progress_indicator'"

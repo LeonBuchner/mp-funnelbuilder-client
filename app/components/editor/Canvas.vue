@@ -131,6 +131,8 @@ function blockLabel(type: BlockType): string {
     input_email: 'E-Mail',
     input_phone: 'Telefon',
     optin_checkbox: 'Opt-in',
+    optin_double: 'Double Opt-in',
+    optin_otp: 'OTP-Verifikation',
     progress_indicator: 'Fortschritt',
     logo: 'Logo',
     multi_choice: 'Mehrfachauswahl',

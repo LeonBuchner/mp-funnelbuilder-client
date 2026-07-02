@@ -33,6 +33,90 @@ import type { PublicFunnel } from '~/types/public-funnel'
 import type { FunnelContent, Block, ButtonBlock } from '~/types/funnel'
 
 // ---------------------------------------------------------------------------
+// Consent-Hilfsfunktionen (localStorage, SSR-sicher)
+// ---------------------------------------------------------------------------
+
+/** Liest den Tracking-Consent aus localStorage. null = noch nicht gesetzt. */
+function readTrackingConsent(funnelSlug: string): boolean | null {
+  if (!import.meta.client) return null
+  try {
+    const raw = window.localStorage.getItem(`mp_consent:${funnelSlug}:tracking`)
+    if (raw === 'true') return true
+    if (raw === 'false') return false
+    return null
+  }
+  catch {
+    return null
+  }
+}
+
+/** Schreibt den Tracking-Consent in localStorage. */
+function writeTrackingConsent(funnelSlug: string, value: boolean): void {
+  if (!import.meta.client) return
+  try {
+    window.localStorage.setItem(`mp_consent:${funnelSlug}:tracking`, String(value))
+  }
+  catch { /* localStorage nicht verfuegbar */ }
+}
+
+// ---------------------------------------------------------------------------
+// GA4 + Meta Pixel Laden (nur nach Consent, nur clientseitig)
+// ---------------------------------------------------------------------------
+
+/**
+ * Prueft ob eine GA4-Measurement-ID dem erlaubten Format entspricht.
+ * Gleicht das backend-seitige Regex ^G-[A-Z0-9]+$ und das Frontend-Formular-Regex ab.
+ * Verhindert XSS wenn ein manipulierter Wert in script.textContent eingebettet wird.
+ */
+function isValidGa4Id(id: string): boolean {
+  return /^G-[A-Z0-9]+$/.test(id)
+}
+
+/**
+ * Prueft ob eine Meta-Pixel-ID nur aus Ziffern besteht.
+ * Gleicht das backend-seitige Regex ^[0-9]+$ und das Frontend-Formular-Regex ab.
+ */
+function isValidMetaPixelId(id: string): boolean {
+  return /^[0-9]+$/.test(id)
+}
+
+function loadGa4Script(measurementId: string): void {
+  if (!import.meta.client) return
+  // Format-Pruefung als letzte Verteidigungslinie vor script.textContent-Einbettung (XSS-Schutz)
+  if (!isValidGa4Id(measurementId)) return
+  if (document.getElementById('gtag-script')) return
+  const script1 = document.createElement('script')
+  script1.id = 'gtag-script'
+  script1.async = true
+  script1.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`
+  document.head.appendChild(script1)
+  const script2 = document.createElement('script')
+  script2.id = 'gtag-init'
+  script2.textContent = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${measurementId}');`
+  document.head.appendChild(script2)
+}
+
+function loadMetaPixel(pixelId: string): void {
+  if (!import.meta.client) return
+  // Format-Pruefung als letzte Verteidigungslinie vor script.textContent-Einbettung (XSS-Schutz)
+  if (!isValidMetaPixelId(pixelId)) return
+  if (document.getElementById('fbq-script')) return
+  const script = document.createElement('script')
+  script.id = 'fbq-script'
+  script.textContent = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pixelId}');fbq('track','PageView');`
+  document.head.appendChild(script)
+}
+
+function trackGa4Lead(): void {
+  if (!import.meta.client) return
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- gtag ist eine globale Funktion ohne TS-Typen
+  const w = window as any
+  if (typeof w.gtag === 'function') {
+    w.gtag('event', 'lead_submitted')
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Layout + Route
 // ---------------------------------------------------------------------------
 
@@ -168,7 +252,7 @@ const { getThemeVars } = useFunnelThemes()
 const containerStyle = computed(() => {
   const vars = funnelData.branding
     ? brandingToFunnelVars(funnelData.branding)
-    : getThemeVars(funnelData.content.meta.themeId ?? 'mp')
+    : getThemeVars(funnelData.content.meta?.themeId ?? 'mp')
 
   return {
     ...vars,
@@ -255,6 +339,56 @@ provide(personalizationKey, {
 })
 
 // ---------------------------------------------------------------------------
+// Consent-Banner + Tracking-Scripts (M4.11 / M4.12)
+// ---------------------------------------------------------------------------
+
+/**
+ * Tracking-Consent: null = Banner zeigen, true/false = Entscheidung getroffen.
+ * Startet auf null (SSR-sicher: kein localStorage-Zugriff auf Server).
+ * Wird in onMounted aus localStorage gelesen.
+ */
+const trackingConsentState = ref<boolean | null>(null)
+/** true = Consent-Banner soll angezeigt werden */
+const showConsentBanner = ref<boolean>(false)
+
+/** Tracking-IDs aus den Funnel-Settings */
+const ga4Id = funnelData.settings.tracking?.ga4_id ?? null
+const metaPixelId = funnelData.settings.tracking?.meta_pixel_id ?? null
+
+onMounted(() => {
+  const stored = readTrackingConsent(slug)
+  if (stored === null) {
+    // Noch keine Entscheidung: Banner anzeigen (nur wenn Tracking konfiguriert)
+    if (ga4Id || metaPixelId) {
+      showConsentBanner.value = true
+    }
+  }
+  else {
+    trackingConsentState.value = stored
+    renderer.setTrackingConsent(stored)
+    if (stored === true) {
+      if (ga4Id) loadGa4Script(ga4Id)
+      if (metaPixelId) loadMetaPixel(metaPixelId)
+    }
+  }
+})
+
+/** Wird vom ConsentBanner aufgerufen wenn der Nutzer eine Entscheidung trifft. */
+function handleConsentDecision(accepted: boolean): void {
+  writeTrackingConsent(slug, accepted)
+  trackingConsentState.value = accepted
+  renderer.setTrackingConsent(accepted)
+  showConsentBanner.value = false
+  if (accepted) {
+    if (ga4Id) loadGa4Script(ga4Id)
+    if (metaPixelId) loadMetaPixel(metaPixelId)
+    if (metaPixelId) {
+      // fbq PageView wurde bereits beim Laden des Pixels ausgeloest (im Inline-Script)
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // UTM-Parameter aus URL
 // ---------------------------------------------------------------------------
 
@@ -331,6 +465,10 @@ async function handleBlockAction(action: string, block: Block): Promise<void> {
   if (action === 'submit') {
     transitionDirection.value = 'forward'
     await renderer.submitLead({ utm: utm.value })
+    // GA4-Lead-Event nach erfolgreichem Submit (nur wenn Consent erteilt)
+    if (renderer.isSubmitted.value && trackingConsentState.value === true) {
+      trackGa4Lead()
+    }
     return
   }
 
@@ -374,7 +512,7 @@ const transitionDirection = ref<'forward' | 'back'>('forward')
 
 // Transition-Name beruecksichtigt Richtung fuer die Slide-Animation
 const transitionName = computed<string>(() => {
-  switch (funnelData.content.settings.animations) {
+  switch (funnelData.content.settings?.animations) {
     case 'slide':
       return transitionDirection.value === 'back' ? 'funnel-slide-back' : 'funnel-slide'
     case 'fade':
@@ -412,6 +550,14 @@ function getBlockError(block: Block): string | undefined {
   if (!('fieldKey' in block)) return undefined
   const fk = (block as Block & { fieldKey: string }).fieldKey
   return renderer.errors.value[fk] || undefined
+}
+
+/**
+ * Wird von BlockOptinOtp aufgerufen, wenn die OTP-Verifikation erfolgreich war.
+ * Speichert den Token im Renderer-State (fliesst beim Lead-Submit mit).
+ */
+function handleOtpVerified(token: string): void {
+  renderer.setOtpVerifiedToken(token)
 }
 </script>
 
@@ -479,6 +625,53 @@ function getBlockError(block: Block): string | undefined {
         </button>
       </div>
 
+      <!-- Double-Opt-in-Bestaetigungs-Screen (M4.10) -->
+      <div
+        v-else-if="renderer.doubleOptinPending.value"
+        class="px-6 py-12 text-center"
+        role="status"
+        aria-live="polite"
+      >
+        <div
+          class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full"
+          style="background-color: var(--funnel-primary, #1c4687);"
+          aria-hidden="true"
+        >
+          <svg
+            class="h-7 w-7"
+            style="color: var(--funnel-on-primary, #fff);"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+        <h2
+          class="mb-2 text-xl font-semibold"
+          style="color: var(--funnel-text);"
+        >
+          Fast geschafft!
+        </h2>
+        <p
+          class="text-sm leading-relaxed"
+          style="color: var(--funnel-muted);"
+        >
+          Bitte prüfe Deine E-Mails und klicke den Bestätigungslink, um Deine Anmeldung abzuschliessen.
+        </p>
+        <p
+          class="mt-2 text-xs"
+          style="color: var(--funnel-muted);"
+        >
+          Keine E-Mail erhalten? Prüfe auch Deinen Spam-Ordner.
+        </p>
+      </div>
+
       <!-- Normaler Schritt-Inhalt -->
       <div
         v-else-if="renderer.currentStep.value"
@@ -507,8 +700,11 @@ function getBlockError(block: Block): string | undefined {
                 mode="live"
                 :model-value="renderer.getAnswerForBlock(block)"
                 :error="getBlockError(block)"
+                :hash="slug"
+                :session-id="renderer.sessionId.value"
                 @update:model-value="(val: string | boolean) => handleAnswerUpdate(block, val)"
                 @action="(action: string) => handleBlockAction(action, block)"
+                @otp-verified="handleOtpVerified"
               />
 
               <!-- Inline-Fehlermeldung pro Feld.
@@ -583,6 +779,14 @@ function getBlockError(block: Block): string | undefined {
         Dieser Funnel hat noch keine Schritte.
       </div>
     </div>
+
+    <!-- Consent-Banner (M4.11): erscheint beim ersten Besuch, nur clientseitig -->
+    <RendererConsentBanner
+      v-if="showConsentBanner"
+      :funnel-slug="slug"
+      @accept="handleConsentDecision(true)"
+      @decline="handleConsentDecision(false)"
+    />
   </div>
 </template>
 

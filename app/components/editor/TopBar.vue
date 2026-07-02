@@ -22,6 +22,7 @@ const toast = useToast()
 const funnelRouteId = computed(() => route.params.id as string)
 const isEditorActive = computed(() => route.path.endsWith('/editor'))
 const isMetricsActive = computed(() => route.path.endsWith('/metrics'))
+const isLeadsActive = computed(() => route.path.endsWith('/leads'))
 
 // ---------------------------------------------------------------------------
 // Inline Name-Bearbeitung
@@ -93,9 +94,10 @@ async function handlePublish(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Einstellungen-Dropdown (Platzhalter)
+// Einstellungen-Modal (M4.12: Tracking-Felder)
 // ---------------------------------------------------------------------------
 const showSettingsDropdown = ref(false)
+const showSettingsModal = ref(false)
 const settingsDropdownEl = ref<HTMLElement | null>(null)
 
 onClickOutside(settingsDropdownEl, () => {
@@ -243,16 +245,20 @@ onClickOutside(settingsDropdownEl, () => {
         Metriken
       </NuxtLink>
 
-      <!-- Kontakte (deaktiviert, kommt bald) -->
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="Kontakte kommen bald"
-        class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus:outline-none"
+      <!-- Kontakte (NuxtLink, aktiv auf /leads) -->
+      <NuxtLink
+        :to="`/admin/funnels/${funnelRouteId}/leads`"
+        :class="[
+          'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent/50',
+          isLeadsActive
+            ? 'border border-ui-border bg-white text-ui-text shadow-sm'
+            : 'text-ui-muted hover:bg-ui-bg hover:text-ui-text',
+        ]"
+        :aria-current="isLeadsActive ? 'page' : undefined"
       >
         <svg
           class="h-3.5 w-3.5 flex-shrink-0"
+          :class="isLeadsActive ? 'text-ui-accent' : ''"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -266,7 +272,7 @@ onClickOutside(settingsDropdownEl, () => {
           />
         </svg>
         Kontakte
-      </button>
+      </NuxtLink>
 
       <!-- Apps (deaktiviert, kommt bald) -->
       <button
@@ -434,18 +440,45 @@ onClickOutside(settingsDropdownEl, () => {
           </svg>
         </button>
 
-        <!-- Platzhalter-Dropdown -->
+        <!-- Einstellungen-Dropdown -->
         <div
           v-if="showSettingsDropdown"
           class="absolute right-0 top-full mt-1 w-52 rounded-xl border border-ui-border bg-white py-1.5 shadow-lg"
           role="menu"
           aria-label="Einstellungs-Optionen"
         >
-          <p class="px-4 py-3 text-xs text-ui-muted">
-            Funnel-Einstellungen kommen als Nächstes.
-          </p>
+          <button
+            type="button"
+            role="menuitem"
+            class="flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+            @click="showSettingsModal = true; showSettingsDropdown = false"
+          >
+            <svg
+              class="h-4 w-4 text-ui-muted"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            Tracking
+          </button>
         </div>
       </div>
+
+      <!-- Einstellungen-Modal (Teleport, damit kein z-Index-Problem) -->
+      <Teleport to="body">
+        <EditorFunnelSettingsModal
+          v-if="showSettingsModal"
+          @close="showSettingsModal = false"
+        />
+      </Teleport>
 
       <!-- Veröffentlichen -->
       <button

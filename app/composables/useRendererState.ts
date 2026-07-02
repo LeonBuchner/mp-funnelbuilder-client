@@ -127,6 +127,26 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
   const submitError = ref<string | null>(null)
   const rateLimitError = ref<boolean>(false)
 
+  /**
+   * OTP-Verifikations-Token (optin_otp-Block).
+   * Wird von BlockOptinOtp gesetzt, sobald otp/verify erfolgreich war.
+   * Fliesst beim Lead-Submit in den Request-Body.
+   */
+  const otpVerifiedToken = ref<string | null>(null)
+
+  /**
+   * Tracking-Consent des Besuchers (aus localStorage, vom ConsentBanner gesetzt).
+   * null = noch keine Entscheidung getroffen (Banner noch aktiv oder nicht gezeigt).
+   * true/false = bewusste Entscheidung des Nutzers.
+   */
+  const trackingConsent = ref<boolean | null>(null)
+
+  /**
+   * Double-Opt-in ausstehend: true wenn Lead submitted und ein optin_double-Block
+   * im Funnel vorhanden ist. Renderer zeigt dann den Bestaetigungs-Screen.
+   */
+  const doubleOptinPending = ref<boolean>(false)
+
   // ---------------------------------------------------------------------------
   // Computed: Navigation und Sichtbarkeit
   // ---------------------------------------------------------------------------
@@ -272,7 +292,7 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
 
       const value = answers.value[block.fieldKey]
 
-      if (block.type === 'optin_checkbox') {
+      if (block.type === 'optin_checkbox' || block.type === 'optin_double') {
         if (!value) {
           errors.value[block.fieldKey] = 'Bitte stimme den Bedingungen zu.'
           valid = false
@@ -433,6 +453,8 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
     submitError.value = null
     rateLimitError.value = false
     isSubmitted.value = false
+    doubleOptinPending.value = false
+    otpVerifiedToken.value = null
   }
 
   // ---------------------------------------------------------------------------
@@ -490,6 +512,30 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
         }
       }
 
+      // Pruefen ob ein optin_double-Block vorhanden ist (fuer Bestaetigungs-Screen)
+      let hasDoubleOptin = false
+      for (const step of activeSteps.value) {
+        for (const block of step.blocks) {
+          if (block.type === 'optin_double') {
+            hasDoubleOptin = true
+            break
+          }
+        }
+        if (hasDoubleOptin) break
+      }
+
+      // Pruefen ob ein optin_otp-Block vorhanden ist (fuer Token-Anforderung)
+      let hasOtpBlock = false
+      for (const step of activeSteps.value) {
+        for (const block of step.blocks) {
+          if (block.type === 'optin_otp') {
+            hasOtpBlock = true
+            break
+          }
+        }
+        if (hasOtpBlock) break
+      }
+
       const body: LeadSubmitBody = {
         session_id: sessionId.value,
         answers: allAnswers,
@@ -498,12 +544,24 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
         ...(opts?.utm ? { utm: opts.utm } : {}),
         // A/B-Varianten-ID einschliessen wenn ein Test laeuft (M3.7)
         ...(internalAbVariantId.value !== null ? { ab_variant_id: internalAbVariantId.value } : {}),
+        // Tracking-Consent (M4.11)
+        ...(trackingConsent.value !== null ? { tracking_consent: trackingConsent.value } : {}),
+        // OTP-Token (M4.10) - nur wenn optin_otp-Block vorhanden
+        ...(hasOtpBlock && otpVerifiedToken.value !== null
+          ? { otp_verified_token: otpVerifiedToken.value }
+          : {}),
       }
 
       await api(`/f/${hash}/leads`, { method: 'POST', body })
 
       isSubmitted.value = true
       trackEvent('lead_submit')
+
+      if (hasDoubleOptin) {
+        // Double-Opt-in: Bestaetigungs-Screen anzeigen statt result-Step
+        doubleOptinPending.value = true
+        return
+      }
 
       // Zum result-Step navigieren (oder letztem Step)
       const resultIdx = activeSteps.value.findIndex(s => s.type === 'result')
@@ -582,6 +640,26 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
   }
 
   // ---------------------------------------------------------------------------
+  // OTP + Tracking-Consent (M4.10 / M4.11)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Setzt den OTP-Verifikations-Token nach erfolgreichem otp/verify.
+   * Wird von BlockOptinOtp aufgerufen.
+   */
+  function setOtpVerifiedToken(token: string): void {
+    otpVerifiedToken.value = token
+  }
+
+  /**
+   * Setzt den Tracking-Consent des Besuchers.
+   * Wird vom ConsentBanner aufgerufen (true = akzeptiert, false = abgelehnt).
+   */
+  function setTrackingConsent(value: boolean): void {
+    trackingConsent.value = value
+  }
+
+  // ---------------------------------------------------------------------------
   // A/B-Varianten-Swap (M3.7)
   // ---------------------------------------------------------------------------
 
@@ -620,6 +698,10 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
     isSubmitted,
     submitError,
     rateLimitError,
+    // M4: OTP + Consent + Double-Optin
+    otpVerifiedToken,
+    trackingConsent,
+    doubleOptinPending,
     // Computed
     stepContext,
     questionSteps,
@@ -636,6 +718,9 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
     submitLead,
     trackEvent,
     handleAction,
+    // OTP + Tracking-Consent (M4)
+    setOtpVerifiedToken,
+    setTrackingConsent,
     // A/B-Varianten (M3.7)
     setActiveSteps,
     setAbVariantId,
