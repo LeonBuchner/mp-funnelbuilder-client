@@ -102,7 +102,7 @@ function handleCountryChange(event: Event): void {
     <!-- Telefon: Ländervorwahl + Eingabe -->
     <div
       v-if="isPhone"
-      class="phone-wrapper flex overflow-hidden rounded-[var(--funnel-radius)] border border-gray-200 bg-white transition-colors focus-within:border-[var(--funnel-accent)] focus-within:ring-2 focus-within:ring-[var(--funnel-accent)]/20"
+      class="phone-wrapper flex overflow-hidden rounded-[var(--funnel-radius)] border border-gray-200 bg-white transition-colors focus-within:border-[var(--funnel-accent)] focus-within:ring-2 focus-within:ring-[var(--funnel-accent)]"
     >
       <!-- Ländervorwahl-Dropdown -->
       <label
@@ -154,7 +154,7 @@ function handleCountryChange(event: Event): void {
       :required="block.required ?? false"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="error ? `field-error-${block.id}` : undefined"
-      class="w-full rounded-[var(--funnel-radius)] border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder-gray-400 transition-colors focus:border-[var(--funnel-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--funnel-accent)]/20"
+      class="w-full rounded-[var(--funnel-radius)] border border-gray-200 bg-white px-4 py-2.5 text-sm placeholder-gray-400 transition-colors focus:border-[var(--funnel-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--funnel-accent)]"
       :class="{ 'border-red-400': error }"
       :style="{ color: 'var(--funnel-text)' }"
       @input="handleInput"

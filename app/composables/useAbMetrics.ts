@@ -35,7 +35,7 @@ export function formatAbConversionRate(rate: number): string {
  * Variante: gibt false zurueck (keine Hervorhebung).
  */
 export function isBestConversion(
-  variantId: number,
+  variantId: string,
   variants: AbVariantMetrics[],
 ): boolean {
   if (variants.length <= 1) return false
@@ -59,7 +59,7 @@ export function useAbMetrics() {
    * Laedt A/B-Metriken fuer einen Test.
    * GET /funnels/{funnelId}/ab-tests/{abTestId}/metrics
    */
-  async function get(funnelId: string, abTestId: number): Promise<AbTestMetricsResponse> {
+  async function get(funnelId: string, abTestId: string): Promise<AbTestMetricsResponse> {
     return api<AbTestMetricsResponse>(`/funnels/${funnelId}/ab-tests/${abTestId}/metrics`)
   }
 

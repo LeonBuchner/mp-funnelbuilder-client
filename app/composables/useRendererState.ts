@@ -83,11 +83,12 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
   const activeSteps = shallowRef<Step[]>(initialSteps)
 
   /**
-   * Zugewiesene A/B-Varianten-ID (null = kein A/B-Test).
+   * Zugewiesene A/B-Varianten-UUID (null = kein A/B-Test).
    * Wird per setAbVariantId() aus useAbVariant gesetzt und in
    * trackEvent / submitLead an die API uebergeben.
+   * Ab M5.6: UUID-String statt Integer.
    */
-  const internalAbVariantId = ref<number | null>(null)
+  const internalAbVariantId = ref<string | null>(null)
 
   /**
    * Stabile Session-ID pro Funnel und Besucher.
@@ -676,10 +677,11 @@ export function useRendererState(hash: string, initialSteps: Step[]) {
   }
 
   /**
-   * Setzt die zugewiesene A/B-Varianten-ID fuer Tracking und Lead-Submit.
+   * Setzt die zugewiesene A/B-Varianten-UUID fuer Tracking und Lead-Submit.
    * Wird von [slug].vue aufgerufen, sobald useAbVariant.abVariantId verfuegbar ist.
+   * Ab M5.6: id ist eine UUID-String statt Integer.
    */
-  function setAbVariantId(id: number | null): void {
+  function setAbVariantId(id: string | null): void {
     internalAbVariantId.value = id
   }
 

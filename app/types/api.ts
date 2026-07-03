@@ -61,3 +61,27 @@ export interface MeResponse {
   user: User
   memberships: Membership[]
 }
+
+// ---------------------------------------------------------------------------
+// Custom-Domains (M5.3)
+// ---------------------------------------------------------------------------
+
+/** SSL-Zertifikat-Status einer Custom-Domain. */
+export type SslStatus = 'pending' | 'provisioning' | 'active' | 'failed'
+
+/**
+ * Custom-Domain eines Workspaces.
+ * Antwort-Datenstruktur von GET/POST /api/admin/workspaces/{uuid}/custom-domain.
+ */
+export interface CustomDomain {
+  domain: string
+  verified_at: string | null
+  ssl_status: SslStatus
+  acme_txt_record: string
+  last_check_at: string | null
+  created_at: string
+}
+
+export interface CustomDomainResponse {
+  data: CustomDomain
+}

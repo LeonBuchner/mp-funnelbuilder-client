@@ -116,7 +116,7 @@ watch(dialogRef, async (el) => {
         </h2>
         <button
           type="button"
-          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
           aria-label="Einstellungen schließen"
           @click="emit('close')"
         >
@@ -161,7 +161,7 @@ watch(dialogRef, async (el) => {
               spellcheck="false"
               :aria-describedby="ga4Error ? 'ga4-id-error' : undefined"
               :aria-invalid="ga4Error ? 'true' : undefined"
-              class="w-full rounded-lg border px-3 py-2 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full rounded-lg border px-3 py-2 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
               :class="ga4Error ? 'border-red-400' : 'border-ui-border'"
             >
             <p
@@ -197,7 +197,7 @@ watch(dialogRef, async (el) => {
               spellcheck="false"
               :aria-describedby="metaError ? 'meta-pixel-error' : undefined"
               :aria-invalid="metaError ? 'true' : undefined"
-              class="w-full rounded-lg border px-3 py-2 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full rounded-lg border px-3 py-2 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
               :class="metaError ? 'border-red-400' : 'border-ui-border'"
             >
             <p
@@ -222,7 +222,7 @@ watch(dialogRef, async (el) => {
       <div class="flex items-center justify-end gap-2 border-t border-ui-border px-6 py-4">
         <button
           type="button"
-          class="rounded-lg px-4 py-2 text-sm text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+          class="rounded-lg px-4 py-2 text-sm text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
           @click="emit('close')"
         >
           Abbrechen
@@ -230,7 +230,7 @@ watch(dialogRef, async (el) => {
         <button
           type="button"
           :disabled="!isValid"
-          class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-50"
           @click="save"
         >
           Speichern

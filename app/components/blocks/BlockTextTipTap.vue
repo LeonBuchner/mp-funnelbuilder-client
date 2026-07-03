@@ -97,7 +97,7 @@ onBeforeUnmount(() => {
     :editor="editor"
     :class="[
       sharedClass,
-      'focus-within:outline-none focus-within:ring-2 focus-within:ring-ui-accent/50 focus-within:rounded-sm',
+      'focus-within:outline-none focus-within:ring-2 focus-within:ring-ui-accent focus-within:rounded-sm',
     ]"
     :style="inlineStyle"
     @mousedown.stop

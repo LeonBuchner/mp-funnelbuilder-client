@@ -28,7 +28,7 @@ interface Props {
   /** UUID/public_id des Funnels (aus Route-Param). */
   funnelId: string
   /** Numerische ID des A/B-Tests. */
-  abTestId: number
+  abTestId: string
   /**
    * Darf der aktuelle Nutzer den Test verwalten (starten, pausieren, beenden, loeschen)?
    * Auch fuer die Gewinner-Aktion verwendet. true fuer mp_team und mp_admin.
@@ -256,7 +256,7 @@ function canShowWinnerButton(m: AbTestMetrics): boolean {
   )
 }
 
-function isWinner(variantId: number, m: AbTestMetrics): boolean {
+function isWinner(variantId: string, m: AbTestMetrics): boolean {
   return m.winner_variant_id === variantId
 }
 
@@ -297,7 +297,7 @@ function formatInteger(value: number): string {
         <template v-if="metrics.status === 'draft'">
           <button
             type="button"
-            class="rounded-lg bg-ui-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="rounded-lg bg-ui-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
             :disabled="isActing"
             @click="handleStart"
           >
@@ -305,7 +305,7 @@ function formatInteger(value: number): string {
           </button>
           <button
             type="button"
-            class="rounded-lg border border-ui-border px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-400/40"
+            class="rounded-lg border border-ui-border px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-500"
             :disabled="isActing"
             @click="askDelete"
           >
@@ -317,7 +317,7 @@ function formatInteger(value: number): string {
         <template v-else-if="metrics.status === 'running'">
           <button
             type="button"
-            class="rounded-lg border border-ui-border px-3 py-1.5 text-xs font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="rounded-lg border border-ui-border px-3 py-1.5 text-xs font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ui-accent"
             :disabled="isActing"
             @click="handlePause"
           >
@@ -329,7 +329,7 @@ function formatInteger(value: number): string {
         <template v-else-if="metrics.status === 'paused'">
           <button
             type="button"
-            class="rounded-lg bg-ui-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="rounded-lg bg-ui-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
             :disabled="isActing"
             @click="handleStart"
           >
@@ -337,7 +337,7 @@ function formatInteger(value: number): string {
           </button>
           <button
             type="button"
-            class="rounded-lg border border-ui-border px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-400/40"
+            class="rounded-lg border border-ui-border px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-500"
             :disabled="isActing"
             @click="askConclude"
           >
@@ -349,7 +349,7 @@ function formatInteger(value: number): string {
       <!-- Neu laden -->
       <button
         type="button"
-        class="shrink-0 rounded p-1 text-ui-muted transition-colors hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+        class="shrink-0 rounded p-1 text-ui-muted transition-colors hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
         aria-label="Metriken neu laden"
         :disabled="isLoading"
         @click="load"
@@ -555,7 +555,7 @@ function formatInteger(value: number): string {
               >
                 <button
                   type="button"
-                  class="rounded-lg border border-ui-border px-3 py-1.5 text-xs font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
+                  class="rounded-lg border border-ui-border px-3 py-1.5 text-xs font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-50"
                   :aria-label="`${variant.label} als Gewinner wählen`"
                   :disabled="isSettingWinner || isActing"
                   @click="askSetWinner(variant)"

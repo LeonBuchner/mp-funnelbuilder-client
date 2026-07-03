@@ -87,7 +87,7 @@ async function handleSubmit(): Promise<void> {
           autocomplete="email"
           required
           placeholder="deine@email.de"
-          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent/30"
+          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent"
         >
       </div>
 
@@ -106,7 +106,7 @@ async function handleSubmit(): Promise<void> {
     <p class="mt-5 text-center text-sm text-mp-muted">
       <NuxtLink
         to="/auth/login"
-        class="rounded text-mp-accent underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-mp-accent/50"
+        class="rounded text-mp-accent underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-mp-accent"
       >
         Zurück zum Login
       </NuxtLink>

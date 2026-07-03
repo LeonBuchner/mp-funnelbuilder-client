@@ -78,6 +78,8 @@ export default defineNuxtConfig({
     // Renderer: SSR mit SWR-Cache fuer 60s. Wiederholte Aufrufe desselben Funnels
     // werden aus dem Nitro-internen Cache bedient (kein erneuter API-Call zum Backend).
     // Cache wird beim naechsten Request nach Ablauf im Hintergrund erneuert.
+    // Kompression der SSR-Antwort uebernimmt in Produktion Nginx (gzip/brotli),
+    // siehe api/docs/custom-domains-nginx.md - kein App-Level-Kompressions-Plugin.
     '/f/**': { swr: 60 },
   },
 

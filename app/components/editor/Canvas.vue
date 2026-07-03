@@ -266,7 +266,7 @@ function handleTextContentUpdate(blockId: string, html: string): void {
                 <button
                   v-if="!props.isReadonly"
                   type="button"
-                  class="block-drag-handle absolute left-0 top-0 z-20 flex h-full w-4 cursor-grab items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent/50"
+                  class="block-drag-handle absolute left-0 top-0 z-20 flex h-full w-4 cursor-grab items-center justify-center opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                   aria-label="Block verschieben"
                   tabindex="-1"
                   @click.stop
@@ -379,7 +379,7 @@ function handleTextContentUpdate(blockId: string, html: string): void {
           >
             <button
               type="button"
-              class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ui-border py-3 text-sm text-ui-muted transition-colors hover:border-ui-accent hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ui-border py-3 text-sm text-ui-muted transition-colors hover:border-ui-accent hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               aria-label="Block hinzufuegen"
               @click.stop="emit('open-block-picker')"
             >

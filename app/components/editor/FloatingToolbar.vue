@@ -91,7 +91,7 @@ onClickOutside(wrapperRef, () => {
       <!-- Duplizieren -->
       <button
         type="button"
-        class="flex h-8 w-8 items-center justify-center text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent/50"
+        class="flex h-8 w-8 items-center justify-center text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent"
         title="Duplizieren"
         aria-label="Block duplizieren"
         @click.stop="handleDuplicate"
@@ -126,7 +126,7 @@ onClickOutside(wrapperRef, () => {
       <button
         type="button"
         :disabled="blockIndex === 0"
-        class="flex h-8 w-8 items-center justify-center text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-30"
+        class="flex h-8 w-8 items-center justify-center text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-30"
         title="Nach oben"
         aria-label="Block nach oben verschieben"
         @click.stop="handleMoveUp"
@@ -153,7 +153,7 @@ onClickOutside(wrapperRef, () => {
       <button
         type="button"
         :disabled="blockIndex === totalBlocks - 1"
-        class="flex h-8 w-8 items-center justify-center text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-30"
+        class="flex h-8 w-8 items-center justify-center text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-30"
         title="Nach unten"
         aria-label="Block nach unten verschieben"
         @click.stop="handleMoveDown"
@@ -179,7 +179,7 @@ onClickOutside(wrapperRef, () => {
       <!-- Zu Seite kopieren -->
       <button
         type="button"
-        class="flex h-8 w-8 items-center justify-center text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent/50"
+        class="flex h-8 w-8 items-center justify-center text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent"
         :class="{ 'bg-ui-bg text-ui-accent': copyMenuOpen }"
         title="Zu Seite kopieren"
         aria-label="Block zu anderer Seite kopieren"
@@ -210,7 +210,7 @@ onClickOutside(wrapperRef, () => {
       <!-- Löschen -->
       <button
         type="button"
-        class="flex h-8 w-8 items-center justify-center text-red-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-red-400/50"
+        class="flex h-8 w-8 items-center justify-center text-red-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-red-500"
         title="Löschen"
         :aria-label="`Block löschen`"
         @click.stop="handleDelete"
@@ -252,7 +252,7 @@ onClickOutside(wrapperRef, () => {
         :key="step.id"
         type="button"
         role="menuitem"
-        class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-ui-text hover:bg-ui-bg focus:bg-ui-bg focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent/50"
+        class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-ui-text hover:bg-ui-bg focus:bg-ui-bg focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ui-accent"
         @click.stop="handleCopyToStep(step.id)"
       >
         <span class="truncate">{{ step.displayLabel }}</span>

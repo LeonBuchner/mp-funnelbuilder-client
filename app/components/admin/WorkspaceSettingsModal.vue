@@ -5,6 +5,8 @@ const emit = defineEmits<{
 
 const authStore = useAuthStore()
 const workspaceStore = useWorkspaceStore()
+
+const isMpAdmin = computed(() => workspaceStore.activeRole === 'mp_admin')
 const toast = useToast()
 const { trapFocus } = useFocusTrap()
 const uploads = useUploads()
@@ -189,7 +191,8 @@ onUnmounted(() => {
     >
       <div
         ref="modalEl"
-        class="w-full max-w-md rounded-2xl bg-ui-surface shadow-xl"
+        class="w-full max-w-md overflow-y-auto rounded-2xl bg-ui-surface shadow-xl"
+        style="max-height: 90dvh"
         role="dialog"
         aria-modal="true"
         aria-labelledby="ws-settings-modal-title"
@@ -204,7 +207,7 @@ onUnmounted(() => {
           </h2>
           <button
             type="button"
-            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
             aria-label="Modal schließen"
             @click="$emit('close')"
           >
@@ -214,7 +217,7 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- Formular -->
+        <!-- Einstellungen-Formular -->
         <form class="p-6" @submit.prevent="handleSubmit">
           <!-- Name -->
           <div class="mb-4">
@@ -233,7 +236,7 @@ onUnmounted(() => {
               autocomplete="organization"
               :aria-invalid="nameError ? 'true' : undefined"
               :aria-describedby="nameError ? 'ws-name-error' : undefined"
-              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:outline-none focus:ring-2 focus:ring-ui-accent"
               :class="nameError ? 'border-red-400 focus:border-red-400' : 'border-ui-border focus:border-ui-accent'"
             >
             <p
@@ -257,7 +260,7 @@ onUnmounted(() => {
             <select
               id="ws-locale"
               v-model="localeSelect"
-              class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
             >
               <option value="de">Deutsch</option>
               <option value="en">English</option>
@@ -275,7 +278,7 @@ onUnmounted(() => {
             <select
               id="ws-timezone"
               v-model="timezoneSelect"
-              class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
             >
               <option
                 v-for="tz in TIMEZONES"
@@ -318,7 +321,7 @@ onUnmounted(() => {
               id="ws-logo"
               type="file"
               accept="image/*"
-              class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text file:mr-3 file:rounded-md file:border-0 file:bg-ui-accent/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text file:mr-3 file:rounded-md file:border-0 file:bg-ui-accent/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @change="handleLogoFileChange"
             >
             <p class="mt-1 text-xs text-ui-muted">
@@ -339,7 +342,7 @@ onUnmounted(() => {
           <div class="flex justify-end gap-2">
             <button
               type="button"
-              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @click="$emit('close')"
             >
               Abbrechen
@@ -347,7 +350,7 @@ onUnmounted(() => {
             <button
               type="submit"
               :disabled="isSaving"
-              class="flex items-center gap-1.5 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="flex items-center gap-1.5 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
             >
               <svg
                 v-if="isSaving"
@@ -363,6 +366,11 @@ onUnmounted(() => {
             </button>
           </div>
         </form>
+        <!-- Custom-Domain-Sektion (nur mp_admin) -->
+        <AdminCustomDomainSection
+          v-if="isMpAdmin && ws?.id"
+          :workspace-uuid="ws.id"
+        />
       </div>
     </div>
   </Teleport>

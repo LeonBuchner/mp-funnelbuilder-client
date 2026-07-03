@@ -133,7 +133,7 @@ async function handleSubmit(): Promise<void> {
           </h2>
           <button
             type="button"
-            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
             aria-label="Modal schließen"
             @click="$emit('close')"
           >
@@ -163,7 +163,7 @@ async function handleSubmit(): Promise<void> {
               autocomplete="off"
               :aria-invalid="nameError ? 'true' : undefined"
               :aria-describedby="nameError ? 'new-ws-name-error' : undefined"
-              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:outline-none focus:ring-2 focus:ring-ui-accent"
               :class="nameError ? 'border-red-400 focus:border-red-400' : 'border-ui-border focus:border-ui-accent'"
             >
             <p
@@ -193,7 +193,7 @@ async function handleSubmit(): Promise<void> {
               autocomplete="off"
               :aria-invalid="slugError ? 'true' : undefined"
               :aria-describedby="slugError ? 'new-ws-slug-error' : 'new-ws-slug-hint'"
-              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:outline-none focus:ring-2 focus:ring-ui-accent"
               :class="slugError ? 'border-red-400 focus:border-red-400' : 'border-ui-border focus:border-ui-accent'"
             >
             <p id="new-ws-slug-hint" class="mt-1 text-xs text-ui-muted">
@@ -222,7 +222,7 @@ async function handleSubmit(): Promise<void> {
           <div class="flex justify-end gap-2">
             <button
               type="button"
-              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @click="$emit('close')"
             >
               Abbrechen
@@ -230,7 +230,7 @@ async function handleSubmit(): Promise<void> {
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
             >
               {{ isSubmitting ? 'Wird angelegt...' : 'Anlegen' }}
             </button>

@@ -188,7 +188,7 @@ function getBrandingSwatches(branding: Branding): string[] {
       <button
         v-if="!props.isReadonly"
         type="button"
-        class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+        class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
         aria-label="Neues Branding erstellen"
         title="Neues Branding"
         @click="openCreateModal"
@@ -264,7 +264,7 @@ function getBrandingSwatches(branding: Branding): string[] {
         >
           <button
             type="button"
-            class="flex flex-1 items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-ui-accent/50 rounded-lg"
+            class="flex flex-1 items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-ui-accent rounded-lg"
             :aria-label="!activeBrandingId ? 'Kein Branding (aktiv)' : 'Kein Branding anwenden'"
             :aria-pressed="!activeBrandingId"
             :disabled="props.isReadonly || applying !== null"
@@ -319,14 +319,14 @@ function getBrandingSwatches(branding: Branding): string[] {
           <div class="flex gap-1.5">
             <button
               type="button"
-              class="rounded px-2.5 py-1 text-xs font-medium bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+              class="rounded px-2.5 py-1 text-xs font-medium bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               @click="handleDelete(branding.id)"
             >
               Ja
             </button>
             <button
               type="button"
-              class="rounded border border-ui-border px-2.5 py-1 text-xs font-medium text-ui-text hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="rounded border border-ui-border px-2.5 py-1 text-xs font-medium text-ui-text hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @click="confirmDeleteId = null"
             >
               Nein
@@ -346,7 +346,7 @@ function getBrandingSwatches(branding: Branding): string[] {
           <!-- Auswahl-Button (Hauptflaeche) -->
           <button
             type="button"
-            class="flex flex-1 items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-ui-accent/50 rounded-lg"
+            class="flex flex-1 items-center gap-3 text-left focus:outline-none focus:ring-2 focus:ring-ui-accent rounded-lg"
             :aria-label="`Branding ${branding.name} ${activeBrandingId === branding.id ? '(aktiv)' : 'anwenden'}`"
             :aria-pressed="activeBrandingId === branding.id"
             :disabled="props.isReadonly || applying !== null"
@@ -394,7 +394,7 @@ function getBrandingSwatches(branding: Branding): string[] {
             <!-- Bearbeiten -->
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded text-ui-muted hover:text-ui-text focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+              class="flex h-6 w-6 items-center justify-center rounded text-ui-muted hover:text-ui-text focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ui-accent"
               :aria-label="`Branding ${branding.name} bearbeiten`"
               @click="openEditModal(branding)"
             >
@@ -414,7 +414,7 @@ function getBrandingSwatches(branding: Branding): string[] {
             <button
               v-if="canDelete"
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded text-ui-muted hover:text-red-500 focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-red-400/50"
+              class="flex h-6 w-6 items-center justify-center rounded text-ui-muted hover:text-red-500 focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-red-500"
               :aria-label="`Branding ${branding.name} loeschen`"
               @click="confirmDeleteId = branding.id"
             >

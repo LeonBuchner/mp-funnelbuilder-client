@@ -204,7 +204,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
       <div class="flex items-center gap-2 border-b border-ui-border px-3 py-3">
         <button
           type="button"
-          class="flex h-7 w-7 items-center justify-center rounded text-ui-muted hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+          class="flex h-7 w-7 items-center justify-center rounded text-ui-muted hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
           aria-label="Zurueck zur Uebersicht"
           title="Zurueck"
           @click="emit('close-add-panel')"
@@ -251,7 +251,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
           role="tab"
           :aria-selected="activeTab === 'overview'"
           :class="[
-            'flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50',
+            'flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent',
             activeTab === 'overview'
               ? 'bg-white text-ui-text shadow-sm'
               : 'text-ui-muted hover:text-ui-text',
@@ -265,7 +265,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
           role="tab"
           :aria-selected="activeTab === 'design'"
           :class="[
-            'flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50',
+            'flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent',
             activeTab === 'design'
               ? 'bg-white text-ui-text shadow-sm'
               : 'text-ui-muted hover:text-ui-text',
@@ -283,7 +283,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
         <div class="flex items-center gap-2 border-b border-ui-border px-3 py-3 mt-3">
           <button
             type="button"
-            class="flex h-7 w-7 items-center justify-center rounded text-ui-muted hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="flex h-7 w-7 items-center justify-center rounded text-ui-muted hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
             aria-label="Zurueck zur Uebersicht"
             title="Zurueck"
             @click="editorStore.deselectBlock()"
@@ -310,7 +310,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
 
           <button
             type="button"
-            class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+            class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
             title="Info"
             aria-label="Info zum Block"
           >
@@ -385,7 +385,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
               </h2>
               <button
                 type="button"
-                class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+                class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
                 title="Seiten erklaert"
                 aria-label="Info zu Seiten"
               >
@@ -493,7 +493,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
                   <button
                     type="button"
                     :disabled="idx === 0"
-                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border disabled:opacity-30 focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border disabled:opacity-30 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     aria-label="Seite nach oben"
                     title="Nach oben"
                     @click="editorStore.moveStep(step.id, 'up')"
@@ -516,7 +516,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
                   <button
                     type="button"
                     :disabled="idx === localPageSteps.length - 1"
-                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border disabled:opacity-30 focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border disabled:opacity-30 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     aria-label="Seite nach unten"
                     title="Nach unten"
                     @click="editorStore.moveStep(step.id, 'down')"
@@ -539,7 +539,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
                   <!-- Seite duplizieren -->
                   <button
                     type="button"
-                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     aria-label="Seite duplizieren"
                     title="Duplizieren"
                     @click="editorStore.duplicateStep(step.id)"
@@ -570,7 +570,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
                   <button
                     type="button"
                     :disabled="editorStore.steps.length <= 1"
-                    class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 disabled:opacity-30 focus:outline-none focus:ring-1 focus:ring-red-400/50"
+                    class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 disabled:opacity-30 focus:outline-none focus:ring-1 focus:ring-red-500"
                     aria-label="Seite loeschen"
                     title="Loeschen"
                     @click="confirmRemoveStep(step)"
@@ -598,7 +598,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
             <button
               v-if="!props.isReadonly"
               type="button"
-              class="mt-1 flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-muted transition-colors hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+              class="mt-1 flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-muted transition-colors hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
               @click="addPageStep"
             >
               <svg
@@ -629,7 +629,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
               </h2>
               <button
                 type="button"
-                class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+                class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
                 title="Ergebnisse erklaert"
                 aria-label="Info zu Ergebnissen"
               >
@@ -726,7 +726,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
                   <!-- Ergebnis duplizieren -->
                   <button
                     type="button"
-                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+                    class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     aria-label="Ergebnis duplizieren"
                     title="Duplizieren"
                     @click="editorStore.duplicateStep(step.id)"
@@ -757,7 +757,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
                   <button
                     type="button"
                     :disabled="editorStore.steps.length <= 1"
-                    class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 disabled:opacity-30 focus:outline-none focus:ring-1 focus:ring-red-400/50"
+                    class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 disabled:opacity-30 focus:outline-none focus:ring-1 focus:ring-red-500"
                     aria-label="Ergebnis loeschen"
                     title="Loeschen"
                     @click="confirmRemoveStep(step)"
@@ -792,7 +792,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
             <button
               v-if="!props.isReadonly"
               type="button"
-              class="mt-1 flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-muted transition-colors hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+              class="mt-1 flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-muted transition-colors hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
               @click="addResultStep"
             >
               <svg
@@ -831,7 +831,7 @@ const dndEnabled = computed(() => !props.isReadonly && !editorStore.previewMode)
               </h2>
               <button
                 type="button"
-                class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+                class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
                 title="Nachrichten erklaert"
                 aria-label="Info zu Nachrichten"
               >

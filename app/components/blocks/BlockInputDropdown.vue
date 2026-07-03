@@ -58,7 +58,7 @@ const chevronStyle = computed<Record<string, string>>(() => ({
       :required="block.required ?? false"
       :aria-invalid="error ? 'true' : undefined"
       :aria-describedby="error ? `field-error-${block.id}` : undefined"
-      class="w-full appearance-none rounded-[var(--funnel-radius)] border border-gray-200 bg-white px-4 py-2.5 text-sm transition-colors focus:border-[var(--funnel-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--funnel-accent)]/20"
+      class="w-full appearance-none rounded-[var(--funnel-radius)] border border-gray-200 bg-white px-4 py-2.5 text-sm transition-colors focus:border-[var(--funnel-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--funnel-accent)]"
       :class="{ 'border-red-400': error }"
       :style="chevronStyle"
       @change="handleChange"

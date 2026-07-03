@@ -143,7 +143,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onDocClick))
         :aria-label="cat.label"
         :title="cat.label"
         :class="[
-          'flex h-7 w-7 items-center justify-center rounded text-base transition-colors focus:outline-none focus:ring-1 focus:ring-ui-accent/50',
+          'flex h-7 w-7 items-center justify-center rounded text-base transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
           activeCategory === cat.id
             ? 'bg-ui-bg'
             : 'text-ui-muted hover:bg-ui-bg/60',
@@ -160,7 +160,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onDocClick))
         v-model="searchQuery"
         type="search"
         placeholder="Suche..."
-        class="w-full rounded border border-ui-border px-2 py-1 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
+        class="w-full rounded border border-ui-border px-2 py-1 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
         aria-label="Emojis durchsuchen"
         @mousedown.stop
       >
@@ -185,7 +185,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onDocClick))
           type="button"
           role="option"
           :aria-label="emoji"
-          class="flex h-7 w-7 items-center justify-center rounded text-lg hover:bg-ui-bg focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+          class="flex h-7 w-7 items-center justify-center rounded text-lg hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
           @mousedown.prevent="pick(emoji)"
         >
           {{ emoji }}

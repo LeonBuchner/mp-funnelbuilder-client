@@ -120,8 +120,8 @@ function updateConditionValue(idx: number, value: string): void {
 // ---------------------------------------------------------------------------
 // CSS-Klassen
 // ---------------------------------------------------------------------------
-const selectCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30 disabled:cursor-not-allowed disabled:opacity-50'
-const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5 text-xs text-ui-text placeholder:text-ui-muted focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30 disabled:cursor-not-allowed disabled:opacity-50'
+const selectCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-50'
+const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5 text-xs text-ui-text placeholder:text-ui-muted focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-50'
 </script>
 
 <template>
@@ -134,7 +134,7 @@ const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5
     <!-- Header mit Auf/Zu-Toggle -->
     <button
       type="button"
-      class="flex w-full items-center justify-between px-3 py-2.5 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+      class="flex w-full items-center justify-between px-3 py-2.5 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
       :aria-expanded="expanded"
       aria-controls="display-cond-body"
       @click="expanded = !expanded"
@@ -245,7 +245,7 @@ const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5
             <button
               v-if="!isReadonly"
               type="button"
-              class="flex h-6 w-6 shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-400/50"
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
               :aria-label="`Bedingung ${idx + 1} löschen`"
               @click="removeCondition(idx)"
             >
@@ -291,7 +291,7 @@ const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5
       <button
         v-if="!isReadonly"
         type="button"
-        class="flex items-center gap-1.5 text-xs text-ui-accent-hover hover:underline focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+        class="flex items-center gap-1.5 text-xs text-ui-accent-hover hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
         @click="addCondition"
       >
         <svg

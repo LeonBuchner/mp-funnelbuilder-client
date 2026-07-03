@@ -348,7 +348,7 @@ function getPaginationPages(): number[] {
       </p>
       <NuxtLink
         to="/admin/funnels"
-        class="text-sm text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+        class="text-sm text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
       >
         Zurück zur Funnel-Liste
       </NuxtLink>
@@ -381,7 +381,7 @@ function getPaginationPages(): number[] {
                 v-if="canWrite"
                 type="button"
                 :disabled="isExporting || isLoadingLeads"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-60"
                 :aria-label="isExporting ? 'Export läuft...' : 'Kontakte als CSV herunterladen'"
                 data-testid="export-csv-btn"
                 @click="handleExport"
@@ -422,7 +422,7 @@ function getPaginationPages(): number[] {
                 <select
                   id="lead-status-filter"
                   v-model="filterStatus"
-                  class="appearance-none rounded-lg border border-ui-border bg-white py-1.5 pl-3 pr-8 text-sm font-medium text-ui-text shadow-sm transition-colors hover:border-ui-accent/40 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                  class="appearance-none rounded-lg border border-ui-border bg-white py-1.5 pl-3 pr-8 text-sm font-medium text-ui-text shadow-sm transition-colors hover:border-ui-accent/40 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                 >
                   <option
                     v-for="opt in statusOptions"
@@ -455,7 +455,7 @@ function getPaginationPages(): number[] {
                 id="lead-from-filter"
                 v-model="filterFrom"
                 type="date"
-                class="rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm text-ui-text shadow-sm transition-colors hover:border-ui-accent/40 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                class="rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm text-ui-text shadow-sm transition-colors hover:border-ui-accent/40 focus:outline-none focus:ring-2 focus:ring-ui-accent"
               >
             </div>
 
@@ -469,14 +469,14 @@ function getPaginationPages(): number[] {
                 id="lead-to-filter"
                 v-model="filterTo"
                 type="date"
-                class="rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm text-ui-text shadow-sm transition-colors hover:border-ui-accent/40 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                class="rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm text-ui-text shadow-sm transition-colors hover:border-ui-accent/40 focus:outline-none focus:ring-2 focus:ring-ui-accent"
               >
             </div>
 
             <!-- Filter anwenden -->
             <button
               type="button"
-              class="rounded-lg bg-ui-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="rounded-lg bg-ui-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
               @click="applyFilter"
             >
               Filtern
@@ -486,7 +486,7 @@ function getPaginationPages(): number[] {
             <button
               v-if="filterStatus || filterFrom || filterTo"
               type="button"
-              class="rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm font-medium text-ui-muted transition-colors hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm font-medium text-ui-muted transition-colors hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @click="filterStatus = ''; filterFrom = ''; filterTo = ''; applyFilter()"
             >
               Zurücksetzen
@@ -654,7 +654,7 @@ function getPaginationPages(): number[] {
                         <!-- Ansehen -->
                         <button
                           type="button"
-                          class="rounded-lg px-2.5 py-1 text-xs font-medium text-ui-accent transition-colors hover:bg-ui-accent/10 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                          class="rounded-lg px-2.5 py-1 text-xs font-medium text-ui-accent transition-colors hover:bg-ui-accent/10 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                           :aria-label="`Kontakt vom ${formatDate(lead.created_at)} ansehen`"
                           @click="openDrawer(lead, $event)"
                         >
@@ -665,7 +665,7 @@ function getPaginationPages(): number[] {
                         <button
                           v-if="canWrite"
                           type="button"
-                          class="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                          class="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
                           :aria-label="`Kontakt vom ${formatDate(lead.created_at)} löschen`"
                           data-testid="delete-lead-btn"
                           @click="requestDelete(lead)"
@@ -698,7 +698,7 @@ function getPaginationPages(): number[] {
                 <button
                   type="button"
                   :disabled="currentPage === 1"
-                  class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Vorherige Seite"
                   @click="goToPage(currentPage - 1)"
                 >
@@ -732,7 +732,7 @@ function getPaginationPages(): number[] {
                     :aria-label="`Seite ${page}`"
                     :aria-current="page === currentPage ? 'page' : undefined"
                     :class="[
-                      'flex h-7 w-7 items-center justify-center rounded-lg text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent/50',
+                      'flex h-7 w-7 items-center justify-center rounded-lg text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
                       page === currentPage
                         ? 'bg-ui-accent text-white'
                         : 'text-ui-muted hover:bg-ui-bg hover:text-ui-text',
@@ -747,7 +747,7 @@ function getPaginationPages(): number[] {
                 <button
                   type="button"
                   :disabled="currentPage === totalPages"
-                  class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Nächste Seite"
                   @click="goToPage(currentPage + 1)"
                 >
@@ -809,8 +809,14 @@ function getPaginationPages(): number[] {
               aria-labelledby="drawer-title"
               tabindex="-1"
               class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-2xl focus:outline-none"
-              style="--color-ui-text: #1f2937; --color-ui-muted: #5c6472;"
             >
+              <!--
+                Der fruehereStyleWorkaround `--color-ui-text/--color-ui-muted` wurde
+                entfernt (M5.6). Tailwind v4 emittiert @theme-Tokens auf :root, daher
+                stehen diese Variablen auch im Teleport-Ziel zur Verfuegung.
+                Sollte kuenftig ein Teleport-Scoping-Problem auftreten, hier kommentieren
+                und die Variablen per dedizierter CSS-Klasse wieder einbinden.
+              -->
               <!-- Drawer-Kopf -->
               <div class="flex flex-shrink-0 items-center justify-between border-b border-ui-border px-6 py-4">
                 <h2
@@ -821,7 +827,7 @@ function getPaginationPages(): number[] {
                 </h2>
                 <button
                   type="button"
-                  class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                  class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
                   aria-label="Details schließen"
                   @click="closeDrawer"
                 >
@@ -982,7 +988,7 @@ function getPaginationPages(): number[] {
                         <button
                           type="button"
                           :disabled="downloadingFileId === file.id"
-                          class="ml-3 flex-shrink-0 rounded-lg border border-ui-border bg-white px-2.5 py-1 text-xs font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/50 disabled:cursor-wait disabled:opacity-60"
+                          class="ml-3 flex-shrink-0 rounded-lg border border-ui-border bg-white px-2.5 py-1 text-xs font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-wait disabled:opacity-60"
                           :aria-label="`${file.original_filename} herunterladen`"
                           @click="downloadFile(selectedLead!.id, file.id, file.original_filename)"
                         >
@@ -1003,7 +1009,7 @@ function getPaginationPages(): number[] {
                 <button
                   v-if="canWrite && selectedLead"
                   type="button"
-                  class="rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  class="rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
                   data-testid="drawer-delete-btn"
                   @click="requestDelete(selectedLead); closeDrawer()"
                 >
@@ -1011,7 +1017,7 @@ function getPaginationPages(): number[] {
                 </button>
                 <button
                   type="button"
-                  class="ml-auto rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                  class="ml-auto rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
                   @click="closeDrawer"
                 >
                   Schließen

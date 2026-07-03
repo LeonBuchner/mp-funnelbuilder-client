@@ -102,7 +102,7 @@ async function handleSubmit(): Promise<void> {
           placeholder="Mindestens 8 Zeichen"
           :aria-invalid="!!fieldErrors['password']?.length || undefined"
           :aria-describedby="fieldErrors['password']?.length ? 'reset-password-error' : undefined"
-          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent/30"
+          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent"
           :class="{ 'border-red-400': fieldErrors['password']?.length }"
         >
         <p
@@ -137,7 +137,7 @@ async function handleSubmit(): Promise<void> {
               ? 'reset-confirmation-error'
               : undefined
           "
-          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent/30"
+          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent"
           :class="{ 'border-red-400': fieldErrors['password_confirmation']?.length }"
         >
         <p
@@ -165,7 +165,7 @@ async function handleSubmit(): Promise<void> {
     <p class="mt-5 text-center text-sm text-mp-muted">
       <NuxtLink
         to="/auth/login"
-        class="rounded text-mp-accent underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-mp-accent/50"
+        class="rounded text-mp-accent underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-mp-accent"
       >
         Zurück zum Login
       </NuxtLink>

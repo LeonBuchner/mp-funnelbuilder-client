@@ -257,7 +257,7 @@ onUnmounted(() => {
           </h2>
           <button
             type="button"
-            class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
             aria-label="Schliessen"
             @click="emit('close')"
           >
@@ -288,7 +288,7 @@ onUnmounted(() => {
               id="bem-name"
               v-model="name"
               type="text"
-              class="w-full rounded-lg border border-ui-border px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/20"
+              class="w-full rounded-lg border border-ui-border px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               placeholder="z.B. Hauptbranding"
               maxlength="80"
               required
@@ -334,13 +334,13 @@ onUnmounted(() => {
                     id="bem-color-primary"
                     v-model="colors.primary"
                     type="color"
-                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                   >
                   <input
                     v-model="colors.primary"
                     type="text"
                     aria-label="Primaerfarbe Hex-Wert"
-                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/20"
+                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     maxlength="7"
                     pattern="#[0-9a-fA-F]{6}"
                   >
@@ -360,13 +360,13 @@ onUnmounted(() => {
                     id="bem-color-secondary"
                     v-model="colors.secondary"
                     type="color"
-                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                   >
                   <input
                     v-model="colors.secondary"
                     type="text"
                     aria-label="Sekundaerfarbe Hex-Wert"
-                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/20"
+                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     maxlength="7"
                     pattern="#[0-9a-fA-F]{6}"
                   >
@@ -386,13 +386,13 @@ onUnmounted(() => {
                     id="bem-color-background"
                     v-model="colors.background"
                     type="color"
-                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                   >
                   <input
                     v-model="colors.background"
                     type="text"
                     aria-label="Hintergrundfarbe Hex-Wert"
-                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/20"
+                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     maxlength="7"
                     pattern="#[0-9a-fA-F]{6}"
                   >
@@ -412,13 +412,13 @@ onUnmounted(() => {
                     id="bem-color-surface"
                     v-model="colors.surface"
                     type="color"
-                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                   >
                   <input
                     v-model="colors.surface"
                     type="text"
                     aria-label="Surface-Farbe Hex-Wert"
-                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/20"
+                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     maxlength="7"
                     pattern="#[0-9a-fA-F]{6}"
                   >
@@ -438,13 +438,13 @@ onUnmounted(() => {
                     id="bem-color-text"
                     v-model="colors.text"
                     type="color"
-                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                   >
                   <input
                     v-model="colors.text"
                     type="text"
                     aria-label="Textfarbe Hex-Wert"
-                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/20"
+                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     maxlength="7"
                     pattern="#[0-9a-fA-F]{6}"
                   >
@@ -464,13 +464,13 @@ onUnmounted(() => {
                     id="bem-color-accent"
                     v-model="colors.accent"
                     type="color"
-                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                    class="h-9 w-9 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
                   >
                   <input
                     v-model="colors.accent"
                     type="text"
                     aria-label="Akzentfarbe Hex-Wert"
-                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/20"
+                    class="w-full rounded border border-ui-border px-2 py-1.5 text-xs text-ui-text font-mono focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     maxlength="7"
                     pattern="#[0-9a-fA-F]{6}"
                   >
@@ -491,7 +491,7 @@ onUnmounted(() => {
               <select
                 id="bem-font-heading"
                 v-model="fontHeading"
-                class="w-full rounded-lg border border-ui-border px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/20"
+                class="w-full rounded-lg border border-ui-border px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               >
                 <option value="">
                   Standard (Inter)
@@ -515,7 +515,7 @@ onUnmounted(() => {
               <select
                 id="bem-font-body"
                 v-model="fontBody"
-                class="w-full rounded-lg border border-ui-border px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/20"
+                class="w-full rounded-lg border border-ui-border px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               >
                 <option value="">
                   Standard (Inter)
@@ -561,7 +561,7 @@ onUnmounted(() => {
                 <div class="absolute inset-0 flex items-end justify-end gap-1 p-1.5">
                   <button
                     type="button"
-                    class="rounded bg-white/90 px-2 py-1 text-xs font-medium text-ui-text shadow-sm hover:bg-white focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                    class="rounded bg-white/90 px-2 py-1 text-xs font-medium text-ui-text shadow-sm hover:bg-white focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     aria-label="Logo auswaehlen"
                     @click="openImagePicker('logo')"
                   >
@@ -570,7 +570,7 @@ onUnmounted(() => {
                   <button
                     v-if="logoPath"
                     type="button"
-                    class="rounded bg-white/90 p-1 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-400/30"
+                    class="rounded bg-white/90 p-1 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
                     aria-label="Logo entfernen"
                     @click="clearImage('logo')"
                   >
@@ -617,7 +617,7 @@ onUnmounted(() => {
                 <div class="absolute inset-0 flex items-end justify-end gap-1 p-1.5">
                   <button
                     type="button"
-                    class="rounded bg-white/90 px-2 py-1 text-xs font-medium text-ui-text shadow-sm hover:bg-white focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                    class="rounded bg-white/90 px-2 py-1 text-xs font-medium text-ui-text shadow-sm hover:bg-white focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     aria-label="Favicon auswaehlen"
                     @click="openImagePicker('favicon')"
                   >
@@ -626,7 +626,7 @@ onUnmounted(() => {
                   <button
                     v-if="faviconPath"
                     type="button"
-                    class="rounded bg-white/90 p-1 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-400/30"
+                    class="rounded bg-white/90 p-1 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
                     aria-label="Favicon entfernen"
                     @click="clearImage('favicon')"
                   >
@@ -660,7 +660,7 @@ onUnmounted(() => {
         <div class="flex shrink-0 items-center justify-end gap-2 border-t border-ui-border px-5 py-4">
           <button
             type="button"
-            class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @click="emit('close')"
           >
             Abbrechen
@@ -668,7 +668,7 @@ onUnmounted(() => {
           <button
             type="button"
             :disabled="saving"
-            class="flex items-center gap-2 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-ui-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
+            class="flex items-center gap-2 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-60"
             @click="handleSave"
           >
             <span

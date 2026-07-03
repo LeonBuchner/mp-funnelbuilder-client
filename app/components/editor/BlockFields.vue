@@ -48,10 +48,10 @@ const emit = defineEmits<{
 // CSS-Klasse fuer alle Formular-Inputs (einheitlicher Stil)
 // ---------------------------------------------------------------------------
 const inputCls =
-  'w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30'
+  'w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent'
 
 const selectCls =
-  'w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30'
+  'w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent'
 
 // ---------------------------------------------------------------------------
 // M1-Typen: bestehende Hilfsfunktionen
@@ -350,7 +350,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
             :value="(selectedBlock as TextBlock).content"
             :readonly="isReadonly"
             rows="6"
-            class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 font-mono text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+            class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 font-mono text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @input="updateText('content', ($event.target as HTMLTextAreaElement).value)"
           />
         </div>
@@ -377,7 +377,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
         <button
           v-if="!isReadonly"
           type="button"
-          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
           @click="showImagePicker = true"
         >
           <svg
@@ -633,13 +633,13 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
               :readonly="isReadonly"
               :aria-label="`Option ${option.label} - Bezeichnung`"
               placeholder="Bezeichnung"
-              class="min-w-0 flex-1 rounded border border-ui-border bg-white px-2 py-1 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
+              class="min-w-0 flex-1 rounded border border-ui-border bg-white px-2 py-1 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @input="updateChoiceOption(option.id, 'label', ($event.target as HTMLInputElement).value)"
             >
             <button
               v-if="!isReadonly"
               type="button"
-              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-400/50"
+              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
               :aria-label="`Option ${option.label} löschen`"
               @click="removeChoiceOption(option.id)"
             >
@@ -662,7 +662,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
           <button
             v-if="!isReadonly"
             type="button"
-            class="mt-1 text-xs text-ui-accent hover:underline focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+            class="mt-1 text-xs text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @click="addChoiceOption"
           >
             + Option hinzufügen
@@ -776,7 +776,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
             :readonly="isReadonly"
             maxlength="2"
             placeholder="DE"
-            class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm uppercase text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+            class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm uppercase text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @input="emit('update-block', { defaultCountryCode: ($event.target as HTMLInputElement).value.toUpperCase() } as Partial<Block>)"
           >
         </div>
@@ -825,7 +825,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
             :value="(selectedBlock as OptinCheckboxBlock).checkboxLabel"
             :readonly="isReadonly"
             rows="3"
-            class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 font-mono text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+            class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 font-mono text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @input="updateOptin('checkboxLabel', ($event.target as HTMLTextAreaElement).value)"
           />
         </div>
@@ -877,13 +877,13 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
               :readonly="isReadonly"
               :aria-label="`Option ${option.label} - Bezeichnung`"
               placeholder="Bezeichnung"
-              class="min-w-0 flex-1 rounded border border-ui-border bg-white px-2 py-1 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
+              class="min-w-0 flex-1 rounded border border-ui-border bg-white px-2 py-1 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @input="updateMultiOption(option.id, 'label', ($event.target as HTMLInputElement).value)"
             >
             <button
               v-if="!isReadonly"
               type="button"
-              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-400/50"
+              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
               :aria-label="`Option ${option.label} löschen`"
               @click="removeMultiOption(option.id)"
             >
@@ -906,7 +906,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
           <button
             v-if="!isReadonly"
             type="button"
-            class="mt-1 text-xs text-ui-accent hover:underline focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+            class="mt-1 text-xs text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @click="addMultiOption"
           >
             + Option hinzufügen
@@ -1121,7 +1121,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
               id="bf-icon-name"
               :value="(selectedBlock as IconBlock).iconName"
               :disabled="isReadonly"
-              class="min-w-0 flex-1 rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="min-w-0 flex-1 rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @change="updateIconBlock({ iconName: ($event.target as HTMLSelectElement).value })"
             >
               <option
@@ -1456,13 +1456,13 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
               :readonly="isReadonly"
               :aria-label="`Option ${option.label} - Bezeichnung`"
               placeholder="Bezeichnung"
-              class="min-w-0 flex-1 rounded border border-ui-border bg-white px-2 py-1 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
+              class="min-w-0 flex-1 rounded border border-ui-border bg-white px-2 py-1 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @input="updateDropdownOption(option.id, 'label', ($event.target as HTMLInputElement).value)"
             >
             <button
               v-if="!isReadonly"
               type="button"
-              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-400/50"
+              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
               :aria-label="`Option ${option.label} löschen`"
               @click="removeDropdownOption(option.id)"
             >
@@ -1485,7 +1485,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
           <button
             v-if="!isReadonly"
             type="button"
-            class="mt-1 text-xs text-ui-accent hover:underline focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+            class="mt-1 text-xs text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @click="addDropdownOption"
           >
             + Option hinzufügen
@@ -1592,7 +1592,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
               type="color"
               :value="(selectedBlock as DividerBlock).styles?.color ?? '#9ca3af'"
               :disabled="isReadonly"
-              class="h-9 w-14 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="h-9 w-14 cursor-pointer rounded border border-ui-border p-0.5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @input="updateDividerStyle('color', ($event.target as HTMLInputElement).value)"
             >
             <span class="text-sm text-ui-muted">
@@ -1658,7 +1658,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
             min="4"
             max="200"
             aria-label="Höhe in Pixeln"
-            class="mt-2 w-24 rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+            class="mt-2 w-24 rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @input="updateSpacer({ height: Number(($event.target as HTMLInputElement).value) || 24 })"
           >
         </div>
@@ -1685,7 +1685,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
         <button
           v-if="!isReadonly"
           type="button"
-          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
           @click="showLogoPicker = true"
         >
           <svg

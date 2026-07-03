@@ -165,7 +165,7 @@ const workspaceInitial = computed<string>(() =>
         <button
           ref="wsTriggerRef"
           type="button"
-          class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+          class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
           :aria-expanded="wsDropdownOpen"
           aria-haspopup="menu"
           aria-label="Workspace-Menü öffnen"
@@ -216,7 +216,7 @@ const workspaceInitial = computed<string>(() =>
             <button
               type="button"
               role="menuitem"
-              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
               @click="openMembersModal"
             >
               <!-- Personen-Icon -->
@@ -229,7 +229,7 @@ const workspaceInitial = computed<string>(() =>
             <button
               type="button"
               role="menuitem"
-              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
               @click="openSettingsModal"
             >
               <!-- Zahnrad-Icon -->
@@ -255,7 +255,7 @@ const workspaceInitial = computed<string>(() =>
             type="button"
             role="menuitem"
             :aria-current="isAllWorkspacesView ? 'page' : undefined"
-            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
             :class="isAllWorkspacesView ? 'font-semibold text-ui-accent' : 'text-ui-text'"
             @click="navigateAllWorkspaces"
           >
@@ -284,7 +284,7 @@ const workspaceInitial = computed<string>(() =>
             type="button"
             role="menuitemradio"
             :aria-checked="!isAllWorkspacesView && ws.id === workspaceStore.activeWorkspace?.id"
-            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
             :class="
               !isAllWorkspacesView && ws.id === workspaceStore.activeWorkspace?.id
                 ? 'font-semibold text-ui-accent'
@@ -323,7 +323,7 @@ const workspaceInitial = computed<string>(() =>
             <button
               type="button"
               role="menuitem"
-              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
               @click="openNewWorkspaceModal"
             >
               <!-- Plus-Icon -->
@@ -344,7 +344,7 @@ const workspaceInitial = computed<string>(() =>
         <!-- Funnels -->
         <NuxtLink
           to="/admin/funnels"
-          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent"
           :class="
             isFunnelsActive
               ? 'bg-ui-accent/10 text-ui-accent'
@@ -406,7 +406,7 @@ const workspaceInitial = computed<string>(() =>
         <button
           v-if="canInvite"
           type="button"
-          class="flex items-center gap-1.5 rounded-lg border border-ui-border px-3 py-1.5 text-sm font-medium text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+          class="flex items-center gap-1.5 rounded-lg border border-ui-border px-3 py-1.5 text-sm font-medium text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
           @click="showInviteModal = true"
         >
           <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -422,7 +422,7 @@ const workspaceInitial = computed<string>(() =>
         >
           <button
             type="button"
-            class="flex h-8 w-8 items-center justify-center rounded-full bg-ui-accent text-xs font-bold text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ui-accent/50 focus:ring-offset-2"
+            class="flex h-8 w-8 items-center justify-center rounded-full bg-ui-accent text-xs font-bold text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ui-accent focus:ring-offset-2"
             :aria-expanded="avatarDropdownOpen"
             aria-haspopup="true"
             :aria-label="`Benutzer-Menu für ${authStore.user?.name ?? 'Benutzer'}`"
@@ -449,7 +449,7 @@ const workspaceInitial = computed<string>(() =>
             <button
               type="button"
               role="menuitem"
-              class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+              class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
               @click="handleLogout"
             >
               <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">

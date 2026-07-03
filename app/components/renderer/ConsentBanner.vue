@@ -13,9 +13,13 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useFocusTrap } from '~/composables/useFocusTrap'
 
-defineProps<{
+const props = withDefaults(defineProps<{
   funnelSlug: string
-}>()
+  /** Datenschutz-URL des Workspaces. Fallback auf '/datenschutz' wenn nicht gesetzt. */
+  privacyPolicyUrl?: string
+}>(), {
+  privacyPolicyUrl: '/datenschutz',
+})
 
 const emit = defineEmits<{
   (e: 'accept' | 'decline'): void
@@ -105,7 +109,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
         Analyse-Tools (z.B. Google Analytics). Ohne Deine Zustimmung verwenden wir
         nur technisch notwendige Cookies.
         <a
-          href="/datenschutz"
+          :href="props.privacyPolicyUrl"
           class="underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-[#2563eb] rounded"
           style="color: #2563eb;"
           target="_blank"

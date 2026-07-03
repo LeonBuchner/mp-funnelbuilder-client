@@ -278,7 +278,9 @@ test.describe('A/B-Test: Cookie + Sticky-Mechanismus', () => {
     const abCookie = cookies.find(c => c.name === `mp_ab_${funnelId}`)
 
     expect(abCookie, 'A/B-Cookie sollte nach erstem Besuch gesetzt sein').toBeDefined()
-    expect(abCookie?.value).toMatch(/^\d+$/)
+    // Ab M5.6: Cookie-Wert ist UUID-String (z.B. "550e8400-e29b-41d4-a716-446655440000")
+    // Fallback: auch alte numerische Werte akzeptieren fuer Abwaertskompatibilitaet
+    expect(abCookie?.value).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$|^\d+$/)
 
     // Cookie ist ein Session-Cookie (kein Ablaufdatum)
     // Playwright: expires = -1 bedeutet Session-Cookie
@@ -325,7 +327,9 @@ test.describe('A/B-Test: Cookie + Sticky-Mechanismus', () => {
     expect(abAssignRequest, 'ab-assign wurde nicht aufgerufen').toBeDefined()
     if (abAssignRequest) {
       const body = JSON.parse(abAssignRequest.postData ?? '{}') as Record<string, unknown>
-      expect(body['existing_variant_id']).toBe(Number(firstVariantId))
+      // Ab M5.6: existing_variant_id ist ein UUID-String, kein Integer mehr.
+      // firstVariantId ist der Cookie-Wert (UUID oder Legacy-Integer-String).
+      expect(body['existing_variant_id']).toBe(firstVariantId)
     }
 
     // Cookie-Wert bleibt gleich (Sticky)

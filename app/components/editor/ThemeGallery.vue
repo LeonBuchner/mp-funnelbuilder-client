@@ -73,7 +73,7 @@ const perspectiveThemes = computed<FunnelTheme[]>(() =>
         </h2>
         <button
           type="button"
-          class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+          class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
           aria-label="Neues Theme erstellen (kommt später)"
           title="Neues Theme"
           disabled
@@ -164,7 +164,7 @@ const perspectiveThemes = computed<FunnelTheme[]>(() =>
           <button
             type="button"
             :class="[
-              'group flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent/50',
+              'group flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
               theme.id === activeThemeId
                 ? 'border-ui-accent bg-ui-accent/5'
                 : 'border-transparent bg-white hover:border-ui-border hover:bg-ui-bg/60',

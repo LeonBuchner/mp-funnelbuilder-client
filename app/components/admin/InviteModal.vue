@@ -208,7 +208,7 @@ function handleKeydown(event: KeyboardEvent): void {
           </div>
           <button
             type="button"
-            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
             aria-label="Modal schließen"
             @click="$emit('close')"
           >
@@ -239,7 +239,7 @@ function handleKeydown(event: KeyboardEvent): void {
                 autocomplete="off"
                 placeholder="E-Mail-Adresse eingeben"
                 required
-                class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
                 :class="{ 'border-red-400': formError }"
               >
             </div>
@@ -254,7 +254,7 @@ function handleKeydown(event: KeyboardEvent): void {
               <select
                 id="invite-role"
                 v-model="selectedRole"
-                class="rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                class="rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
               >
                 <option value="mp_admin">Admin (alles)</option>
                 <option value="mp_team">Team (bearbeiten)</option>
@@ -265,7 +265,7 @@ function handleKeydown(event: KeyboardEvent): void {
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="flex-shrink-0 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="flex-shrink-0 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
             >
               {{ isSubmitting ? 'Wird gesendet...' : 'Einladen' }}
             </button>

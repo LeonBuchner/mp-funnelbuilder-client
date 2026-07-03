@@ -182,7 +182,7 @@ function varPlaceholder(key: string): string {
         >
           <button
             type="button"
-            class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+            class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus:outline-none focus:ring-2 focus:ring-ui-accent"
             :aria-label="`Variable ${v.key} bearbeiten`"
             title="Bearbeiten"
             @click="openEdit(idx)"
@@ -205,7 +205,7 @@ function varPlaceholder(key: string): string {
           </button>
           <button
             type="button"
-            class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-400/50"
+            class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
             :aria-label="`Variable ${v.key} löschen`"
             title="Loeschen"
             @click="removeVar(idx)"
@@ -257,7 +257,7 @@ function varPlaceholder(key: string): string {
           v-model.trim="form.key"
           type="text"
           placeholder="z. B. vorname"
-          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
+          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
           autocomplete="off"
         >
         <p class="mt-0.5 text-xs text-ui-muted">
@@ -277,7 +277,7 @@ function varPlaceholder(key: string): string {
         <select
           id="pvar-source"
           v-model="form.source"
-          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
+          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
         >
           <option value="url_param">URL-Parameter</option>
           <option value="utm_param">UTM-Parameter</option>
@@ -298,7 +298,7 @@ function varPlaceholder(key: string): string {
           v-model.trim="form.paramName"
           type="text"
           :placeholder="form.source === 'utm_param' ? 'z. B. utm_source' : 'z. B. vorname'"
-          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
+          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
           autocomplete="off"
         >
       </div>
@@ -316,7 +316,7 @@ function varPlaceholder(key: string): string {
           v-model.trim="form.sourceBlockId"
           type="text"
           placeholder="a1b2c3d4-0000-4000-8000-000000000001"
-          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
+          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
           autocomplete="off"
         >
       </div>
@@ -334,7 +334,7 @@ function varPlaceholder(key: string): string {
           v-model="form.fallback"
           type="text"
           placeholder="z. B. Freund"
-          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-1 focus:ring-ui-accent/30"
+          class="w-full rounded border border-ui-border px-2 py-1 text-xs focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
           autocomplete="off"
         >
       </div>
@@ -359,13 +359,13 @@ function varPlaceholder(key: string): string {
       <div class="flex gap-2 pt-1">
         <button
           type="submit"
-          class="rounded bg-ui-accent px-3 py-1 text-xs font-medium text-white hover:bg-ui-accent/90 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+          class="rounded bg-ui-accent px-3 py-1 text-xs font-medium text-white hover:bg-ui-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
         >
           {{ editingIndex !== null ? 'Speichern' : 'Hinzufügen' }}
         </button>
         <button
           type="button"
-          class="rounded border border-ui-border px-3 py-1 text-xs text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+          class="rounded border border-ui-border px-3 py-1 text-xs text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
           @click="closeForm"
         >
           Abbrechen
@@ -377,7 +377,7 @@ function varPlaceholder(key: string): string {
     <button
       v-if="!isReadonly && !isFormOpen"
       type="button"
-      class="mt-1 flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-muted transition-colors hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent/50"
+      class="mt-1 flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-muted transition-colors hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
       @click="openAdd"
     >
       <svg

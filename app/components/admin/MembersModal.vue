@@ -197,7 +197,7 @@ onUnmounted(() => {
           </h2>
           <button
             type="button"
-            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
             aria-label="Modal schließen"
             @click="$emit('close')"
           >
@@ -232,7 +232,7 @@ onUnmounted(() => {
             {{ loadError }}
             <button
               type="button"
-              class="mt-2 block w-full text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="mt-2 block w-full text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @click="loadMembers"
             >
               Erneut versuchen
@@ -290,7 +290,7 @@ onUnmounted(() => {
                     :aria-label="`Rolle von ${member.name}`"
                     :aria-invalid="roleErrors[member.id] ? 'true' : undefined"
                     :aria-describedby="roleErrors[member.id] ? `role-error-${member.id}` : undefined"
-                    class="rounded-lg border border-ui-border bg-white py-1.5 pl-2.5 pr-7 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="rounded-lg border border-ui-border bg-white py-1.5 pl-2.5 pr-7 text-xs text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-50"
                     @change="(e) => handleRoleChange(member, (e.target as HTMLSelectElement).value as WorkspaceRole)"
                   >
                     <option value="mp_admin">Admin</option>
@@ -321,7 +321,7 @@ onUnmounted(() => {
                   :aria-label="isLastAdmin(members, member.id)
                     ? `${member.name} kann nicht entfernt werden – letzter Admin`
                     : `${member.name} entfernen`"
-                  class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:cursor-not-allowed disabled:opacity-40"
                   @click="requestRemove(member.id)"
                 >
                   <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -359,7 +359,7 @@ onUnmounted(() => {
                 <div class="flex gap-2">
                   <button
                     type="button"
-                    class="rounded-md px-3 py-1 text-xs font-medium text-ui-muted transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+                    class="rounded-md px-3 py-1 text-xs font-medium text-ui-muted transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-ui-accent"
                     @click="cancelRemove"
                   >
                     Abbrechen
@@ -367,7 +367,7 @@ onUnmounted(() => {
                   <button
                     type="button"
                     :disabled="isRemoving"
-                    class="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    class="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     @click="handleRemove"
                   >
                     {{ isRemoving ? 'Wird entfernt...' : 'Entfernen' }}
@@ -389,7 +389,7 @@ onUnmounted(() => {
         <div class="border-t border-ui-border px-6 py-3 text-right">
           <button
             type="button"
-            class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @click="$emit('close')"
           >
             Schließen

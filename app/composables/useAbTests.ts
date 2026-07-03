@@ -85,7 +85,7 @@ export function useAbTests() {
    * Startet oder setzt einen pausierten Test fort.
    * POST /funnels/{funnelId}/ab-tests/{abTestId}/start
    */
-  async function start(funnelId: string, abTestId: number): Promise<AbTestResponse> {
+  async function start(funnelId: string, abTestId: string): Promise<AbTestResponse> {
     return api<AbTestResponse>(`/funnels/${funnelId}/ab-tests/${abTestId}/start`, {
       method: 'POST',
     })
@@ -95,7 +95,7 @@ export function useAbTests() {
    * Pausiert einen laufenden Test.
    * POST /funnels/{funnelId}/ab-tests/{abTestId}/pause
    */
-  async function pause(funnelId: string, abTestId: number): Promise<AbTestResponse> {
+  async function pause(funnelId: string, abTestId: string): Promise<AbTestResponse> {
     return api<AbTestResponse>(`/funnels/${funnelId}/ab-tests/${abTestId}/pause`, {
       method: 'POST',
     })
@@ -105,7 +105,7 @@ export function useAbTests() {
    * Schliesst einen Test ab (kein Gewinner gesetzt).
    * POST /funnels/{funnelId}/ab-tests/{abTestId}/conclude
    */
-  async function conclude(funnelId: string, abTestId: number): Promise<AbTestResponse> {
+  async function conclude(funnelId: string, abTestId: string): Promise<AbTestResponse> {
     return api<AbTestResponse>(`/funnels/${funnelId}/ab-tests/${abTestId}/conclude`, {
       method: 'POST',
     })
@@ -115,7 +115,7 @@ export function useAbTests() {
    * Loescht einen Test (nur moeglich wenn nicht running).
    * DELETE /funnels/{funnelId}/ab-tests/{abTestId}
    */
-  async function remove(funnelId: string, abTestId: number): Promise<void> {
+  async function remove(funnelId: string, abTestId: string): Promise<void> {
     await api(`/funnels/${funnelId}/ab-tests/${abTestId}`, { method: 'DELETE' })
   }
 
@@ -125,8 +125,8 @@ export function useAbTests() {
    */
   async function setWinner(
     funnelId: string,
-    abTestId: number,
-    variantId: number,
+    abTestId: string,
+    variantId: string,
   ): Promise<AbTestResponse> {
     return api<AbTestResponse>(
       `/funnels/${funnelId}/ab-tests/${abTestId}/winner/${variantId}`,

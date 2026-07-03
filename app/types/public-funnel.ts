@@ -10,8 +10,11 @@ import type { FunnelContent, BrandingColors } from '~/types/funnel'
 
 export interface AbAssignBody {
   session_id: string
-  /** Varianten-ID aus dem Session-Cookie (fuer Sticky-Zuweisung). */
-  existing_variant_id?: number
+  /**
+   * UUID der Variante aus dem Session-Cookie (fuer Sticky-Zuweisung).
+   * Backend liefert ab M5.6 UUIDs statt Integer-IDs.
+   */
+  existing_variant_id?: string
 }
 
 /**
@@ -19,7 +22,8 @@ export interface AbAssignBody {
  * 204 No Content bedeutet: kein laufender A/B-Test -> Standard-Content rendern.
  */
 export interface AbAssignResponse {
-  ab_variant_id: number
+  /** UUID der zugewiesenen Variante. */
+  ab_variant_id: string
   funnel_version: {
     content: FunnelContent
     schema_version: string
@@ -68,7 +72,11 @@ export interface PublicFunnel {
   settings: PublicFunnelSettings
   branding: PublicFunnelBranding | null
   mp_branding_enabled: boolean
-  workspace: { name: string }
+  workspace: {
+    name: string
+    /** Datenschutz-URL des Workspaces. Fallback: '/datenschutz'. */
+    privacy_policy_url?: string | null
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -97,8 +105,8 @@ export interface LeadSubmitBody {
   consent: boolean
   consent_text: string
   utm?: UtmParams
-  /** Zugewiesene A/B-Varianten-ID, falls ein A/B-Test laeuft. */
-  ab_variant_id?: number
+  /** UUID der zugewiesenen A/B-Variante, falls ein A/B-Test laeuft. */
+  ab_variant_id?: string
   /** Tracking-Consent (true/false). null = nicht gesetzt (kein Consent-Banner gezeigt). */
   tracking_consent?: boolean | null
   /** OTP-Verifikations-Token, wenn ein optin_otp-Block im Funnel vorhanden ist. */
@@ -132,6 +140,6 @@ export interface EventBody {
   device_type?: string
   utm?: Record<string, string>
   referrer?: string
-  /** Zugewiesene A/B-Varianten-ID, falls ein A/B-Test laeuft. */
-  ab_variant_id?: number
+  /** UUID der zugewiesenen A/B-Variante, falls ein A/B-Test laeuft. */
+  ab_variant_id?: string
 }

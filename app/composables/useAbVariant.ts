@@ -2,8 +2,8 @@
  * useAbVariant – A/B-Varianten-Zuweisung fuer den oeffentlichen Funnel-Renderer.
  *
  * Ablauf (CLIENT-ONLY, nach onMounted):
- *   1. Liest vorhandene Varianten-ID aus Session-Cookie mp_ab_{hash}.
- *   2. POST /api/public/f/{hash}/ab-assign mit session_id und existing_variant_id.
+ *   1. Liest vorhandene Varianten-UUID aus Session-Cookie mp_ab_{hash}.
+ *   2. POST /api/public/f/{hash}/ab-assign mit session_id und existing_variant_id (UUID).
  *   3. 204 No Content -> kein laufender A/B-Test -> Standard-Content bleibt.
  *   4. 200 -> Cookie setzen (Sticky-Mechanismus), abVariantId und abContent setzen.
  *      abContent laeuft durch dieselbe sanitizeFunnelContent-Pipeline wie der
@@ -17,9 +17,10 @@
  *
  * Cookie (Leon-Entscheid):
  *   - Name: mp_ab_{hash}
+ *   - Wert: UUID-String der zugewiesenen Variante (ab M5.6, war zuvor Integer).
  *   - Session-Cookie (kein expires/maxAge -> endet beim Browser-Schliessen).
  *   - SameSite=Lax, path=/ (kein httpOnly: clientseitiger Zugriff noetig).
- *   - Kein Consent erforderlich (kein PII, nur numerische Varianten-ID).
+ *   - Kein Consent erforderlich (kein PII, nur Varianten-UUID).
  *
  * Testbarkeit:
  *   - readAbCookie / writeAbCookie sind als reine Funktionen exportiert.
@@ -41,28 +42,30 @@ const REGEX_SPECIAL = /[.*+?^${}()|[\]\\]/g
 
 /**
  * Liest den A/B-Session-Cookie fuer einen bestimmten Funnel-Hash.
- * Gibt null zurueck wenn kein Cookie gesetzt ist oder der Wert ungueltig ist.
+ * Gibt null zurueck wenn kein Cookie gesetzt ist oder der Wert leer ist.
+ * Ab M5.6: Cookie-Wert ist eine UUID (z.B. "550e8400-e29b-41d4-a716-446655440000").
  *
  * Nur clientseitig verfuegbar (document existiert nicht im SSR-Kontext).
  */
-export function readAbCookie(hash: string): number | null {
+export function readAbCookie(hash: string): string | null {
   if (typeof document === 'undefined') return null
   const name = `mp_ab_${hash}`
   const escaped = name.replace(REGEX_SPECIAL, '\\$&')
   const match = document.cookie.match(new RegExp(`(?:^|; )${escaped}=([^;]*)`))
   if (!match) return null
-  const parsed = parseInt(match[1] ?? '', 10)
-  return Number.isFinite(parsed) ? parsed : null
+  const value = match[1] ?? ''
+  return value.length > 0 ? value : null
 }
 
 /**
  * Setzt den A/B-Session-Cookie fuer einen bestimmten Funnel-Hash.
  * Session-Cookie: kein expires/maxAge -> endet beim Schliessen des Browsers.
  * SameSite=Lax verhindert Cross-Site-Angriffe.
+ * Ab M5.6: variantId ist eine UUID-String statt Integer.
  *
  * Nur clientseitig verfuegbar (document existiert nicht im SSR-Kontext).
  */
-export function writeAbCookie(hash: string, variantId: number): void {
+export function writeAbCookie(hash: string, variantId: string): void {
   if (typeof document === 'undefined') return
   const name = `mp_ab_${hash}`
   // Kein expires/maxAge: Session-Cookie gemaess Leon-Entscheid
@@ -83,10 +86,11 @@ export function useAbVariant(hash: string, sessionIdRef: Ref<string>) {
   const api = usePublicApi()
 
   /**
-   * Zugewiesene Varianten-ID (null = kein A/B-Test oder noch nicht aufgeloest).
+   * Zugewiesene Varianten-UUID (null = kein A/B-Test oder noch nicht aufgeloest).
    * Bleibt null waehrend SSR und Hydration -> kein Hydration-Mismatch.
+   * Ab M5.6: UUID-String statt Integer (Backend-Aenderung).
    */
-  const abVariantId = ref<number | null>(null)
+  const abVariantId = ref<string | null>(null)
 
   /**
    * Content der zugewiesenen Variante (null = Standard-Content verwenden).
@@ -148,7 +152,7 @@ export function useAbVariant(hash: string, sessionIdRef: Ref<string>) {
   })
 
   return {
-    /** Zugewiesene Varianten-ID (null = kein A/B-Test). */
+    /** Zugewiesene Varianten-UUID (null = kein A/B-Test). */
     abVariantId,
     /** Bereinigter Content der Variante (null = Standard-Content verwenden). */
     abContent,

@@ -127,7 +127,7 @@ const blockDisplayId = computed<string>(() => {
       </h3>
       <button
         type="button"
-        class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+        class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
         title="Info zur Verknüpfung"
         aria-label="Info zur Verknüpfung"
       >
@@ -179,7 +179,7 @@ const blockDisplayId = computed<string>(() => {
         :id="`lnk-nav-${block.id}`"
         :value="navTargetValue"
         :disabled="isReadonly"
-        class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30 disabled:cursor-not-allowed disabled:opacity-50"
+        class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-50"
         @change="onNavChange"
       >
         <option value="next">Nächste Seite</option>
@@ -237,7 +237,7 @@ const blockDisplayId = computed<string>(() => {
         :id="`lnk-result-${block.id}`"
         :value="resultStepIdValue"
         :disabled="isReadonly"
-        class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30 disabled:cursor-not-allowed disabled:opacity-50"
+        class="w-full rounded-lg border border-ui-border bg-white px-3 py-2 text-sm text-ui-text focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-50"
         @change="onResultChange"
       >
         <option value="">Kein Ergebnis</option>
@@ -262,7 +262,7 @@ const blockDisplayId = computed<string>(() => {
         </span>
         <button
           type="button"
-          class="flex-shrink-0 text-ui-muted hover:text-ui-text focus:outline-none focus:ring-1 focus:ring-ui-accent/50"
+          class="flex-shrink-0 text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
           :aria-label="`Block-ID kopieren: ${blockDisplayId}`"
           title="Kopieren"
           @click="copyBlockId"

@@ -82,7 +82,7 @@ async function handleSubmit(): Promise<void> {
           placeholder="deine@email.de"
           :aria-invalid="!!fieldErrors['email']?.length || undefined"
           :aria-describedby="fieldErrors['email']?.length ? 'login-email-error' : undefined"
-          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent/30"
+          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent"
           :class="{ 'border-red-400': fieldErrors['email']?.length }"
         >
         <p
@@ -113,7 +113,7 @@ async function handleSubmit(): Promise<void> {
           placeholder="••••••••"
           :aria-invalid="!!fieldErrors['password']?.length || undefined"
           :aria-describedby="fieldErrors['password']?.length ? 'login-password-error' : undefined"
-          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent/30"
+          class="w-full rounded-lg border border-mp-border px-3 py-2 text-sm text-mp-text placeholder:text-mp-muted focus:border-mp-accent focus:outline-none focus:ring-2 focus:ring-mp-accent"
           :class="{ 'border-red-400': fieldErrors['password']?.length }"
         >
         <p
@@ -141,7 +141,7 @@ async function handleSubmit(): Promise<void> {
     <p class="mt-5 text-center text-sm text-mp-muted">
       <NuxtLink
         to="/auth/forgot-password"
-        class="rounded text-mp-accent underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-mp-accent/50"
+        class="rounded text-mp-accent underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-mp-accent"
       >
         Passwort vergessen?
       </NuxtLink>

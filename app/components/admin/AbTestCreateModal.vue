@@ -205,7 +205,7 @@ function versionLabel(v: FunnelVersionListItem): string {
           </h2>
           <button
             type="button"
-            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
             aria-label="Modal schließen"
             @click="$emit('close')"
           >
@@ -291,7 +291,7 @@ function versionLabel(v: FunnelVersionListItem): string {
           </p>
           <button
             type="button"
-            class="mt-5 rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+            class="mt-5 rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
             @click="$emit('close')"
           >
             Schließen
@@ -322,7 +322,7 @@ function versionLabel(v: FunnelVersionListItem): string {
               autocomplete="off"
               :aria-invalid="nameError ? 'true' : undefined"
               :aria-describedby="nameError ? 'ab-name-error' : undefined"
-              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-ui-text placeholder:text-ui-muted focus:outline-none focus:ring-2 focus:ring-ui-accent"
               :class="nameError ? 'border-red-400 focus:border-red-400' : 'border-ui-border focus:border-ui-accent'"
             >
             <p
@@ -365,7 +365,7 @@ function versionLabel(v: FunnelVersionListItem): string {
                 required
                 :aria-invalid="versionBError ? 'true' : undefined"
                 :aria-describedby="versionBError ? 'ab-version-b-error' : 'ab-version-b-hint'"
-                class="w-full appearance-none rounded-lg border bg-white px-3 py-2 pr-8 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+                class="w-full appearance-none rounded-lg border bg-white px-3 py-2 pr-8 text-sm text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
                 :class="versionBError ? 'border-red-400 focus:border-red-400' : 'border-ui-border focus:border-ui-accent'"
               >
                 <option
@@ -434,7 +434,7 @@ function versionLabel(v: FunnelVersionListItem): string {
               :aria-invalid="splitError ? 'true' : undefined"
               :aria-describedby="splitError ? 'ab-split-error' : 'ab-split-hint'"
               :aria-valuetext="splitDisplay"
-              class="w-full accent-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent/30"
+              class="w-full accent-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
             >
             <div class="mt-1 flex justify-between text-xs text-ui-muted" aria-hidden="true">
               <span>1 %</span>
@@ -470,7 +470,7 @@ function versionLabel(v: FunnelVersionListItem): string {
           <div class="flex justify-end gap-2">
             <button
               type="button"
-              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
               @click="$emit('close')"
             >
               Abbrechen
@@ -478,7 +478,7 @@ function versionLabel(v: FunnelVersionListItem): string {
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+              class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
             >
               {{ isSubmitting ? 'Wird angelegt...' : 'Test anlegen' }}
             </button>

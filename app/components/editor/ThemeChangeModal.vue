@@ -118,14 +118,14 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
       <div class="mt-5 flex items-center justify-end gap-2">
         <button
           type="button"
-          class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+          class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
           @click="cancel"
         >
           Abbrechen
         </button>
         <button
           type="button"
-          class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-ui-accent/50"
+          class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
           @click="confirm"
         >
           Theme ändern

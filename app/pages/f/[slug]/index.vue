@@ -339,6 +339,16 @@ provide(personalizationKey, {
 })
 
 // ---------------------------------------------------------------------------
+// Datenschutz-URL fuer ConsentBanner
+// ---------------------------------------------------------------------------
+
+/**
+ * Datenschutz-URL aus dem Workspace-Payload.
+ * Fallback auf '/datenschutz' wenn das Feld fehlt (Backend noch ohne privacy_policy_url).
+ */
+const privacyPolicyUrl = funnelData.workspace?.privacy_policy_url ?? '/datenschutz'
+
+// ---------------------------------------------------------------------------
 // Consent-Banner + Tracking-Scripts (M4.11 / M4.12)
 // ---------------------------------------------------------------------------
 
@@ -583,10 +593,18 @@ function handleOtpVerified(token: string): void {
 
       Transition-opacity: dezenter Uebergang waehrend der A/B-Aufloesung (M3.7).
       isAbResolving ist false waehrend SSR und Hydration -> kein Hydration-Mismatch.
+
+      Waehrend des kurzen A/B-Content-Swaps (isAbResolving=true):
+        - :inert verhindert, dass Fokus oder Screenreader den ausgeblendeten
+          Inhalt lesen (WCAG 2.4.11, Empfehlung M3.7 a11y-Agent).
+        - aria-hidden="true" macht den Bereich fuer AT unsichtbar.
+        - Beide Attribute werden entfernt, sobald der Swap abgeschlossen ist.
     -->
     <div
       class="w-full max-w-[460px] mx-auto transition-opacity duration-150"
       :class="{ 'opacity-0': isAbResolving }"
+      :inert="isAbResolving"
+      :aria-hidden="isAbResolving ? 'true' : undefined"
       role="region"
       aria-label="Funnel"
     >
@@ -662,7 +680,7 @@ function handleOtpVerified(token: string): void {
           class="text-sm leading-relaxed"
           style="color: var(--funnel-muted);"
         >
-          Bitte prüfe Deine E-Mails und klicke den Bestätigungslink, um Deine Anmeldung abzuschliessen.
+          Bitte prüfe Deine E-Mails und klicke den Bestätigungslink, um Deine Anmeldung abzuschließen.
         </p>
         <p
           class="mt-2 text-xs"
@@ -784,6 +802,7 @@ function handleOtpVerified(token: string): void {
     <RendererConsentBanner
       v-if="showConsentBanner"
       :funnel-slug="slug"
+      :privacy-policy-url="privacyPolicyUrl"
       @accept="handleConsentDecision(true)"
       @decline="handleConsentDecision(false)"
     />

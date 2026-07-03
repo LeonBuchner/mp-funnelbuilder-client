@@ -14,8 +14,8 @@ export type AbTestStatus = 'draft' | 'running' | 'paused' | 'concluded'
 // ---------------------------------------------------------------------------
 
 export interface AbVariant {
-  id: number
-  ab_test_id: number
+  id: string
+  ab_test_id: string
   funnel_version_id: number
   label: string
   is_control: boolean
@@ -26,12 +26,13 @@ export interface AbVariant {
 // ---------------------------------------------------------------------------
 
 export interface AbTest {
-  id: number
-  funnel_id: number
+  id: string
+  // funnel_id wurde entfernt: wird vom Backend nicht mehr ausgegeben (Integer-Enumeration).
+  // Der Funnel-Kontext ist immer aus dem URL-Parameter bekannt.
   name: string
   status: AbTestStatus
   traffic_split_pct_a: number
-  winner_variant_id: number | null
+  winner_variant_id: string | null
   started_at: string | null
   ended_at: string | null
   created_at: string
@@ -73,7 +74,7 @@ export interface FunnelVersionListResponse {
 // ---------------------------------------------------------------------------
 
 export interface AbVariantMetrics {
-  ab_variant_id: number
+  ab_variant_id: string
   label: string
   is_control: boolean
   views: number
@@ -84,10 +85,10 @@ export interface AbVariantMetrics {
 }
 
 export interface AbTestMetrics {
-  id: number
+  id: string
   name: string
   status: AbTestStatus
-  winner_variant_id: number | null
+  winner_variant_id: string | null
   started_at: string | null
   ended_at: string | null
   variants: AbVariantMetrics[]
