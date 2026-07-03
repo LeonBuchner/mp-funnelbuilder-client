@@ -1,16 +1,19 @@
 /**
- * Unit-Tests fuer das Lead-Verwaltungs-Feature (M4.4).
+ * Unit-Tests fuer das Lead-Verwaltungs-Feature (M4.4 + M4.5 Kanban-Board).
  *
  * Getestet werden:
- * 1. getLeadStatusLabel() - Status-Badge-Mapping
- * 2. getLeadStatusClass() - CSS-Klassen-Mapping
- * 3. getFirstAnswerPreview() - Vorschau-Texte
- * 4. buildLeadsExportUrl() - URL-Aufbau mit/ohne Filter
- * 5. formatFileSize() - Dateigroessen-Formatierung
- * 6. useLeads().list() - API-Aufruf mit Filter/Pagination-Params
- * 7. useLeads().exportUrl() - URL via Laufzeit-Config
- * 8. useLeads().remove() - DELETE-Aufruf
- * 9. useLeads().fileDownload() - Signed-URL-Abruf
+ *  1. getLeadStatusLabel() - Status-Badge-Mapping
+ *  2. getLeadStatusClass() - CSS-Klassen-Mapping
+ *  3. getFirstAnswerPreview() - Vorschau-Texte
+ *  4. buildLeadsExportUrl() - URL-Aufbau mit/ohne Filter
+ *  5. formatFileSize() - Dateigroessen-Formatierung
+ *  6. useLeads().list() - API-Aufruf mit Filter/Pagination-Params
+ *  7. useLeads().exportUrl() - URL via Laufzeit-Config
+ *  8. useLeads().remove() - DELETE-Aufruf
+ *  9. useLeads().fileDownload() - Signed-URL-Abruf
+ * 10. groupByStage() - Gruppierungsfunktion
+ * 11. useLeads().fetchBoard() - Board-URL
+ * 12. useLeads().updateStage() - PATCH-URL und Methode
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
@@ -19,9 +22,10 @@ import {
   getFirstAnswerPreview,
   buildLeadsExportUrl,
   formatFileSize,
+  groupByStage,
   useLeads,
 } from '../../app/composables/useLeads'
-import type { Lead, LeadStatus } from '../../app/composables/useLeads'
+import type { Lead, LeadStatus, BoardLead, LeadStage } from '../../app/composables/useLeads'
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -340,5 +344,141 @@ describe('useLeads – exportUrl()', () => {
     const { exportUrl } = useLeads()
     const url = exportUrl('funnel-1', { status: 'complete' })
     expect(url).toContain('status=complete')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// groupByStage (reine Hilfsfunktion)
+// ---------------------------------------------------------------------------
+
+function makeBoardLead(stage: LeadStage, id = 'lead-1'): BoardLead {
+  return {
+    id,
+    stage,
+    status: 'complete',
+    created_at: '2026-06-01T10:00:00Z',
+    first_answer: { field_key: 'name', value: 'Max Mustermann' },
+  }
+}
+
+describe('groupByStage', () => {
+  it('gibt leere Arrays zurueck wenn keine Leads vorhanden', () => {
+    const result = groupByStage([])
+    expect(result.neu).toHaveLength(0)
+    expect(result.gesichtet).toHaveLength(0)
+    expect(result.interview).toHaveLength(0)
+    expect(result.zusage).toHaveLength(0)
+    expect(result.absage).toHaveLength(0)
+  })
+
+  it('gruppiert Leads korrekt nach Stage', () => {
+    const leads: BoardLead[] = [
+      makeBoardLead('neu', 'l1'),
+      makeBoardLead('neu', 'l2'),
+      makeBoardLead('interview', 'l3'),
+      makeBoardLead('zusage', 'l4'),
+    ]
+    const result = groupByStage(leads)
+    expect(result.neu).toHaveLength(2)
+    expect(result.interview).toHaveLength(1)
+    expect(result.zusage).toHaveLength(1)
+    expect(result.gesichtet).toHaveLength(0)
+    expect(result.absage).toHaveLength(0)
+  })
+
+  it('behaelt die Reihenfolge innerhalb einer Spalte bei', () => {
+    const leads: BoardLead[] = [
+      makeBoardLead('neu', 'a'),
+      makeBoardLead('neu', 'b'),
+      makeBoardLead('neu', 'c'),
+    ]
+    const result = groupByStage(leads)
+    expect(result.neu.map((l) => l.id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('ignoriert Leads mit unbekannter Stage nicht (wird nicht eingefuegt)', () => {
+    // Defensiv-Test: ein Lead mit einer Stage, die nicht im Enum ist
+    const lead = { ...makeBoardLead('neu', 'x'), stage: 'unbekannt' as LeadStage }
+    const result = groupByStage([lead])
+    // Keine unbekannte Spalte wird erstellt
+    expect(Object.keys(result)).toEqual(['neu', 'gesichtet', 'interview', 'zusage', 'absage'])
+    // Der Lead landet nicht in einer gültigen Spalte
+    const total = Object.values(result).reduce((s, arr) => s + arr.length, 0)
+    expect(total).toBe(0)
+  })
+
+  it('alle 5 Phasen sind als Schluesseln vorhanden', () => {
+    const result = groupByStage([])
+    expect(Object.keys(result)).toEqual(['neu', 'gesichtet', 'interview', 'zusage', 'absage'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// useLeads – fetchBoard()
+// ---------------------------------------------------------------------------
+
+describe('useLeads – fetchBoard()', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('ruft den Board-Endpunkt mit der richtigen URL auf', async () => {
+    const mockResp = { data: [] }
+    mockApiFetch.mockResolvedValueOnce(mockResp)
+
+    const { fetchBoard } = useLeads()
+    const result = await fetchBoard('funnel-board-1')
+
+    expect(mockApiFetch).toHaveBeenCalledWith('/funnels/funnel-board-1/leads/board')
+    expect(result).toEqual(mockResp)
+  })
+
+  it('wirft den Fehler weiter wenn die API einen Fehler zurueckgibt', async () => {
+    mockApiFetch.mockRejectedValueOnce(new Error('Verboten'))
+
+    const { fetchBoard } = useLeads()
+    await expect(fetchBoard('funnel-board-1')).rejects.toThrow('Verboten')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// useLeads – updateStage()
+// ---------------------------------------------------------------------------
+
+describe('useLeads – updateStage()', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const stages: LeadStage[] = ['neu', 'gesichtet', 'interview', 'zusage', 'absage']
+
+  it.each(stages)('sendet PATCH an den richtigen Endpunkt fuer Stage "%s"', async (stage) => {
+    const mockResp = { data: { id: 'lead-1', status: 'complete', stage, consent_given_at: null, created_at: '', answers: [], files: [] } }
+    mockApiFetch.mockResolvedValueOnce(mockResp)
+
+    const { updateStage } = useLeads()
+    await updateStage('funnel-1', 'lead-uuid-1', stage)
+
+    expect(mockApiFetch).toHaveBeenCalledWith(
+      '/funnels/funnel-1/leads/lead-uuid-1/stage',
+      expect.objectContaining({ method: 'PATCH', body: { stage } }),
+    )
+  })
+
+  it('gibt die aktualisierte LeadResource zurueck', async () => {
+    const mockResp = { data: { id: 'lead-1', status: 'complete', stage: 'interview', consent_given_at: null, created_at: '', answers: [], files: [] } }
+    mockApiFetch.mockResolvedValueOnce(mockResp)
+
+    const { updateStage } = useLeads()
+    const result = await updateStage('funnel-1', 'lead-1', 'interview')
+
+    expect(result).toEqual(mockResp)
+  })
+
+  it('wirft den Fehler weiter bei API-Fehler (z. B. 403 fuer client)', async () => {
+    mockApiFetch.mockRejectedValueOnce(new Error('Forbidden'))
+
+    const { updateStage } = useLeads()
+    await expect(updateStage('funnel-1', 'lead-1', 'zusage')).rejects.toThrow('Forbidden')
   })
 })

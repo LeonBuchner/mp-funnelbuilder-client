@@ -128,6 +128,7 @@ const canInvite = computed<boolean>(
 // Aktiver Tab
 // ---------------------------------------------------------------------------
 const isFunnelsActive = computed(() => route.path.startsWith('/admin/funnels'))
+const isPerformanceActive = computed(() => route.path.startsWith('/admin/performance'))
 
 // Ob die workspace-uebergreifende "Alle Workspaces"-Ansicht aktiv ist. In dem Fall
 // zeigt der Umschalter "Alle Workspaces" statt eines einzelnen Workspace.
@@ -357,19 +358,21 @@ const workspaceInitial = computed<string>(() =>
           Funnels
         </NuxtLink>
 
-        <!-- Performance (deaktiviert) -->
-        <button
-          type="button"
-          disabled
-          title="kommt bald"
-          aria-disabled="true"
-          class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus-visible:outline-none"
+        <!-- Performance -->
+        <NuxtLink
+          to="/admin/performance"
+          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
+          :class="
+            isPerformanceActive
+              ? 'bg-ui-accent/10 text-ui-accent'
+              : 'text-ui-muted hover:bg-ui-bg hover:text-ui-text'
+          "
         >
           <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
           Performance
-        </button>
+        </NuxtLink>
 
         <!-- Inbox (deaktiviert) -->
         <button

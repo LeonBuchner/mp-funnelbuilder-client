@@ -1,21 +1,22 @@
 <!--
-  Kontakte-Tab (Lead-Verwaltung) im Funnel-Editor-Kontext (M4.4).
+  Kontakte-Tab (Lead-Verwaltung) im Funnel-Editor-Kontext (M4.4 + M4.5).
 
-  Zeigt paginierte Lead-Tabelle mit:
-  - Filterleiste (Status, Datumsbereich)
-  - Spalten: Datum, Status-Badge, erste Antwort, Aktionen
-  - Slide-over-Drawer fuer Detail-Ansicht
-  - CSV-Export-Button
-  - Loeschen-Bestaetigung per ConfirmModal
+  Zwei Ansichten, umschaltbar per Toggle:
+  1. Tabelle (paginiert, filterbar) - bisheriger Stand
+  2. Kanban-Board nach Bewerbungsphase (Neu/Gesichtet/Interview/Zusage/Absage)
+
+  Gemeinsam genutzter Detail-Drawer und ConfirmModal.
 
   Rollen:
-  - mp_admin / mp_team: alle Aktionen sichtbar
-  - client: nur Ansehen, Loeschen/Export/Download NICHT im DOM
+  - mp_admin / mp_team: alle Aktionen sichtbar, Drag + Stage-Select aktiv
+  - client: nur Ansehen, kein Drag/Select/Export/Loeschen
 -->
 <script setup lang="ts">
 import type {
   Lead,
   LeadStatus,
+  LeadStage,
+  BoardLead,
   LeadsFilter,
   PaginatedLeadsMeta,
 } from '~/composables/useLeads'
@@ -46,6 +47,17 @@ const isReadonly = computed(() => workspaceStore.activeRole === 'client')
 const canWrite = computed(() => workspaceStore.activeRole !== 'client')
 
 // ---------------------------------------------------------------------------
+// Ansichts-Umschalter: Tabelle | Board
+// ---------------------------------------------------------------------------
+const VIEW_MODE_KEY = 'mp_leads_view_mode'
+
+type ViewMode = 'table' | 'board'
+
+const viewMode = ref<ViewMode>(
+  import.meta.client && localStorage.getItem(VIEW_MODE_KEY) === 'board' ? 'board' : 'table',
+)
+
+// ---------------------------------------------------------------------------
 // Funnel laden (fuer TopBar-Name)
 // ---------------------------------------------------------------------------
 const isLoadingFunnel = ref(true)
@@ -58,7 +70,11 @@ onMounted(async () => {
       title: `Kontakte - ${editorStore.funnel?.name ?? 'Funnel'} - MP Funnel-Builder`,
       description: `Lead-Verwaltung für den Funnel ${editorStore.funnel?.name ?? ''}.`,
     })
-    await loadLeads()
+    if (viewMode.value === 'board') {
+      await loadBoard()
+    } else {
+      await loadLeads()
+    }
   } catch {
     loadError.value = 'Funnel konnte nicht geladen werden.'
   } finally {
@@ -129,6 +145,41 @@ watch([filterStatus, filterFrom, filterTo], () => {
 })
 
 // ---------------------------------------------------------------------------
+// Board-Daten
+// ---------------------------------------------------------------------------
+const boardLeads = ref<BoardLead[]>([])
+const isBoardLoading = ref(false)
+const boardError = ref<string | null>(null)
+
+async function loadBoard(): Promise<void> {
+  isBoardLoading.value = true
+  boardError.value = null
+  try {
+    const response = await leadsApi.fetchBoard(funnelId.value)
+    boardLeads.value = response.data
+  } catch {
+    boardError.value = 'Kontakte konnten nicht geladen werden.'
+  } finally {
+    isBoardLoading.value = false
+  }
+}
+
+function handleStageUpdated(leadId: string, stage: LeadStage): void {
+  // Lokalen Board-State synchronisieren (wird durch das Board-Component
+  // optimistisch schon aktualisiert; hier nur das Flat-Array anpassen)
+  const lead = boardLeads.value.find((l) => l.id === leadId)
+  if (lead) lead.stage = stage
+}
+
+// Watch NACH den Board-Deklarationen, damit keine TDZ-Referenzen entstehen
+watch(viewMode, (mode) => {
+  if (import.meta.client) localStorage.setItem(VIEW_MODE_KEY, mode)
+  if (mode === 'board' && boardLeads.value.length === 0 && !isBoardLoading.value) {
+    void loadBoard()
+  }
+})
+
+// ---------------------------------------------------------------------------
 // Datum-Formatierung
 // ---------------------------------------------------------------------------
 function formatDate(dateStr: string): string {
@@ -165,6 +216,23 @@ async function openDrawer(lead: Lead, event?: Event): Promise<void> {
   nextTick(() => {
     drawerEl.value?.focus()
   })
+}
+
+/**
+ * Oeffnet den Detail-Drawer anhand einer Lead-ID.
+ * Wird vom Board-Component verwendet, das nur die BoardLead-Minimalstruktur kennt.
+ * Der Drawer zeigt einen Ladeindikator bis die vollstaendigen Daten vorliegen.
+ */
+async function openDrawerById(leadId: string, event?: Event): Promise<void> {
+  const placeholder: Lead = {
+    id: leadId,
+    status: 'complete',
+    consent_given_at: null,
+    created_at: new Date().toISOString(),
+    answers: [],
+    files: [],
+  }
+  await openDrawer(placeholder, event)
 }
 
 function closeDrawer(): void {
@@ -376,9 +444,80 @@ function getPaginationPages(): number[] {
             </h1>
 
             <div class="flex items-center gap-2">
-              <!-- CSV-Export (nur mp_admin / mp_team) -->
+              <!-- Ansichts-Umschalter: Tabelle | Board -->
+              <div
+                class="flex items-center rounded-lg border border-ui-border bg-white p-0.5"
+                role="group"
+                aria-label="Ansicht wechseln"
+              >
+                <!--
+                  Kontrast-Hinweis: bg-ui-accent + text-white kann in headless Chromium
+                  durch OKLCH-Farbkonvertierung unter 4.5:1 fallen.
+                  bg-ui-accent-light + text-ui-text (dunkel auf hellem Blau) ist stabiler:
+                  #1f2937 auf #eff4ff -> 12.5:1 (WCAG AA).
+                  Inaktiver Zustand: text-ui-text auf weiss -> 15.3:1.
+                -->
+                <button
+                  type="button"
+                  :class="[
+                    'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
+                    viewMode === 'table'
+                      ? 'bg-ui-accent-light text-ui-text'
+                      : 'text-ui-text hover:bg-ui-bg',
+                  ]"
+                  :aria-pressed="viewMode === 'table'"
+                  data-testid="view-toggle-table"
+                  @click="viewMode = 'table'"
+                >
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3 10h18M3 6h18M3 14h18M3 18h18"
+                    />
+                  </svg>
+                  Tabelle
+                </button>
+                <button
+                  type="button"
+                  :class="[
+                    'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
+                    viewMode === 'board'
+                      ? 'bg-ui-accent-light text-ui-text'
+                      : 'text-ui-text hover:bg-ui-bg',
+                  ]"
+                  :aria-pressed="viewMode === 'board'"
+                  data-testid="view-toggle-board"
+                  @click="viewMode = 'board'"
+                >
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+                    />
+                  </svg>
+                  Board
+                </button>
+              </div>
+
+              <!-- CSV-Export (nur mp_admin / mp_team, nur in Tabellen-Ansicht) -->
               <button
-                v-if="canWrite"
+                v-if="canWrite && viewMode === 'table'"
                 type="button"
                 :disabled="isExporting || isLoadingLeads"
                 class="inline-flex items-center gap-1.5 rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-60"
@@ -406,8 +545,63 @@ function getPaginationPages(): number[] {
           </div>
 
           <!-- --------------------------------------------------------------- -->
-          <!-- Filterleiste                                                     -->
+          <!-- Board-Ansicht                                                    -->
           <!-- --------------------------------------------------------------- -->
+          <template v-if="viewMode === 'board'">
+            <!-- Lade-Zustand Board -->
+            <div
+              v-if="isBoardLoading"
+              class="flex items-center justify-center py-16"
+              aria-busy="true"
+              aria-label="Board wird geladen"
+            >
+              <svg
+                class="h-6 w-6 animate-spin text-ui-accent"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
+            </div>
+
+            <!-- Fehler Board -->
+            <div
+              v-else-if="boardError"
+              class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              role="alert"
+            >
+              {{ boardError }}
+            </div>
+
+            <!-- Board-Komponente -->
+            <AdminLeadsBoard
+              v-else
+              :board-leads="boardLeads"
+              :funnel-id="funnelId"
+              :is-readonly="isReadonly"
+              data-testid="leads-board"
+              @open-lead="(id, evt) => openDrawerById(id, evt)"
+              @stage-updated="handleStageUpdated"
+            />
+          </template>
+
+          <!-- --------------------------------------------------------------- -->
+          <!-- Filterleiste (nur Tabellen-Ansicht)                              -->
+          <!-- --------------------------------------------------------------- -->
+          <template v-else>
           <div
             class="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-ui-border bg-white p-4"
             aria-label="Kontakte filtern"
@@ -765,6 +959,8 @@ function getPaginationPages(): number[] {
               </nav>
             </div>
           </div>
+          </template>
+          <!-- Ende: Tabellen-Ansicht -->
         </div>
       </main>
     </template>

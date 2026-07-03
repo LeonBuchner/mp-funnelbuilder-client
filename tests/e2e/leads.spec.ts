@@ -289,3 +289,190 @@ test('L6 – axe: keine kritischen AA-Violations im offenen Drawer', async ({ pa
     `A11y-Violations im Drawer:\n${criticalOrSerious.map((v) => `[${v.impact}] ${v.id}: ${v.description}`).join('\n')}`,
   ).toHaveLength(0)
 })
+
+// ---------------------------------------------------------------------------
+// L7 - Board-Umschalter und Board-Ansicht
+// ---------------------------------------------------------------------------
+
+test('L7 – Board-Toggle wechselt in die Board-Ansicht', async ({ page }) => {
+  if (!sharedToken || !funnelId) { test.skip(); return }
+  await loginAsAdmin(page)
+  await page.goto(`/admin/funnels/${funnelId}/leads`)
+  await page.waitForSelector('main', { state: 'visible', timeout: 15000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  // Board-Button klicken
+  await page.locator('[data-testid="view-toggle-board"]').click()
+
+  // Board-Region muss erscheinen
+  await expect(page.locator('[data-testid="leads-board"]')).toBeVisible({ timeout: 10000 })
+
+  // Tabellenspezifische Elemente verschwinden
+  await expect(page.locator('table')).not.toBeVisible()
+})
+
+test('L7 – Board laedt und zeigt Spalten', async ({ page }) => {
+  if (!sharedToken || !funnelId) { test.skip(); return }
+  await loginAsAdmin(page)
+  await page.goto(`/admin/funnels/${funnelId}/leads`)
+  await page.waitForSelector('main', { state: 'visible', timeout: 15000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  await page.locator('[data-testid="view-toggle-board"]').click()
+
+  // Board geladen
+  await page.waitForSelector('[data-testid="leads-board"]', { state: 'visible', timeout: 10000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  // Alle 5 Spalten-Ueberschriften sichtbar (per ID der Board-Spalten-Labels)
+  for (const stage of ['neu', 'gesichtet', 'interview', 'zusage', 'absage']) {
+    await expect(page.locator(`#board-col-${stage}-label`)).toBeVisible({ timeout: 5000 })
+  }
+})
+
+// ---------------------------------------------------------------------------
+// L8 - Umschalter speichert den Zustand (localStorage)
+// ---------------------------------------------------------------------------
+
+test('L8 – Ansichts-Umschalter: Zustand bleibt nach Reload erhalten', async ({ page }) => {
+  if (!sharedToken || !funnelId) { test.skip(); return }
+  await loginAsAdmin(page)
+  await page.goto(`/admin/funnels/${funnelId}/leads`)
+  await page.waitForSelector('main', { state: 'visible', timeout: 15000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  // Board aktivieren
+  await page.locator('[data-testid="view-toggle-board"]').click()
+  await page.waitForSelector('[data-testid="leads-board"]', { state: 'visible', timeout: 10000 })
+
+  // Seite neuladen
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await page.waitForSelector('main', { state: 'visible', timeout: 15000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  // Board sollte noch aktiv sein
+  await expect(page.locator('[data-testid="leads-board"]')).toBeVisible({ timeout: 10000 })
+
+  // Zurueck zu Tabelle setzen (Aufraumen fuer nachfolgende Tests)
+  await page.locator('[data-testid="view-toggle-table"]').click()
+  await page.waitForSelector('table', { state: 'visible', timeout: 5000 }).catch(() => {})
+})
+
+// ---------------------------------------------------------------------------
+// L9 - Stage per Select-Fallback aendern (persistiert)
+// ---------------------------------------------------------------------------
+
+test('L9 – Phase per Stage-Select aendern und Reload bestaetigt Aenderung', async ({ page }) => {
+  if (!sharedToken || !funnelId) { test.skip(); return }
+  await loginAsAdmin(page)
+  await page.goto(`/admin/funnels/${funnelId}/leads`)
+  await page.waitForSelector('main', { state: 'visible', timeout: 15000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  // Board-Ansicht
+  await page.locator('[data-testid="view-toggle-board"]').click()
+  await page.waitForSelector('[data-testid="leads-board"]', { state: 'visible', timeout: 10000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  // Erstes Stage-Select im Board
+  const firstSelect = page.locator('[data-testid="stage-select"]').first()
+  const hasSelect = await firstSelect.isVisible().catch(() => false)
+  if (!hasSelect) {
+    test.skip()
+    return
+  }
+
+  // Aktuellen Wert merken
+  const currentStage = await firstSelect.inputValue()
+  // Neue Phase waehlen (naechste in Liste oder Fallback)
+  const stages = ['neu', 'gesichtet', 'interview', 'zusage', 'absage']
+  const newStage = stages[(stages.indexOf(currentStage) + 1) % stages.length] ?? 'gesichtet'
+
+  await firstSelect.selectOption(newStage)
+
+  // Kurz warten damit der PATCH abgesendet wird
+  await page.waitForTimeout(1500)
+
+  // Seite neuladen
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await page.waitForSelector('main', { state: 'visible', timeout: 15000 })
+  await page.waitForSelector('[data-testid="leads-board"]', { state: 'visible', timeout: 10000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  // Die Stage-Selects in der neuen Phase muessen den Lead enthalten
+  const newStageSelects = page.locator('[data-testid="stage-select"]')
+  const allValues = await newStageSelects.evaluateAll(
+    (selects) => selects.map((s) => (s as HTMLSelectElement).value),
+  )
+  expect(allValues).toContain(newStage)
+})
+
+// ---------------------------------------------------------------------------
+// L10 - client-Rolle: kein Stage-Select im Board
+// ---------------------------------------------------------------------------
+
+test('L10 – client-Rolle: Stage-Select nicht im DOM auf dem Board', async ({ page }) => {
+  if (!sharedToken || !funnelId) { test.skip(); return }
+
+  // auth/me auf client-Rolle umbiegen
+  await page.route('**/auth/me', async (route) => {
+    const response = await route.fetch()
+    const json = await response.json() as {
+      user: Record<string, unknown>
+      memberships: { role: string; workspace: Record<string, unknown> }[]
+    }
+    if (json.memberships) {
+      json.memberships = json.memberships.map((m) => ({ ...m, role: 'client' }))
+    }
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(json),
+    })
+  })
+
+  await page.goto('/auth/login')
+  await page.evaluate((t: string) => {
+    localStorage.setItem('mp_token', t)
+  }, sharedToken)
+  await page.goto(`/admin/funnels/${funnelId}/leads`)
+  await page.waitForSelector('main', { state: 'visible', timeout: 15000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  // Board-Ansicht oeffnen
+  await page.locator('[data-testid="view-toggle-board"]').click()
+  await page.waitForSelector('[data-testid="leads-board"]', { state: 'visible', timeout: 10000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  // Stage-Select darf NICHT im DOM sein
+  const stageSelect = page.locator('[data-testid="stage-select"]').first()
+  await expect(stageSelect).not.toBeAttached()
+})
+
+// ---------------------------------------------------------------------------
+// L11 - axe: keine kritischen AA-Violations auf dem Board
+// ---------------------------------------------------------------------------
+
+test('L11 – axe: keine kritischen AA-Violations auf dem Board', async ({ page }) => {
+  if (!sharedToken || !funnelId) { test.skip(); return }
+  await loginAsAdmin(page)
+  await page.goto(`/admin/funnels/${funnelId}/leads`)
+  await page.waitForSelector('main', { state: 'visible', timeout: 15000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  await page.locator('[data-testid="view-toggle-board"]').click()
+  await page.waitForSelector('[data-testid="leads-board"]', { state: 'visible', timeout: 10000 })
+  await page.waitForSelector('[aria-busy="true"]', { state: 'hidden', timeout: 10000 }).catch(() => {})
+
+  const results = await new AxeBuilder({ page })
+    .include('main')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+    .analyze()
+
+  const criticalOrSerious = results.violations.filter(
+    (v) => v.impact === 'critical' || v.impact === 'serious',
+  )
+  expect(
+    criticalOrSerious,
+    `A11y-Violations auf Board:\n${criticalOrSerious.map((v) => `[${v.impact}] ${v.id}: ${v.description}`).join('\n')}`,
+  ).toHaveLength(0)
+})

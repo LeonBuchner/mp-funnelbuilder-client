@@ -1,9 +1,9 @@
 /**
- * API-Composable fuer Lead-Verwaltung (M4.4).
+ * API-Composable fuer Lead-Verwaltung (M4.4) + Kanban-Board (M4.5).
  *
  * Exportiert zusaetzlich reine Hilfsfunktionen (buildLeadsExportUrl,
- * getLeadStatusLabel, getFirstAnswerPreview), die in Vitest-Tests direkt
- * und ohne Nuxt-Kontext testbar sind.
+ * getLeadStatusLabel, getFirstAnswerPreview, groupByStage), die in Vitest-Tests
+ * direkt und ohne Nuxt-Kontext testbar sind.
  *
  * Endpunkte:
  *   GET  /funnels/{funnelId}/leads?status=&from=&to=&page=
@@ -11,6 +11,8 @@
  *   DELETE /funnels/{funnelId}/leads/{leadId}
  *   GET  /funnels/{funnelId}/leads/export?status=&from=&to=
  *   GET  /funnels/{funnelId}/leads/{leadId}/files/{fileId}/download
+ *   GET  /funnels/{funnelId}/leads/board
+ *   PATCH /funnels/{funnelId}/leads/{leadId}/stage  Body: { stage }
  */
 
 // ---------------------------------------------------------------------------
@@ -22,6 +24,9 @@ export type LeadStatus =
   | 'complete'
   | 'double_opt_in_pending'
   | 'double_opt_in_confirmed'
+
+/** Bewerbungsphase im Kanban-Board. */
+export type LeadStage = 'neu' | 'gesichtet' | 'interview' | 'zusage' | 'absage'
 
 export interface LeadAnswer {
   field_key: string
@@ -39,10 +44,27 @@ export interface LeadFile {
 export interface Lead {
   id: string
   status: LeadStatus
+  stage?: LeadStage
   consent_given_at: string | null
   created_at: string
   answers: LeadAnswer[]
   files: LeadFile[]
+}
+
+/**
+ * Kompaktes Lead-Objekt fuer das Kanban-Board.
+ * Liefert GET /funnels/{funnelId}/leads/board (max. 500 Eintraege).
+ */
+export interface BoardLead {
+  id: string
+  stage: LeadStage
+  status: LeadStatus
+  created_at: string
+  first_answer: { field_key: string; value: string } | null
+}
+
+export interface BoardResponse {
+  data: BoardLead[]
 }
 
 export interface PaginatedLeadsLinks {
@@ -78,6 +100,83 @@ export interface LeadsFilter {
 
 export interface FileDownloadResponse {
   url: string
+}
+
+// ---------------------------------------------------------------------------
+// Board-Konstanten und Hilfsfunktionen (keine Nuxt-Abhaengigkeit, testbar)
+// ---------------------------------------------------------------------------
+
+/** Phasen in fester Reihenfolge fuer das Kanban-Board. */
+export const LEAD_STAGES: ReadonlyArray<{ value: LeadStage; label: string }> = [
+  { value: 'neu', label: 'Neu' },
+  { value: 'gesichtet', label: 'Gesichtet' },
+  { value: 'interview', label: 'Interview' },
+  { value: 'zusage', label: 'Zusage' },
+  { value: 'absage', label: 'Absage' },
+] as const
+
+/**
+ * Gibt das deutschsprachige Label fuer eine Board-Phase zurueck.
+ */
+export function getLeadStageLabel(stage: LeadStage): string {
+  return LEAD_STAGES.find((s) => s.value === stage)?.label ?? stage
+}
+
+/**
+ * Gibt die Tailwind-Badge-Klassen fuer eine Board-Phase zurueck.
+ */
+export function getLeadStageClass(stage: LeadStage): string {
+  const classes: Record<LeadStage, string> = {
+    neu: 'bg-blue-50 text-blue-900',
+    gesichtet: 'bg-purple-50 text-purple-900',
+    interview: 'bg-amber-50 text-amber-900',
+    zusage: 'bg-green-50 text-green-900',
+    absage: 'bg-red-50 text-red-900',
+  }
+  return classes[stage] ?? 'bg-gray-50 text-gray-900'
+}
+
+/**
+ * Gruppiert Board-Leads nach Phase.
+ * Reine Funktion, direkt testbar ohne Nuxt-Kontext.
+ */
+export function groupByStage(leads: BoardLead[]): Record<LeadStage, BoardLead[]> {
+  const result: Record<LeadStage, BoardLead[]> = {
+    neu: [],
+    gesichtet: [],
+    interview: [],
+    zusage: [],
+    absage: [],
+  }
+  for (const lead of leads) {
+    if (lead.stage in result) {
+      result[lead.stage].push(lead)
+    }
+  }
+  return result
+}
+
+/**
+ * Formatiert ein Datum relativ zum jetzigen Zeitpunkt (Deutsch).
+ * Ab 30 Tagen wird das absolute Datum angezeigt.
+ */
+export function formatRelativeDate(dateStr: string): string {
+  const diffMs = Date.now() - new Date(dateStr).getTime()
+  const diffMins = Math.floor(diffMs / 60_000)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffDays >= 30) {
+    return new Intl.DateTimeFormat('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(new Date(dateStr))
+  }
+  if (diffDays >= 1) return `vor ${diffDays} Tag${diffDays === 1 ? '' : 'en'}`
+  if (diffHours >= 1) return `vor ${diffHours} Std.`
+  if (diffMins >= 1) return `vor ${diffMins} Min.`
+  return 'gerade eben'
 }
 
 // ---------------------------------------------------------------------------
@@ -269,5 +368,29 @@ export function useLeads() {
     return response.url
   }
 
-  return { list, get, remove, exportUrl, downloadExport, fileDownload }
+  /**
+   * Laedt alle Leads eines Funnels als flache Liste fuer das Kanban-Board.
+   * GET /funnels/{funnelId}/leads/board (max. 500 Eintraege, ohne Pagination)
+   */
+  async function fetchBoard(funnelId: string): Promise<BoardResponse> {
+    return api<BoardResponse>(`/funnels/${funnelId}/leads/board`)
+  }
+
+  /**
+   * Setzt die Bewerbungsphase eines Leads.
+   * PATCH /funnels/{funnelId}/leads/{leadId}/stage  Body: { stage }
+   * Nur mp_admin/mp_team; client -> 403 vom Backend.
+   */
+  async function updateStage(
+    funnelId: string,
+    leadId: string,
+    stage: LeadStage,
+  ): Promise<LeadResponse> {
+    return api<LeadResponse>(`/funnels/${funnelId}/leads/${leadId}/stage`, {
+      method: 'PATCH',
+      body: { stage },
+    })
+  }
+
+  return { list, get, remove, exportUrl, downloadExport, fileDownload, fetchBoard, updateStage }
 }
