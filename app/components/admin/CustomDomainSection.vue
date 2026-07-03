@@ -270,7 +270,7 @@ function getSslBadge(status: SslStatus): SslBadge {
         <button
           type="button"
           :disabled="isAdding"
-          class="flex items-center gap-1.5 rounded-lg bg-ui-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+          class="flex items-center gap-1.5 rounded-lg bg-ui-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
           @click="handleAddDomain"
         >
           <svg
@@ -375,7 +375,7 @@ function getSslBadge(status: SslStatus): SslBadge {
             <button
               type="button"
               :aria-label="copyFeedback === 'success' ? 'Kopiert!' : 'TXT-Record in Zwischenablage kopieren'"
-              class="flex-shrink-0 rounded-lg border border-ui-border bg-white px-3 py-2 text-xs font-medium text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+              class="flex-shrink-0 rounded-lg border border-ui-border bg-white px-3 py-2 text-xs font-medium text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
               :class="{ 'border-green-400 text-green-700': copyFeedback === 'success', 'border-red-400 text-red-700': copyFeedback === 'error' }"
               @click="copyTxtRecord"
             >
@@ -432,7 +432,7 @@ function getSslBadge(status: SslStatus): SslBadge {
             <button
               type="button"
               :disabled="isVerifying"
-              class="flex items-center gap-1.5 rounded-lg border border-ui-accent px-3 py-1.5 text-xs font-medium text-ui-accent transition-colors hover:bg-ui-accent/5 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-ui-accent"
+              class="flex items-center gap-1.5 rounded-lg border border-ui-accent px-3 py-1.5 text-xs font-medium text-ui-accent transition-colors hover:bg-ui-accent/5 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
               @click="handleVerifyDomain"
             >
               <svg
@@ -473,7 +473,7 @@ function getSslBadge(status: SslStatus): SslBadge {
         <div>
           <button
             type="button"
-            class="text-xs text-ui-muted underline-offset-2 hover:text-red-600 hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent rounded"
+            class="text-xs text-ui-muted underline-offset-2 hover:text-red-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent rounded"
             @click="showRemoveConfirm = true"
           >
             Domain entfernen

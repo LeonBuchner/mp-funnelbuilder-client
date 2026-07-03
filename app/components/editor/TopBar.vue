@@ -117,7 +117,7 @@ onClickOutside(settingsDropdownEl, () => {
       <!-- Home-Icon (zurück zur Funnel-Liste) -->
       <NuxtLink
         to="/admin/funnels"
-        class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+        class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
         aria-label="Zurück zur Funnel-Liste"
         title="Funnel-Liste"
       >
@@ -153,7 +153,7 @@ onClickOutside(settingsDropdownEl, () => {
         <button
           type="button"
           :disabled="props.isReadonly"
-          class="max-w-[240px] truncate text-sm font-semibold text-ui-text transition-colors hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-default disabled:hover:text-ui-text"
+          class="max-w-[240px] truncate text-sm font-semibold text-ui-text transition-colors hover:text-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-default disabled:hover:text-ui-text"
           :title="props.isReadonly ? undefined : 'Name bearbeiten'"
           :aria-label="`Funnel-Name: ${editorStore.funnel?.name ?? 'Funnel'}. Klicken zum Bearbeiten`"
           @click="startEditName"
@@ -191,7 +191,7 @@ onClickOutside(settingsDropdownEl, () => {
       <NuxtLink
         :to="`/admin/funnels/${funnelRouteId}/editor`"
         :class="[
-          'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+          'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
           isEditorActive
             ? 'border border-ui-border bg-white text-ui-text shadow-sm'
             : 'text-ui-muted hover:bg-ui-bg hover:text-ui-text',
@@ -220,7 +220,7 @@ onClickOutside(settingsDropdownEl, () => {
       <NuxtLink
         :to="`/admin/funnels/${funnelRouteId}/metrics`"
         :class="[
-          'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+          'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
           isMetricsActive
             ? 'border border-ui-border bg-white text-ui-text shadow-sm'
             : 'text-ui-muted hover:bg-ui-bg hover:text-ui-text',
@@ -249,7 +249,7 @@ onClickOutside(settingsDropdownEl, () => {
       <NuxtLink
         :to="`/admin/funnels/${funnelRouteId}/leads`"
         :class="[
-          'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+          'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
           isLeadsActive
             ? 'border border-ui-border bg-white text-ui-text shadow-sm'
             : 'text-ui-muted hover:bg-ui-bg hover:text-ui-text',
@@ -280,7 +280,7 @@ onClickOutside(settingsDropdownEl, () => {
         disabled
         aria-disabled="true"
         title="Apps kommen bald"
-        class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus:outline-none"
+        class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus-visible:outline-none"
       >
         <svg
           class="h-3.5 w-3.5 flex-shrink-0"
@@ -324,7 +324,7 @@ onClickOutside(settingsDropdownEl, () => {
         <button
           type="button"
           :disabled="!editorStore.canUndo"
-          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Rückgängig (Strg+Z)"
           title="Rückgängig (Strg+Z)"
           @click="editorStore.undo()"
@@ -348,7 +348,7 @@ onClickOutside(settingsDropdownEl, () => {
         <button
           type="button"
           :disabled="!editorStore.canRedo"
-          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Wiederholen (Strg+Y)"
           title="Wiederholen (Strg+Y)"
           @click="editorStore.redo()"
@@ -375,7 +375,7 @@ onClickOutside(settingsDropdownEl, () => {
         type="button"
         :aria-pressed="editorStore.previewMode"
         :class="[
-          'flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+          'flex h-8 w-8 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
           editorStore.previewMode
             ? 'bg-ui-accent text-white'
             : 'text-ui-muted hover:bg-ui-bg hover:text-ui-text',
@@ -412,7 +412,7 @@ onClickOutside(settingsDropdownEl, () => {
       >
         <button
           type="button"
-          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           :aria-expanded="showSettingsDropdown"
           aria-haspopup="true"
           aria-label="Funnel-Einstellungen"
@@ -450,7 +450,7 @@ onClickOutside(settingsDropdownEl, () => {
           <button
             type="button"
             role="menuitem"
-            class="flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+            class="flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
             @click="showSettingsModal = true; showSettingsDropdown = false"
           >
             <svg
@@ -485,7 +485,7 @@ onClickOutside(settingsDropdownEl, () => {
         v-if="!props.isReadonly"
         type="button"
         :disabled="editorStore.publishState === 'publishing' || editorStore.isSaving"
-        class="rounded-lg bg-ui-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-60"
+        class="rounded-lg bg-ui-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-60"
         @click="handlePublish"
       >
         {{
@@ -501,7 +501,7 @@ onClickOutside(settingsDropdownEl, () => {
         disabled
         aria-disabled="true"
         title="Weitere Optionen kommen bald"
-        class="flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-lg border border-ui-border text-ui-muted opacity-50 focus:outline-none"
+        class="flex h-8 w-8 cursor-not-allowed items-center justify-center rounded-lg border border-ui-border text-ui-muted opacity-50 focus-visible:outline-none"
         aria-label="Weitere Optionen"
       >
         <svg

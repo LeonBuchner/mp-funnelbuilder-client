@@ -377,7 +377,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
         <button
           v-if="!isReadonly"
           type="button"
-          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           @click="showImagePicker = true"
         >
           <svg
@@ -639,7 +639,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
             <button
               v-if="!isReadonly"
               type="button"
-              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
+              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500"
               :aria-label="`Option ${option.label} löschen`"
               @click="removeChoiceOption(option.id)"
             >
@@ -662,7 +662,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
           <button
             v-if="!isReadonly"
             type="button"
-            class="mt-1 text-xs text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="mt-1 text-xs text-ui-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             @click="addChoiceOption"
           >
             + Option hinzufügen
@@ -883,7 +883,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
             <button
               v-if="!isReadonly"
               type="button"
-              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
+              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500"
               :aria-label="`Option ${option.label} löschen`"
               @click="removeMultiOption(option.id)"
             >
@@ -906,7 +906,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
           <button
             v-if="!isReadonly"
             type="button"
-            class="mt-1 text-xs text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="mt-1 text-xs text-ui-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             @click="addMultiOption"
           >
             + Option hinzufügen
@@ -1462,7 +1462,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
             <button
               v-if="!isReadonly"
               type="button"
-              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
+              class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500"
               :aria-label="`Option ${option.label} löschen`"
               @click="removeDropdownOption(option.id)"
             >
@@ -1485,7 +1485,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
           <button
             v-if="!isReadonly"
             type="button"
-            class="mt-1 text-xs text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="mt-1 text-xs text-ui-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             @click="addDropdownOption"
           >
             + Option hinzufügen
@@ -1685,7 +1685,7 @@ function onLogoPickerSelect(payload: { url: string, alt_text: string | null }): 
         <button
           v-if="!isReadonly"
           type="button"
-          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-ui-border bg-white px-3 py-2 text-sm text-ui-accent transition-colors hover:border-ui-accent hover:bg-ui-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           @click="showLogoPicker = true"
         >
           <svg

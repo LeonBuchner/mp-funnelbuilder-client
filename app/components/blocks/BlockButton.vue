@@ -35,7 +35,7 @@ const displayLabel = computed<string>(() => {
       type="button"
       :class="[
         'w-full rounded-[var(--funnel-radius)] px-6 py-3.5 text-base font-semibold',
-        'transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2',
+        'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
         mode === 'editor' ? 'cursor-default' : 'cursor-pointer',
         // Outline und Ghost: kein gefuellter Hintergrund
         block.style === 'outline' || block.style === 'ghost' ? 'border' : '',

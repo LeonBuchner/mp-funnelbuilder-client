@@ -208,7 +208,7 @@ function handleKeydown(event: KeyboardEvent): void {
           </div>
           <button
             type="button"
-            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             aria-label="Modal schließen"
             @click="$emit('close')"
           >
@@ -265,7 +265,7 @@ function handleKeydown(event: KeyboardEvent): void {
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="flex-shrink-0 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+              class="flex-shrink-0 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
             >
               {{ isSubmitting ? 'Wird gesendet...' : 'Einladen' }}
             </button>

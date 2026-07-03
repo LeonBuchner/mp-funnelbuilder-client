@@ -127,7 +127,7 @@ const blockDisplayId = computed<string>(() => {
       </h3>
       <button
         type="button"
-        class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+        class="flex h-5 w-5 items-center justify-center rounded-full text-ui-muted hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
         title="Info zur Verknüpfung"
         aria-label="Info zur Verknüpfung"
       >
@@ -262,7 +262,7 @@ const blockDisplayId = computed<string>(() => {
         </span>
         <button
           type="button"
-          class="flex-shrink-0 text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex-shrink-0 text-ui-muted hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           :aria-label="`Block-ID kopieren: ${blockDisplayId}`"
           title="Kopieren"
           @click="copyBlockId"

@@ -106,7 +106,7 @@ function ratingLabel(value: number): string {
         v-for="n in block.maxRating"
         :key="n"
         type="button"
-        class="transition-transform focus:outline-none focus:ring-2 focus:ring-offset-1"
+        class="transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
         :class="[
           mode === 'live' ? 'cursor-pointer hover:scale-110' : 'cursor-default',
         ]"
@@ -141,7 +141,7 @@ function ratingLabel(value: number): string {
         v-for="n in block.maxRating"
         :key="n"
         type="button"
-        class="h-11 w-11 rounded-full text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1"
+        class="h-11 w-11 rounded-full text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
         :class="mode === 'live' ? 'cursor-pointer' : 'cursor-default'"
         :style="{
           backgroundColor: selectedRating === n ? 'var(--funnel-accent)' : 'transparent',
@@ -169,7 +169,7 @@ function ratingLabel(value: number): string {
         v-for="n in block.maxRating"
         :key="n"
         type="button"
-        class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 transition-all focus:outline-none focus:ring-2 focus:ring-offset-1"
+        class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
         :class="[
           mode === 'live' ? 'cursor-pointer hover:scale-110' : 'cursor-default',
           selectedRating === n ? 'scale-110' : '',

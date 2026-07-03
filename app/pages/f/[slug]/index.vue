@@ -635,7 +635,7 @@ function handleOtpVerified(token: string): void {
         </p>
         <button
           type="button"
-          class="mt-3 text-xs underline focus:outline-none focus:ring-2 focus:ring-offset-2"
+          class="mt-3 text-xs underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
           :style="{ color: 'var(--funnel-accent)', '--tw-ring-color': 'var(--funnel-accent)' }"
           @click="renderer.submitError.value = null"
         >
@@ -745,7 +745,7 @@ function handleOtpVerified(token: string): void {
             >
               <button
                 type="button"
-                class="flex items-center gap-1 text-xs focus:outline-none focus:ring-2 focus:ring-offset-2 rounded"
+                class="flex items-center gap-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded"
                 :style="{
                   color: 'var(--funnel-muted)',
                   '--tw-ring-color': 'var(--funnel-accent)',

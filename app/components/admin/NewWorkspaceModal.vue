@@ -133,7 +133,7 @@ async function handleSubmit(): Promise<void> {
           </h2>
           <button
             type="button"
-            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             aria-label="Modal schließen"
             @click="$emit('close')"
           >
@@ -222,7 +222,7 @@ async function handleSubmit(): Promise<void> {
           <div class="flex justify-end gap-2">
             <button
               type="button"
-              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
               @click="$emit('close')"
             >
               Abbrechen
@@ -230,7 +230,7 @@ async function handleSubmit(): Promise<void> {
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+              class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
             >
               {{ isSubmitting ? 'Wird angelegt...' : 'Anlegen' }}
             </button>

@@ -120,7 +120,7 @@ onBeforeUnmount(() => {
       </p>
       <NuxtLink
         to="/admin/funnels"
-        class="text-sm text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+        class="text-sm text-ui-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
       >
         Zurück zur Funnel-Liste
       </NuxtLink>

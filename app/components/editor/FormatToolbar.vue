@@ -244,7 +244,7 @@ function cancelLink(): void {
           :aria-pressed="activePx === btn.px"
           :disabled="isReadonly"
           :class="[
-            'flex-1 rounded px-1.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+            'flex-1 rounded px-1.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
             activePx === btn.px
               ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
               : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
@@ -265,7 +265,7 @@ function cancelLink(): void {
           :aria-expanded="showSizeDropdown"
           :disabled="isReadonly"
           :class="[
-            'flex-1 rounded px-1.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+            'flex-1 rounded px-1.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
             showSizeDropdown || !FONT_SIZE_QUICK_BUTTONS.some(b => b.px === activePx)
               ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
               : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
@@ -294,7 +294,7 @@ function cancelLink(): void {
           :aria-checked="activePx === px"
           :aria-label="`${px}px${FONT_SIZE_BADGE[px] ? ` (${FONT_SIZE_BADGE[px]})` : ''}`"
           :class="[
-            'flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent',
+            'flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent',
             activePx === px
               ? 'bg-ui-bg/60 text-ui-text'
               : 'text-ui-text hover:bg-ui-bg/40',
@@ -347,7 +347,7 @@ function cancelLink(): void {
         type="button"
         aria-label="Fett"
         :disabled="isReadonly"
-        class="flex-1 rounded py-1.5 text-xs font-bold text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
+        class="flex-1 rounded py-1.5 text-xs font-bold text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
         @mousedown.prevent="toggleBold"
       >
         B
@@ -356,7 +356,7 @@ function cancelLink(): void {
         type="button"
         aria-label="Kursiv"
         :disabled="isReadonly"
-        class="flex-1 rounded py-1.5 text-xs italic text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
+        class="flex-1 rounded py-1.5 text-xs italic text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
         @mousedown.prevent="toggleItalic"
       >
         I
@@ -365,7 +365,7 @@ function cancelLink(): void {
         type="button"
         aria-label="Unterstrichen"
         :disabled="isReadonly"
-        class="flex-1 rounded py-1.5 text-xs underline text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
+        class="flex-1 rounded py-1.5 text-xs underline text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
         @mousedown.prevent="toggleUnderline"
       >
         U
@@ -388,7 +388,7 @@ function cancelLink(): void {
         :aria-pressed="activeAlign === 'left'"
         :disabled="isReadonly"
         :class="[
-          'flex flex-1 items-center justify-center rounded py-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+          'flex flex-1 items-center justify-center rounded py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
           activeAlign === 'left'
             ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
             : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
@@ -419,7 +419,7 @@ function cancelLink(): void {
         :aria-pressed="activeAlign === 'center'"
         :disabled="isReadonly"
         :class="[
-          'flex flex-1 items-center justify-center rounded py-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+          'flex flex-1 items-center justify-center rounded py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
           activeAlign === 'center'
             ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
             : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
@@ -450,7 +450,7 @@ function cancelLink(): void {
         :aria-pressed="activeAlign === 'right'"
         :disabled="isReadonly"
         :class="[
-          'flex flex-1 items-center justify-center rounded py-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+          'flex flex-1 items-center justify-center rounded py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
           activeAlign === 'right'
             ? 'bg-ui-bg text-ui-text shadow-sm ring-1 ring-ui-border'
             : 'text-ui-muted hover:bg-ui-bg/60 hover:text-ui-text',
@@ -491,7 +491,7 @@ function cancelLink(): void {
           aria-label="Emoji einfügen"
           :aria-expanded="showEmojiPicker"
           :disabled="isReadonly"
-          class="flex w-full items-center justify-center rounded py-1.5 text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
+          class="flex w-full items-center justify-center rounded py-1.5 text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
           @mousedown.prevent="showEmojiPicker = !showEmojiPicker; showLinkInput = false"
         >
           <svg
@@ -549,7 +549,7 @@ function cancelLink(): void {
           aria-label="Link einfügen"
           :aria-expanded="showLinkInput"
           :disabled="isReadonly"
-          class="flex w-full items-center justify-center rounded py-1.5 text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
+          class="flex w-full items-center justify-center rounded py-1.5 text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
           @mousedown.prevent="openLinkInput(); showEmojiPicker = false"
         >
           <svg
@@ -598,14 +598,14 @@ function cancelLink(): void {
           <div class="flex justify-end gap-1.5">
             <button
               type="button"
-              class="rounded px-2 py-1 text-xs text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+              class="rounded px-2 py-1 text-xs text-ui-muted hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
               @click="cancelLink"
             >
               Abbrechen
             </button>
             <button
               type="button"
-              class="rounded bg-ui-accent px-2 py-1 text-xs font-medium text-white hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+              class="rounded bg-ui-accent px-2 py-1 text-xs font-medium text-white hover:bg-ui-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
               @click="applyLink"
             >
               Einfügen

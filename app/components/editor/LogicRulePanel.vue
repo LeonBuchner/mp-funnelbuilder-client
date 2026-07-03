@@ -214,7 +214,7 @@ const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5
     <!-- Header mit Auf/Zu-Toggle -->
     <button
       type="button"
-      class="flex w-full items-center justify-between px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+      class="flex w-full items-center justify-between px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
       :aria-expanded="expanded"
       aria-controls="logic-panel-body"
       @click="expanded = !expanded"
@@ -295,7 +295,7 @@ const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5
               <button
                 v-if="!isReadonly"
                 type="button"
-                class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
+                class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500"
                 :aria-label="`Regel ${ruleIdx + 1} löschen`"
                 title="Regel loeschen"
                 @click="removeRule(rule.id)"
@@ -378,7 +378,7 @@ const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5
                   <button
                     v-if="!isReadonly && rule.conditions.length > 1"
                     type="button"
-                    class="flex h-6 w-6 shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    class="flex h-6 w-6 shrink-0 items-center justify-center rounded text-red-400 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500"
                     :aria-label="`Bedingung ${condIdx + 1} aus Regel ${ruleIdx + 1} löschen`"
                     @click="removeCondition(rule.id, condIdx)"
                   >
@@ -424,7 +424,7 @@ const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5
             <button
               v-if="!isReadonly"
               type="button"
-              class="mb-3 block text-xs text-ui-accent-hover hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+              class="mb-3 block text-xs text-ui-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
               :aria-label="`Bedingung zu Regel ${ruleIdx + 1} hinzufügen`"
               @click="addCondition(rule.id)"
             >
@@ -508,7 +508,7 @@ const inputCls = 'w-full rounded-md border border-ui-border bg-white px-2 py-1.5
       <button
         v-if="!isReadonly && hasFieldBlocks"
         type="button"
-        class="flex items-center gap-1.5 text-xs text-ui-accent-hover hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+        class="flex items-center gap-1.5 text-xs text-ui-accent-hover hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
         @click="addRule"
       >
         <svg

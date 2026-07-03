@@ -96,7 +96,7 @@ function toggleSection(key: SectionKey): void {
     <div class="border-b border-ui-border">
       <button
         type="button"
-        class="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+        class="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
         :aria-expanded="einfacheOpen"
         aria-controls="einfache-bloecke-liste"
         @click="einfacheOpen = !einfacheOpen"
@@ -143,7 +143,7 @@ function toggleSection(key: SectionKey): void {
         >
           <button
             type="button"
-            class="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+            class="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
             :aria-label="`${entry.label} hinzufügen`"
             @click="pickBlock(entry.type)"
           >
@@ -166,7 +166,7 @@ function toggleSection(key: SectionKey): void {
     <div class="border-b border-ui-border">
       <button
         type="button"
-        class="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+        class="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
         :aria-expanded="interaktiveOpen"
         aria-controls="interaktive-bloecke-liste"
         @click="interaktiveOpen = !interaktiveOpen"
@@ -219,7 +219,7 @@ function toggleSection(key: SectionKey): void {
         >
           <button
             type="button"
-            class="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+            class="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
             :aria-label="`${entry.label} hinzufügen`"
             @click="pickBlock(entry.type)"
           >
@@ -255,7 +255,7 @@ function toggleSection(key: SectionKey): void {
         <!-- Akkordeon-Kopf -->
         <button
           type="button"
-          class="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+          class="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
           :class="{
             'bg-ui-accent-light text-ui-accent': expandedSection === template.key,
           }"
@@ -317,7 +317,7 @@ function toggleSection(key: SectionKey): void {
           <!-- Hinzufügen-Button -->
           <button
             type="button"
-            class="mt-2 w-full rounded-lg bg-ui-accent px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-ui-accent focus:ring-offset-1"
+            class="mt-2 w-full rounded-lg bg-ui-accent px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent focus-visible:ring-offset-1"
             :aria-label="`Sektion ${template.label} hinzufügen`"
             @click="pickSection(template.key)"
           >

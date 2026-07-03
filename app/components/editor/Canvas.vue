@@ -379,7 +379,7 @@ function handleTextContentUpdate(blockId: string, html: string): void {
           >
             <button
               type="button"
-              class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ui-border py-3 text-sm text-ui-muted transition-colors hover:border-ui-accent hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
+              class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ui-border py-3 text-sm text-ui-muted transition-colors hover:border-ui-accent hover:text-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
               aria-label="Block hinzufuegen"
               @click.stop="emit('open-block-picker')"
             >

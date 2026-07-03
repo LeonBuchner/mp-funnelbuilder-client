@@ -165,7 +165,7 @@ const workspaceInitial = computed<string>(() =>
         <button
           ref="wsTriggerRef"
           type="button"
-          class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           :aria-expanded="wsDropdownOpen"
           aria-haspopup="menu"
           aria-label="Workspace-Menü öffnen"
@@ -216,7 +216,7 @@ const workspaceInitial = computed<string>(() =>
             <button
               type="button"
               role="menuitem"
-              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
               @click="openMembersModal"
             >
               <!-- Personen-Icon -->
@@ -229,7 +229,7 @@ const workspaceInitial = computed<string>(() =>
             <button
               type="button"
               role="menuitem"
-              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
               @click="openSettingsModal"
             >
               <!-- Zahnrad-Icon -->
@@ -255,7 +255,7 @@ const workspaceInitial = computed<string>(() =>
             type="button"
             role="menuitem"
             :aria-current="isAllWorkspacesView ? 'page' : undefined"
-            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
             :class="isAllWorkspacesView ? 'font-semibold text-ui-accent' : 'text-ui-text'"
             @click="navigateAllWorkspaces"
           >
@@ -284,7 +284,7 @@ const workspaceInitial = computed<string>(() =>
             type="button"
             role="menuitemradio"
             :aria-checked="!isAllWorkspacesView && ws.id === workspaceStore.activeWorkspace?.id"
-            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+            class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
             :class="
               !isAllWorkspacesView && ws.id === workspaceStore.activeWorkspace?.id
                 ? 'font-semibold text-ui-accent'
@@ -323,7 +323,7 @@ const workspaceInitial = computed<string>(() =>
             <button
               type="button"
               role="menuitem"
-              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+              class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
               @click="openNewWorkspaceModal"
             >
               <!-- Plus-Icon -->
@@ -344,7 +344,7 @@ const workspaceInitial = computed<string>(() =>
         <!-- Funnels -->
         <NuxtLink
           to="/admin/funnels"
-          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           :class="
             isFunnelsActive
               ? 'bg-ui-accent/10 text-ui-accent'
@@ -363,7 +363,7 @@ const workspaceInitial = computed<string>(() =>
           disabled
           title="kommt bald"
           aria-disabled="true"
-          class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus:outline-none"
+          class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus-visible:outline-none"
         >
           <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -377,7 +377,7 @@ const workspaceInitial = computed<string>(() =>
           disabled
           title="kommt bald"
           aria-disabled="true"
-          class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus:outline-none"
+          class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus-visible:outline-none"
         >
           <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -391,7 +391,7 @@ const workspaceInitial = computed<string>(() =>
           disabled
           title="kommt bald"
           aria-disabled="true"
-          class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus:outline-none"
+          class="flex cursor-not-allowed items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ui-muted opacity-50 focus-visible:outline-none"
         >
           <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -406,7 +406,7 @@ const workspaceInitial = computed<string>(() =>
         <button
           v-if="canInvite"
           type="button"
-          class="flex items-center gap-1.5 rounded-lg border border-ui-border px-3 py-1.5 text-sm font-medium text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex items-center gap-1.5 rounded-lg border border-ui-border px-3 py-1.5 text-sm font-medium text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           @click="showInviteModal = true"
         >
           <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -422,7 +422,7 @@ const workspaceInitial = computed<string>(() =>
         >
           <button
             type="button"
-            class="flex h-8 w-8 items-center justify-center rounded-full bg-ui-accent text-xs font-bold text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ui-accent focus:ring-offset-2"
+            class="flex h-8 w-8 items-center justify-center rounded-full bg-ui-accent text-xs font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent focus-visible:ring-offset-2"
             :aria-expanded="avatarDropdownOpen"
             aria-haspopup="true"
             :aria-label="`Benutzer-Menu für ${authStore.user?.name ?? 'Benutzer'}`"
@@ -449,7 +449,7 @@ const workspaceInitial = computed<string>(() =>
             <button
               type="button"
               role="menuitem"
-              class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+              class="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
               @click="handleLogout"
             >
               <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">

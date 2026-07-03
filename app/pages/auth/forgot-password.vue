@@ -95,7 +95,7 @@ async function handleSubmit(): Promise<void> {
       <button
         type="submit"
         :disabled="isPending"
-        class="w-full rounded-lg bg-mp-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-mp-accent-hover focus:outline-none focus:ring-2 focus:ring-mp-accent focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+        class="w-full rounded-lg bg-mp-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-mp-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mp-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span v-if="isPending">Wird gesendet...</span>
         <span v-else>Link anfordern</span>
@@ -106,7 +106,7 @@ async function handleSubmit(): Promise<void> {
     <p class="mt-5 text-center text-sm text-mp-muted">
       <NuxtLink
         to="/auth/login"
-        class="rounded text-mp-accent underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-mp-accent"
+        class="rounded text-mp-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mp-accent"
       >
         Zurück zum Login
       </NuxtLink>

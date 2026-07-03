@@ -260,7 +260,7 @@ const isEditorMode = computed(() => props.mode === 'editor')
       <button
         type="button"
         :disabled="isEditorMode || isSending"
-        class="flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+        class="flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         :style="{
           backgroundColor: 'var(--funnel-primary, #1c4687)',
           color: 'var(--funnel-on-primary, #fff)',
@@ -290,7 +290,7 @@ const isEditorMode = computed(() => props.mode === 'editor')
         Wir haben einen Code an <strong>{{ email }}</strong> gesendet.
         <button
           type="button"
-          class="underline focus:outline-none focus:ring-1 focus:ring-[var(--funnel-accent)] rounded"
+          class="underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--funnel-accent)] rounded"
           :style="{ color: 'var(--funnel-accent)' }"
           @click="resetToEmail"
         >
@@ -353,7 +353,7 @@ const isEditorMode = computed(() => props.mode === 'editor')
       <button
         type="button"
         :disabled="isEditorMode || isVerifying"
-        class="flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+        class="flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         :style="{
           backgroundColor: 'var(--funnel-primary, #1c4687)',
           color: 'var(--funnel-on-primary, #fff)',
@@ -374,7 +374,7 @@ const isEditorMode = computed(() => props.mode === 'editor')
         v-if="!isEditorMode"
         type="button"
         :disabled="isSending"
-        class="text-xs underline focus:outline-none focus:ring-1 focus:ring-[var(--funnel-accent)] rounded"
+        class="text-xs underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--funnel-accent)] rounded"
         :style="{ color: 'var(--funnel-muted)' }"
         @click="sendCode"
       >

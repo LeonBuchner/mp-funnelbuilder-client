@@ -182,7 +182,7 @@ function varPlaceholder(key: string): string {
         >
           <button
             type="button"
-            class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="flex h-5 w-5 items-center justify-center rounded text-ui-muted hover:bg-ui-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             :aria-label="`Variable ${v.key} bearbeiten`"
             title="Bearbeiten"
             @click="openEdit(idx)"
@@ -205,7 +205,7 @@ function varPlaceholder(key: string): string {
           </button>
           <button
             type="button"
-            class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
+            class="flex h-5 w-5 items-center justify-center rounded text-red-400 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500"
             :aria-label="`Variable ${v.key} löschen`"
             title="Loeschen"
             @click="removeVar(idx)"
@@ -359,13 +359,13 @@ function varPlaceholder(key: string): string {
       <div class="flex gap-2 pt-1">
         <button
           type="submit"
-          class="rounded bg-ui-accent px-3 py-1 text-xs font-medium text-white hover:bg-ui-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+          class="rounded bg-ui-accent px-3 py-1 text-xs font-medium text-white hover:bg-ui-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
         >
           {{ editingIndex !== null ? 'Speichern' : 'Hinzufügen' }}
         </button>
         <button
           type="button"
-          class="rounded border border-ui-border px-3 py-1 text-xs text-ui-muted hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="rounded border border-ui-border px-3 py-1 text-xs text-ui-muted hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           @click="closeForm"
         >
           Abbrechen
@@ -377,7 +377,7 @@ function varPlaceholder(key: string): string {
     <button
       v-if="!isReadonly && !isFormOpen"
       type="button"
-      class="mt-1 flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-muted transition-colors hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+      class="mt-1 flex w-full items-center gap-2 px-4 py-2 text-sm text-ui-muted transition-colors hover:text-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
       @click="openAdd"
     >
       <svg

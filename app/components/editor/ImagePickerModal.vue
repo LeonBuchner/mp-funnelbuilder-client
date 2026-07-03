@@ -281,7 +281,7 @@ function getAlt(item: UploadItem): string {
 // ---------------------------------------------------------------------------
 
 function tabButtonCls(tab: ActiveTab): string {
-  const base = 'px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent'
+  const base = 'px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent'
   return activeTab.value === tab
     ? `${base} border-b-2 border-ui-accent text-ui-accent`
     : `${base} border-b-2 border-transparent text-ui-muted hover:text-ui-text`
@@ -314,7 +314,7 @@ function tabButtonCls(tab: ActiveTab): string {
           </h2>
           <button
             type="button"
-            class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             aria-label="Schließen"
             @click="emit('close')"
           >
@@ -528,7 +528,7 @@ function tabButtonCls(tab: ActiveTab): string {
               <button
                 v-if="!isReadonly"
                 type="button"
-                class="mt-2 text-sm text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="mt-2 text-sm text-ui-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 @click="activeTab = 'upload'"
               >
                 Erstes Bild hochladen
@@ -546,7 +546,7 @@ function tabButtonCls(tab: ActiveTab): string {
                   <!-- Auswahl-Button (Hauptinteraktion) -->
                   <button
                     type="button"
-                    class="absolute inset-0 h-full w-full overflow-hidden rounded-lg border border-ui-border transition-colors hover:border-ui-accent focus:border-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent focus:ring-offset-1"
+                    class="absolute inset-0 h-full w-full overflow-hidden rounded-lg border border-ui-border transition-colors hover:border-ui-accent focus-visible:border-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent focus-visible:ring-offset-1"
                     :aria-label="`${getAlt(item)} auswählen`"
                     @click="selectItem(item)"
                   >
@@ -564,7 +564,7 @@ function tabButtonCls(tab: ActiveTab): string {
                   <button
                     v-if="!isReadonly && confirmDeleteId !== item.id"
                     type="button"
-                    class="absolute bottom-1.5 right-1.5 z-10 rounded-md bg-white/90 p-1 text-red-500 opacity-0 shadow transition-opacity hover:bg-white hover:text-red-600 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500 group-hover:opacity-100"
+                    class="absolute bottom-1.5 right-1.5 z-10 rounded-md bg-white/90 p-1 text-red-500 opacity-0 shadow transition-opacity hover:bg-white hover:text-red-600 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 group-hover:opacity-100"
                     :aria-label="`${getAlt(item)} löschen`"
                     @click.stop="confirmDeleteId = item.id"
                   >
@@ -595,14 +595,14 @@ function tabButtonCls(tab: ActiveTab): string {
                     <div class="flex gap-1.5">
                       <button
                         type="button"
-                        class="rounded px-2.5 py-1 text-xs font-medium bg-red-600 text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        class="rounded px-2.5 py-1 text-xs font-medium bg-red-600 text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
                         @click.stop="handleDelete(item.id)"
                       >
                         Ja
                       </button>
                       <button
                         type="button"
-                        class="rounded border border-ui-border px-2.5 py-1 text-xs font-medium text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                        class="rounded border border-ui-border px-2.5 py-1 text-xs font-medium text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                         @click.stop="confirmDeleteId = null"
                       >
                         Nein
@@ -620,7 +620,7 @@ function tabButtonCls(tab: ActiveTab): string {
                 <button
                   type="button"
                   :disabled="loadingMore"
-                  class="rounded-lg border border-ui-border px-4 py-2 text-sm text-ui-muted transition-colors hover:border-ui-accent hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-50"
+                  class="rounded-lg border border-ui-border px-4 py-2 text-sm text-ui-muted transition-colors hover:border-ui-accent hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-50"
                   @click="loadMore"
                 >
                   <span v-if="loadingMore">Wird geladen...</span>

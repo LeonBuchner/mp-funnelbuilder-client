@@ -40,7 +40,7 @@
           <li>
             <a
               href="/barrierefreiheit"
-              class="underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--funnel-accent,#3579fa)] focus:ring-offset-1 rounded"
+              class="underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--funnel-accent,#3579fa)] focus-visible:ring-offset-1 rounded"
               style="color: inherit;"
             >
               Barrierefreiheit
@@ -50,7 +50,7 @@
           <li>
             <a
               href="/impressum"
-              class="underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--funnel-accent,#3579fa)] focus:ring-offset-1 rounded"
+              class="underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--funnel-accent,#3579fa)] focus-visible:ring-offset-1 rounded"
               style="color: inherit;"
             >
               Impressum
@@ -60,7 +60,7 @@
           <li>
             <a
               href="/datenschutz"
-              class="underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--funnel-accent,#3579fa)] focus:ring-offset-1 rounded"
+              class="underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--funnel-accent,#3579fa)] focus-visible:ring-offset-1 rounded"
               style="color: inherit;"
             >
               Datenschutz

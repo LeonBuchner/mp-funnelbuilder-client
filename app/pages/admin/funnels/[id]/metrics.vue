@@ -354,7 +354,7 @@ const hasAnswersData = computed(() => answerBlocks.value.length > 0)
       </p>
       <NuxtLink
         to="/admin/funnels"
-        class="text-sm text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+        class="text-sm text-ui-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
       >
         Zurück zur Funnel-Liste
       </NuxtLink>
@@ -558,7 +558,7 @@ const hasAnswersData = computed(() => answerBlocks.value.length > 0)
               <button
                 v-if="canWrite"
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-lg bg-ui-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-ui-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
                 @click="openCreateModal"
               >
                 <svg
@@ -596,7 +596,7 @@ const hasAnswersData = computed(() => answerBlocks.value.length > 0)
               <button
                 v-if="canWrite"
                 type="button"
-                class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-ui-border bg-white px-3 py-1.5 text-sm font-medium text-ui-text transition-colors hover:border-ui-accent/40 hover:text-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 @click="openCreateModal"
               >
                 <svg
@@ -917,7 +917,7 @@ const hasAnswersData = computed(() => answerBlocks.value.length > 0)
                     <!-- Aufklapp-Kopf -->
                     <button
                       type="button"
-                      class="flex w-full items-center justify-between px-4 py-3 text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+                      class="flex w-full items-center justify-between px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
                       :aria-expanded="openAnswerBlocks.has(block.block_id)"
                       :aria-controls="`answers-block-${block.block_id}`"
                       @click="toggleAnswerBlock(block.block_id)"

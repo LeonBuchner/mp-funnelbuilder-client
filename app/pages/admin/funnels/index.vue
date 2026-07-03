@@ -450,7 +450,7 @@ function categoryColors(category: string): { bg: string; text: string } {
           </Transition>
           <button
             type="button"
-            class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-border hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-border hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             :aria-pressed="showSearchInput"
             :aria-label="showSearchInput ? 'Suche schließen' : 'Suche öffnen'"
             @click="toggleSearch"
@@ -466,7 +466,7 @@ function categoryColors(category: string): { bg: string; text: string } {
           <button
             type="button"
             :aria-pressed="viewMode === 'list'"
-            class="flex h-8 w-8 items-center justify-center rounded-l-lg transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+            class="flex h-8 w-8 items-center justify-center rounded-l-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
             :class="viewMode === 'list' ? 'bg-ui-accent/10 text-ui-accent' : 'text-ui-muted hover:bg-ui-bg'"
             aria-label="Listenansicht"
             @click="viewMode = 'list'"
@@ -478,7 +478,7 @@ function categoryColors(category: string): { bg: string; text: string } {
           <button
             type="button"
             :aria-pressed="viewMode === 'grid'"
-            class="flex h-8 w-8 items-center justify-center rounded-r-lg transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+            class="flex h-8 w-8 items-center justify-center rounded-r-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
             :class="viewMode === 'grid' ? 'bg-ui-accent/10 text-ui-accent' : 'text-ui-muted hover:bg-ui-bg'"
             aria-label="Rasteransicht"
             @click="viewMode = 'grid'"
@@ -493,7 +493,7 @@ function categoryColors(category: string): { bg: string; text: string } {
         <button
           v-if="!isReadonly"
           type="button"
-          class="flex items-center gap-1.5 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+          class="flex items-center gap-1.5 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
           @click="openCreateDialog"
         >
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -552,7 +552,7 @@ function categoryColors(category: string): { bg: string; text: string } {
       <button
         v-if="!isReadonly"
         type="button"
-        class="flex items-center gap-1.5 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+        class="flex items-center gap-1.5 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
         @click="openCreateDialog"
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -574,7 +574,7 @@ function categoryColors(category: string): { bg: string; text: string } {
       </p>
       <button
         type="button"
-        class="mt-2 text-sm text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+        class="mt-2 text-sm text-ui-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
         @click="searchQuery = ''"
       >
         Filter zurücksetzen
@@ -674,7 +674,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                 <div class="min-w-0">
                   <NuxtLink
                     :to="`/admin/funnels/${funnel.id}/editor`"
-                    class="block truncate font-medium text-ui-text hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                    class="block truncate font-medium text-ui-text hover:text-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                   >
                     {{ funnel.name }}
                   </NuxtLink>
@@ -691,7 +691,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                 type="button"
                 :aria-label="funnel.is_favorite ? `${funnel.name} aus Favoriten entfernen` : `${funnel.name} zu Favoriten hinzufügen`"
                 :aria-pressed="funnel.is_favorite"
-                class="rounded p-1 transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="rounded p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 :class="funnel.is_favorite ? 'text-amber-400' : 'text-ui-border hover:text-amber-400'"
                 :disabled="isReadonly"
                 @click="handleToggleFavorite(funnel)"
@@ -727,7 +727,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                   :href="`/f/${funnel.id}`"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="text-ui-muted transition-colors hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                  class="text-ui-muted transition-colors hover:text-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                   :aria-label="`${funnel.name} öffentlich öffnen`"
                 >
                   <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -770,7 +770,7 @@ function categoryColors(category: string): { bg: string; text: string } {
             <td class="relative px-4 py-3">
               <button
                 type="button"
-                class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="flex h-7 w-7 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 :class="{ 'opacity-50': isCloningId === funnel.id }"
                 :disabled="isCloningId === funnel.id"
                 :aria-expanded="openMenuId === funnel.id"
@@ -803,7 +803,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                 <NuxtLink
                   :to="`/admin/funnels/${funnel.id}/editor`"
                   role="menuitem"
-                  class="flex items-center gap-2 px-3.5 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+                  class="flex items-center gap-2 px-3.5 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
                 >
                   <svg class="h-3.5 w-3.5 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -816,7 +816,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                   v-if="!isReadonly"
                   type="button"
                   role="menuitem"
-                  class="flex w-full items-center gap-2 px-3.5 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+                  class="flex w-full items-center gap-2 px-3.5 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
                   @click="handleClone(funnel)"
                 >
                   <svg class="h-3.5 w-3.5 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -830,7 +830,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                   v-if="authStore.isMpAdmin"
                   type="button"
                   role="menuitem"
-                  class="flex w-full items-center gap-2 px-3.5 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ui-accent"
+                  class="flex w-full items-center gap-2 px-3.5 py-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ui-accent"
                   @click="openSaveAsTemplateDialog(funnel)"
                 >
                   <svg class="h-3.5 w-3.5 text-ui-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -847,7 +847,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                   v-if="!isReadonly"
                   type="button"
                   role="menuitem"
-                  class="flex w-full items-center gap-2 px-3.5 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500"
+                  class="flex w-full items-center gap-2 px-3.5 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-500"
                   @click="confirmDelete(funnel)"
                 >
                   <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -914,7 +914,7 @@ function categoryColors(category: string): { bg: string; text: string } {
             type="button"
             :aria-label="funnel.is_favorite ? `${funnel.name} aus Favoriten entfernen` : `${funnel.name} zu Favoriten hinzufügen`"
             :aria-pressed="funnel.is_favorite"
-            class="absolute right-2 top-2 rounded-lg p-1 backdrop-blur-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="absolute right-2 top-2 rounded-lg p-1 backdrop-blur-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             :class="funnel.is_favorite ? 'text-amber-400' : 'text-white/60 hover:text-amber-400'"
             :disabled="isReadonly"
             @click="handleToggleFavorite(funnel)"
@@ -937,7 +937,7 @@ function categoryColors(category: string): { bg: string; text: string } {
           <h2 class="mb-1 truncate font-semibold text-ui-text">
             <NuxtLink
               :to="`/admin/funnels/${funnel.id}/editor`"
-              class="hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
+              class="hover:text-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             >
               {{ funnel.name }}
             </NuxtLink>
@@ -995,7 +995,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                 role="tab"
                 :aria-selected="createDialogTab === 'blank'"
                 type="button"
-                class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 :class="createDialogTab === 'blank'
                   ? 'bg-white text-ui-text shadow-sm'
                   : 'text-ui-muted hover:text-ui-text'"
@@ -1007,7 +1007,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                 role="tab"
                 :aria-selected="createDialogTab === 'template'"
                 type="button"
-                class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 :class="createDialogTab === 'template'
                   ? 'bg-white text-ui-text shadow-sm'
                   : 'text-ui-muted hover:text-ui-text'"
@@ -1052,7 +1052,7 @@ function categoryColors(category: string): { bg: string; text: string } {
             <div class="flex justify-end gap-2">
               <button
                 type="button"
-                class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 @click="closeCreateDialog"
               >
                 Abbrechen
@@ -1060,7 +1060,7 @@ function categoryColors(category: string): { bg: string; text: string } {
               <button
                 type="submit"
                 :disabled="isCreating"
-                class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+                class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
               >
                 {{ isCreating ? 'Wird angelegt...' : 'Anlegen und bearbeiten' }}
               </button>
@@ -1098,7 +1098,7 @@ function categoryColors(category: string): { bg: string; text: string } {
               </p>
               <button
                 type="button"
-                class="text-sm font-medium text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="text-sm font-medium text-ui-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 @click="() => { templates = []; loadTemplates() }"
               >
                 Erneut versuchen
@@ -1137,7 +1137,7 @@ function categoryColors(category: string): { bg: string; text: string } {
                   v-for="template in templates"
                   :key="template.id"
                   type="button"
-                  class="group/card overflow-hidden rounded-xl border border-ui-border bg-white text-left transition-all hover:border-ui-accent hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                  class="group/card overflow-hidden rounded-xl border border-ui-border bg-white text-left transition-all hover:border-ui-accent hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                   :aria-label="`Funnel aus Vorlage '${template.name}' erstellen`"
                   @click="handleCreateFromTemplate(template)"
                 >
@@ -1207,7 +1207,7 @@ function categoryColors(category: string): { bg: string; text: string } {
             <div class="mt-4 flex justify-end border-t border-ui-border pt-4">
               <button
                 type="button"
-                class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 @click="closeCreateDialog"
               >
                 Abbrechen
@@ -1247,14 +1247,14 @@ function categoryColors(category: string): { bg: string; text: string } {
           <div class="flex justify-end gap-2 border-t border-ui-border px-6 py-4">
             <button
               type="button"
-              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+              class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
               @click="cancelDelete"
             >
               Abbrechen
             </button>
             <button
               type="button"
-              class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
               @click="handleDelete"
             >
               Löschen
@@ -1365,7 +1365,7 @@ function categoryColors(category: string): { bg: string; text: string } {
             <div class="flex justify-end gap-2">
               <button
                 type="button"
-                class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 @click="closeSaveAsTemplateDialog"
               >
                 Abbrechen
@@ -1373,7 +1373,7 @@ function categoryColors(category: string): { bg: string; text: string } {
               <button
                 type="submit"
                 :disabled="isSavingAsTemplate"
-                class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent"
+                class="rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent"
               >
                 {{ isSavingAsTemplate ? 'Wird gespeichert...' : 'Als Vorlage speichern' }}
               </button>

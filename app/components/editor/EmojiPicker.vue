@@ -143,7 +143,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onDocClick))
         :aria-label="cat.label"
         :title="cat.label"
         :class="[
-          'flex h-7 w-7 items-center justify-center rounded text-base transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent',
+          'flex h-7 w-7 items-center justify-center rounded text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent',
           activeCategory === cat.id
             ? 'bg-ui-bg'
             : 'text-ui-muted hover:bg-ui-bg/60',
@@ -185,7 +185,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onDocClick))
           type="button"
           role="option"
           :aria-label="emoji"
-          class="flex h-7 w-7 items-center justify-center rounded text-lg hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex h-7 w-7 items-center justify-center rounded text-lg hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           @mousedown.prevent="pick(emoji)"
         >
           {{ emoji }}

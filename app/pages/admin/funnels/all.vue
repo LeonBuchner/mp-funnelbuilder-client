@@ -184,7 +184,7 @@ function workspaceColor(name: string): string {
       <div class="flex items-center gap-3">
         <NuxtLink
           to="/admin/funnels"
-          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-border hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-border hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           aria-label="Zurück zur Workspace-Übersicht"
         >
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -219,7 +219,7 @@ function workspaceColor(name: string): string {
         </Transition>
         <button
           type="button"
-          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-border hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-border hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           :aria-pressed="showSearchInput"
           :aria-label="showSearchInput ? 'Suche schließen' : 'Suche öffnen'"
           @click="toggleSearch"
@@ -279,7 +279,7 @@ function workspaceColor(name: string): string {
         </p>
         <button
           type="button"
-          class="mt-2 text-sm text-ui-accent hover:underline focus:outline-none focus:ring-2 focus:ring-ui-accent"
+          class="mt-2 text-sm text-ui-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
           @click="searchQuery = ''"
         >
           Filter zurücksetzen
@@ -358,7 +358,7 @@ function workspaceColor(name: string): string {
                       </div>
                       <NuxtLink
                         :to="`/admin/funnels/${funnel.id}/editor`"
-                        class="font-medium text-ui-text hover:text-ui-accent focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                        class="font-medium text-ui-text hover:text-ui-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                       >
                         {{ funnel.name }}
                       </NuxtLink>
@@ -420,7 +420,7 @@ function workspaceColor(name: string): string {
               <li>
                 <button
                   type="button"
-                  class="flex h-8 min-w-[2rem] items-center justify-center rounded-lg border border-ui-border bg-white px-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
+                  class="flex h-8 min-w-[2rem] items-center justify-center rounded-lg border border-ui-border bg-white px-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
                   :disabled="currentPage <= 1"
                   aria-label="Vorherige Seite"
                   @click="goToPage(currentPage - 1)"
@@ -446,7 +446,7 @@ function workspaceColor(name: string): string {
                 <button
                   v-else
                   type="button"
-                  class="flex h-8 min-w-[2rem] items-center justify-center rounded-lg border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                  class="flex h-8 min-w-[2rem] items-center justify-center rounded-lg border text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                   :class="item === currentPage
                     ? 'border-ui-accent bg-ui-accent font-semibold text-white'
                     : 'border-ui-border bg-white text-ui-text hover:bg-ui-bg'"
@@ -462,7 +462,7 @@ function workspaceColor(name: string): string {
               <li>
                 <button
                   type="button"
-                  class="flex h-8 min-w-[2rem] items-center justify-center rounded-lg border border-ui-border bg-white px-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus:outline-none focus:ring-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
+                  class="flex h-8 min-w-[2rem] items-center justify-center rounded-lg border border-ui-border bg-white px-2 text-sm text-ui-text transition-colors hover:bg-ui-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-40"
                   :disabled="currentPage >= lastPage"
                   aria-label="Nächste Seite"
                   @click="goToPage(currentPage + 1)"

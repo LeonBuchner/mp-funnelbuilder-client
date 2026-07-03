@@ -257,7 +257,7 @@ onUnmounted(() => {
           </h2>
           <button
             type="button"
-            class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-ui-muted transition-colors hover:bg-ui-bg hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             aria-label="Schliessen"
             @click="emit('close')"
           >
@@ -561,7 +561,7 @@ onUnmounted(() => {
                 <div class="absolute inset-0 flex items-end justify-end gap-1 p-1.5">
                   <button
                     type="button"
-                    class="rounded bg-white/90 px-2 py-1 text-xs font-medium text-ui-text shadow-sm hover:bg-white focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                    class="rounded bg-white/90 px-2 py-1 text-xs font-medium text-ui-text shadow-sm hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                     aria-label="Logo auswaehlen"
                     @click="openImagePicker('logo')"
                   >
@@ -570,7 +570,7 @@ onUnmounted(() => {
                   <button
                     v-if="logoPath"
                     type="button"
-                    class="rounded bg-white/90 p-1 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    class="rounded bg-white/90 p-1 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                     aria-label="Logo entfernen"
                     @click="clearImage('logo')"
                   >
@@ -617,7 +617,7 @@ onUnmounted(() => {
                 <div class="absolute inset-0 flex items-end justify-end gap-1 p-1.5">
                   <button
                     type="button"
-                    class="rounded bg-white/90 px-2 py-1 text-xs font-medium text-ui-text shadow-sm hover:bg-white focus:outline-none focus:ring-2 focus:ring-ui-accent"
+                    class="rounded bg-white/90 px-2 py-1 text-xs font-medium text-ui-text shadow-sm hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                     aria-label="Favicon auswaehlen"
                     @click="openImagePicker('favicon')"
                   >
@@ -626,7 +626,7 @@ onUnmounted(() => {
                   <button
                     v-if="faviconPath"
                     type="button"
-                    class="rounded bg-white/90 p-1 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    class="rounded bg-white/90 p-1 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                     aria-label="Favicon entfernen"
                     @click="clearImage('favicon')"
                   >
@@ -660,7 +660,7 @@ onUnmounted(() => {
         <div class="flex shrink-0 items-center justify-end gap-2 border-t border-ui-border px-5 py-4">
           <button
             type="button"
-            class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:text-ui-text focus:outline-none focus:ring-2 focus:ring-ui-accent"
+            class="rounded-lg px-4 py-2 text-sm font-medium text-ui-muted transition-colors hover:text-ui-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
             @click="emit('close')"
           >
             Abbrechen
@@ -668,7 +668,7 @@ onUnmounted(() => {
           <button
             type="button"
             :disabled="saving"
-            class="flex items-center gap-2 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-60"
+            class="flex items-center gap-2 rounded-lg bg-ui-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ui-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ui-accent disabled:cursor-not-allowed disabled:opacity-60"
             @click="handleSave"
           >
             <span

@@ -110,7 +110,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
         nur technisch notwendige Cookies.
         <a
           :href="props.privacyPolicyUrl"
-          class="underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-[#2563eb] rounded"
+          class="underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] rounded"
           style="color: #2563eb;"
           target="_blank"
           rel="noopener"
@@ -126,7 +126,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
         <!-- #3579fa wurde nicht verwendet: Kontrast nur 3.98:1, zu wenig fuer 14px-Text. -->
         <button
           type="button"
-          class="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+          class="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
           style="background-color: #2563eb; --tw-ring-color: #2563eb;"
           @click="emit('accept')"
         >
@@ -136,7 +136,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
         <!-- Nur notwendige -->
         <button
           type="button"
-          class="flex-1 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3579fa] focus:ring-offset-2"
+          class="flex-1 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3579fa] focus-visible:ring-offset-2"
           @click="emit('decline')"
         >
           Nur notwendige

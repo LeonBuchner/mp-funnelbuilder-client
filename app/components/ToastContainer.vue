@@ -33,7 +33,7 @@ const { toasts, remove } = useToast()
         <span class="flex-1 text-sm font-medium">{{ toast.message }}</span>
         <button
           type="button"
-          class="ml-1 flex-shrink-0 rounded p-0.5 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
+          class="ml-1 flex-shrink-0 rounded p-0.5 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           :aria-label="`Benachrichtigung schließen: ${toast.message}`"
           @click="remove(toast.id)"
         >

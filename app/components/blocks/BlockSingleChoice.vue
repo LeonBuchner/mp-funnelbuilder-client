@@ -134,7 +134,7 @@ function safeOptionLabel(label: string): string {
           :class="[
             'w-full rounded-[var(--funnel-radius)] px-6 py-4 text-center',
             'text-base font-medium transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-offset-2',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
             mode === 'live' ? 'cursor-pointer' : 'cursor-default',
             modelValue === option.value
               ? 'opacity-90 ring-2 ring-offset-1'
@@ -171,7 +171,7 @@ function safeOptionLabel(label: string): string {
             'flex w-full flex-col items-center justify-center gap-3',
             'rounded-[var(--funnel-radius)] px-3 py-5 text-center',
             'transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-offset-2',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
             mode === 'live' ? 'cursor-pointer' : 'cursor-default',
           ]"
           :style="{
@@ -235,7 +235,7 @@ function safeOptionLabel(label: string): string {
           :class="[
             'w-full overflow-hidden rounded-[var(--funnel-radius)] text-left',
             'border transition-colors',
-            'focus:outline-none focus:ring-2',
+            'focus-visible:outline-none focus-visible:ring-2',
             mode === 'live' ? 'cursor-pointer' : 'cursor-default',
             modelValue === option.value
               ? 'border-[var(--funnel-primary)] ring-2 ring-[var(--funnel-primary)]'
